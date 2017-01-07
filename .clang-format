@@ -1,0 +1,10 @@
+BasedOnStyle: Webkit
+IndentWidth: 4
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: true
+PointerAlignment: Right
+UseTab: Never
+AlignConsecutiveAssignments: true
+AlignTrailingComments: true
+SpaceBeforeParens: ControlStatements
+BreakBeforeBinaryOperators: true
