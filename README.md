@@ -37,11 +37,12 @@ implementation never writes to the disk image.
 Building
 -----------
 
-Make sure the SDL2 development package for your distribution is installed, as
-well as GNU readline (only necessary for the debugger). On Ubuntu this is:
+To build from source make sure the SDL2 development package for your
+distribution is installed, the OpenGL ES 2 headers, as well as GNU readline
+(only necessary for the debugger). On Ubuntu this is:
 
 ```bash
-apt-get install libreadline-dev libsdl2-dev
+apt-get install libreadline-dev libsdl2-dev libgles2-mesa-dev
 ```
 
 Then:
@@ -65,6 +66,17 @@ The game can be started using the command line:
 ```
 
 Where `<image.st>` is the Sundog disk image to use.
+
+Key shortcuts
+----------------
+
+After starting the program game will immediately start. The game is
+controlled with the mouse only. There are however some key shortcuts:
+
+- `s` Save state to `sundog.sav` in current directory.
+- `l` Load state from `sundog.sav` in current directory.
+
+Some other shortcuts are debugging related, see [debugging.md](doc/debugging.md).
 
 Status
 ---------
