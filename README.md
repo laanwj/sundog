@@ -17,10 +17,10 @@ graphics rendering, which have been re-implemented separately.
 Screenshots
 -------------
 
-![Title screen](screenshots/title_screen.png) ![Planet surface](screenshots/surface.png)
-![Drahew city](screenshots/city.png) ![Drahew exchange](screenshots/drahew_ech.png)
-![Move on ship](screenshots/moveonship.png) ![Inside pod](screenshots/pod.png)
-![Pilotage](screenshots/ship_cockpit.png) ![Ship maintenance](screenshots/ship_parts.png)
+<img alt="Title screen" src="screenshots/title_screen.png" width="40%"> <img alt="Planet surface" src="screenshots/surface.png" width="40%">
+<img alt="Drahew city" src="screenshots/city.png" width="40%"> <img alt="Drahew exchange" src="screenshots/drahew_ech.png" width="40%">
+<img alt="Ship interior" src="screenshots/moveonship.png" width="40%"> <img alt="Inside pod" src="screenshots/pod.png" width="40%">
+<img alt="Pilotage" src="screenshots/ship_cockpit.png" width="40%"> <img alt="Ship maintenance" src="screenshots/ship_parts.png" width="40%">
 
 Disk image
 -------------
@@ -81,14 +81,13 @@ Status
 - Loading / reading states (`l` and `s` respectively).
 - Ground combat
 
-Is it fully playable? Almost: a few critical parts for completing the game are
-still missing. See below.
+Is it fully playable? Almost. I haven't tested everything, but see below.
 
 ### To be done
 
 Critical:
 
-- Untested: space combat on pirate encounters (some native procedures may need to
+- *Untested:* space combat on pirate encounters (some native procedures may need to
   be implemented for this).
 
 Non-critical:
@@ -172,6 +171,3 @@ License
 ---------
 
 This code is provided under the MIT license.
-
-References
---------------
