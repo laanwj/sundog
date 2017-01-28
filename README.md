@@ -3,16 +3,21 @@ Sundog: Frozen Legacy
 
 This is a port in progress of the Atari ST game SunDog: Frozen Legacy (1984) by
 FTL software to modern platforms, using SDL2 for input and OpenGL ES 2 for
-graphics.
+graphics. A good overview of the gameplay can be found on [wikipedia](https://en.wikipedia.org/wiki/SunDog:_Frozen_Legacy).
 
-The game was written in Pascal, developed using the well-known UCSD Pascal compiler.
-This compiler compiles to bytecode called "p-code" for an abstract architecture
-called the p-system. This project implements a p-system interpreter (also called
-"P-Machine Emulator" or PME) in C, which is able to run the game.
+The game was originally written in Pascal, developed using the well-known UCSD
+Pascal compiler. This compiler compiles to bytecode called "p-code" for an
+abstract architecture called the p-system. This project implements a p-system
+interpreter (also called "P-Machine Emulator" or PME) in C, which is able to
+run the game.
 
 This makes it possible to run the game without emulating the Atari ST or even
 68000 processor. There are a few assembly-language functions for (primarily)
 graphics rendering, which have been re-implemented separately.
+
+The goal of this port is to keep the gameplay and graphics close to the Atari
+ST version, although small hacks or improvements would be welcome. See the
+[Sundog Resurrection](http://sundogresurrectionproject.com) project for a complete re-imagining of the game.
 
 Screenshots
 -------------
@@ -34,8 +39,8 @@ work as the layout of the disk will be different.
 Unlike the original game which writes to disk on every start, this
 implementation never writes to the disk image.
 
-Building
------------
+Building from source
+----------------------
 
 To build from source make sure the SDL2 development package for your
 distribution is installed, the OpenGL ES 2 headers, as well as GNU readline
@@ -70,7 +75,7 @@ Where `<image.st>` is the Sundog disk image to use.
 Key shortcuts
 ----------------
 
-After starting the program game will immediately start. The game is
+After starting the program the game will immediately start. The game is
 controlled with the mouse only. There are however some key shortcuts:
 
 - `s` Save state to `sundog.sav` in current directory.
@@ -90,7 +95,7 @@ Status
 - Liftoff / Landing.
 - Sublight flight.
 - Warp (albeit without fancy effects).
-- Loading / reading states (`l` and `s` respectively).
+- Loading / reading save states (`l` and `s` respectively).
 - Ground combat
 
 Is it fully playable? Almost. I haven't tested everything, but see below.
@@ -105,12 +110,14 @@ Critical:
 Non-critical:
 
 - Sound: as the game uses XBIOS DoSound call for sound, this would involve
-  emulating the YM2149F PSG sound chip, at least up to a point.
+  emulating the YM2149F PSG sound chip, at least up to a point (or as there
+  seems to be a fixed number of 36 sound effects: substituting
+  sampled sounds).
 - Initial FTL animation is missing: this is an assembly routine that triggers *before*
   the bootstrapping of the p-machine.
 - None of the stuff in SHIPLIB has been figured out. There are four native procedures
   in this segment (0x16, 0x18, 0x19, 0x1a) which probably do special rendering effects
-  not covered by GEMBIND.
+  not covered by GEMBIND. There seems to be no further user interaction code.
 
 ### Future ideas
 
@@ -143,14 +150,14 @@ the segment `USERPROG`, and starts interpreting at procedure 1 of that segment.
 From there the p-system takes care of the rest of initialization, eventually
 executing `SYSTEM.STARTUP`. This is the game, in this case.
 
-In modern terms the P-system is comparable to the JRE, but more low-level.
-Some "advanced" features (for the time) that are supported:
+In modern terms the P-system is comparable to the Java Runtime Environment, but
+more low-level. Some "advanced" features (for the time) that are supported:
 
 - OS, architecture, endian-independent bytecode.
 
-- Tasks (multi-tasking), synchronizing using semaphores.
+- Tasks (multi-tasking), synchronized using semaphores.
 
-- External events which can signal semaphores.
+- External events (user input, timer interrupts) can signal semaphores.
 
 - Paging ("swapping") of code. Segments are loaded when accessed, causing a
   segment fault to occur. When there is memory pressure, least recently used
@@ -179,7 +186,12 @@ Author
 
 - Wladimir J. van der Laan
 
+Special thanks to:
+
+- [Bitsavers](bitsavers.trailing-edge.com)
+- The UCSD pascal group on Yahoo
+
 License
 ---------
 
-This code is provided under the MIT license.
+This software is provided under the MIT license.
