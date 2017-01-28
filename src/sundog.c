@@ -64,7 +64,7 @@ struct game_state {
  * In any case it trips up while running in this interpreter, and until someone finds
  * a more elegant way around it, we persistently turn it off by resetting its state.
  */
-#define INTEGRITY_CHECK_ADDR (0x348e + 8 + 2*0x238) /* Gglobal EMBIND_238 */
+#define INTEGRITY_CHECK_ADDR (0x348e + 8 + 2 * 0x238) /* Gglobal EMBIND_238 */
 #ifdef DEBUG_INTEGRITY_CHECK
 /** Watch ??? state */
 static void watch_integrity_check(struct psys_state *s)

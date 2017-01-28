@@ -18,8 +18,13 @@
 
 /** Helpers for interpreter ***/
 
-/* Boolean test */
+/* Boolean test. In contrast to how C handles booleans, p-system booleans only
+ * use the bottom bit. This means that 0 is false, but e.g. 2, 4, 6 and so on
+ * is also false.
+ */
 #define BOOL(x) ((x)&1)
+
+/** Instruction fetching ***/
 
 /* Read unsigned byte from PC (UB/DB) */
 static inline psys_byte fetch_UB(struct psys_state *state)
@@ -53,8 +58,9 @@ static inline psys_word fetch_V(struct psys_state *state)
     return a;
 }
 
-/* Look up intermediate MSCW offset lexlevel levels
- * above the current one (0=local).
+/** Look up intermediate MSCW offset, lexlevel levels
+ * above the current one (0=local). This is used for intermediate (e.g. nested
+ * scope) variable accesses.
  */
 static inline psys_fulladdr intermd_mscw(struct psys_state *state, unsigned lexlevel)
 {
@@ -66,6 +72,8 @@ static inline psys_fulladdr intermd_mscw(struct psys_state *state, unsigned lexl
     return mscw;
 }
 
+/** Get base address of a pool, given the address of a pool descriptor structure.
+ */
 psys_fulladdr psys_pool_get_base(struct psys_state *s, psys_fulladdr pool)
 {
     psys_fulladdr poolbase = 0; /* internal pool */
@@ -77,8 +85,8 @@ psys_fulladdr psys_pool_get_base(struct psys_state *s, psys_fulladdr pool)
     return poolbase;
 }
 
-/* Look up the segment base address and add offset, given an erec.
- * Fault if a segment is not resident, and return 0.
+/* Look up the segment base address and add offset, given an erec offset.
+ * Fault if a segment is not resident, and return PSYS_ADDR_ERROR.
  */
 psys_fulladdr psys_segment_from_erec(struct psys_state *s, psys_fulladdr erec)
 {
@@ -100,7 +108,7 @@ psys_fulladdr psys_segment_from_erec(struct psys_state *s, psys_fulladdr erec)
     }
 }
 
-/* Look up EREC for segment number in local environment.
+/* Look up EREC for segment number in local segment environment (EVEC).
  * Returns 0 if segment not found.
  */
 static inline psys_fulladdr lookup_ref_segment(struct psys_state *s, psys_word segid)
@@ -130,25 +138,25 @@ static inline psys_fulladdr lookup_ref_segment(struct psys_state *s, psys_word s
     }
 }
 
-/* Get address of local variable */
+/** Get address of local variable */
 static inline psys_fulladdr local_addr(struct psys_state *state, unsigned n)
 {
     return W(state->mp + PSYS_MSCW_VAROFS, n);
 }
 
-/* Get address of global variable */
+/** Get address of global variable */
 static inline psys_fulladdr global_addr(struct psys_state *state, unsigned n)
 {
     return W(state->base + PSYS_MSCW_VAROFS, n);
 }
 
-/* Get address of intermediate variable */
+/** Get address of intermediate variable */
 static inline psys_fulladdr intermd_addr(struct psys_state *state, unsigned lexlevel, unsigned n)
 {
     return W(intermd_mscw(state, lexlevel) + PSYS_MSCW_VAROFS, n);
 }
 
-/** Get address of extended variable.
+/** Get address of extended variable (a global address from another segment).
  * This can cause a PSYS_ERR_NOPROC error if the segment could not be found.
  * It does not matter whether the segment is resident: globals are not swapped.
  */
@@ -163,10 +171,11 @@ static inline psys_fulladdr extended_addr(struct psys_state *state, unsigned seg
     }
 }
 
-/* Look up address for string descriptor.
+/** Look up address for string descriptor.
  * A string descriptor is a (erec,ofs) tuple in memory. If erec is NIL,
  * the offset is an offset in memory, if erec is non-null it is an offset
  * into the segment pointed to by the environment record.
+ * Fault if a segment is not resident, and return PSYS_ADDR_ERROR.
  */
 static psys_fulladdr array_descriptor_to_addr(struct psys_state *s, psys_fulladdr straddr)
 {
@@ -185,19 +194,19 @@ static psys_fulladdr array_descriptor_to_addr(struct psys_state *s, psys_fulladd
     return 0;
 }
 
-/* Compute constant pool offset + n words, given a segment base address */
+/** Compute constant pool offset + n words, given a segment base address */
 static inline psys_fulladdr seg_cpool_ofs(struct psys_state *state, psys_fulladdr seg, unsigned n)
 {
     return W(0, psys_ldw(state, seg + PSYS_SEG_CPOOLOFS) + n);
 }
 
-/* Is segment in our local endian? */
+/** Is segment in our local endian? */
 static inline bool seg_needs_endian_flip(struct psys_state *state, psys_fulladdr seg)
 {
     return psys_ldw(state, seg + PSYS_SEG_ENDIAN) != PSYS_ENDIAN_NATIVE;
 }
 
-/* Increase timestamp in SYSCOM */
+/** Increase timestamp in SYSCOM */
 void psys_increase_timestamp(struct psys_state *state, psys_fulladdr erec)
 {
     psys_word timestamp = psys_ldw(state, state->syscom + PSYS_SYSCOM_TIMESTAMP);
@@ -207,7 +216,7 @@ void psys_increase_timestamp(struct psys_state *state, psys_fulladdr erec)
     psys_stw(state, sib + PSYS_SIB_Time_Stamp, timestamp);
 }
 
-/* Increase or decrease reference count on segment.
+/** Increase or decrease reference count on segment.
  * Increase Seg_Refs count in SIB to prevent the segment from being swapped out.
  * Decrease Seg_Refs count in SIB to allow the segment to be swapped out again.
  */
@@ -218,7 +227,7 @@ static void psys_segment_refcount(struct psys_state *state, psys_fulladdr erec, 
         psys_ldw(state, sib + PSYS_SIB_Link_Count) + delta);
 }
 
-/* Look up procedure address from erec and procedure number. */
+/** Look up procedure address from erec and procedure number. */
 static psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, psys_word procedure, psys_word *num_locals_out, psys_word *end_pointer, psys_fulladdr *segment_out)
 {
     psys_fulladdr sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
@@ -235,8 +244,8 @@ static psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, 
             return PSYS_ADDR_ERROR;
         }
     }
-    /* It looks like the procedure dictionary is flipped to native endian on load,
-     * so no need to flip these. Same for the number of locals. */
+    /* The procedure dictionary is flipped to native endian on load, so no need
+     * to flip these. Same for the number of locals. */
     psys_word procdict = psys_ldw(s, segment + PSYS_SEG_PROCDICT);
     psys_word numproc  = psys_ldw(s, W(segment, procdict));
     if (PDBG(s, CALL)) {
@@ -264,6 +273,9 @@ static psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, 
     return procaddr;
 }
 
+/** Call a native procedure provided by a binding.
+ * Return true if the procedure was executed and false on error.
+ */
 static bool call_binding(struct psys_state *s, psys_fulladdr segment, psys_word procedure, psys_fulladdr env_data)
 {
     struct psys_segment_id id;
@@ -281,8 +293,8 @@ static bool call_binding(struct psys_state *s, psys_fulladdr segment, psys_word 
     return true;
 }
 
-/* Procedure call after lookups (except procedure).
- * msstat can be 0, in which case the global pointer will be loaded from erec.
+/** Procedure call after context lookups (except of the procedure address itself).
+ * msstat can be 0, in which case the current base pointer will be used.
  */
 static void handle_call_formal(struct psys_state *s, psys_fulladdr msstat, psys_fulladdr erec, psys_word procedure, bool nonlocal)
 {
@@ -373,8 +385,8 @@ static void handle_call(struct psys_state *s, psys_word seg, psys_word lexlevel,
     handle_call_formal(s, msstat, erec, procedure, nonlocal);
 }
 
-/* Handle RPU instruction. This can generate a segment fault if the segment returned to
- * is not resident.
+/* Handle RPU (return) instruction. This can generate a segment fault if the
+ * segment returned to is not resident.
  */
 static void handle_return(struct psys_state *s, psys_word count)
 {
@@ -1231,7 +1243,11 @@ void psys_execerror(struct psys_state *s, psys_word err)
     /* restore processor state from before last instruction */
     s->sp      = s->stored_sp;
     s->ipc     = s->stored_ipc;
-    s->running = false; /* TODO proper error handling */
+    s->running = false;
+    /* TODO proper error handling. The PME is supposed to push the
+     * current CPU state on the stack then call kernel function
+     * 0x02 (Exec_Error) for error handling.
+     */
     if (PDBG(s, WARNING)) {
         psys_debug("Execution error %d (fatal)\n", err);
         psys_print_traceback(s);
@@ -1251,6 +1267,8 @@ void psys_fault(struct psys_state *s, psys_fulladdr tib, psys_fulladdr erec, psy
     psys_stw(s, s->syscom + PSYS_SYSCOM_FAULT_EREC, erec);
     psys_stw(s, s->syscom + PSYS_SYSCOM_FAULT_WORDS, words);
     psys_stw(s, s->syscom + PSYS_SYSCOM_FAULT_TYPE, type);
+    /* raise signal so that fault handler task can pick up the pieces
+     * and put humpty-dumpty back together again. */
     psys_signal(s, s->syscom + PSYS_SYSCOM_REAL_SEM, true);
 }
 

@@ -101,7 +101,7 @@ LIBCALLS = {
     b'HEAPOPS ': {
         2: 'H_Mark(a)',    # called at "mark" (Chapter 9, MACAdvantage)
         3: 'H_Release(a)', # called at "release" (Chapter 9, MACAdvantage)
-        4: 'H_New(dest,bytes)',
+        4: 'H_New(dest,words)',
         5: 'H_Dispose(a,b)',
     },
     b'STRINGOP': {

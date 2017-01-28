@@ -105,7 +105,7 @@ Is it fully playable? Almost. I haven't tested everything, but see below.
 Critical:
 
 - *Untested:* space combat on pirate encounters (some native procedures may need to
-  be implemented for this).
+  be implemented for this, probably SHIPLIB:0x18).
 
 Non-critical:
 
@@ -115,9 +115,11 @@ Non-critical:
   sampled sounds).
 - Initial FTL animation is missing: this is an assembly routine that triggers *before*
   the bootstrapping of the p-machine.
-- None of the stuff in SHIPLIB has been figured out. There are four native procedures
-  in this segment (0x16, 0x18, 0x19, 0x1a) which probably do special rendering effects
-  not covered by GEMBIND. There seems to be no further user interaction code.
+- None of the stuff in SHIPLIB has been implemented. There are four native
+  procedures in this segment (0x16, 0x18, 0x19, 0x1a) which seem to be
+  rendering effects for the ship the viewscreen (stars, moving enemies, fire
+  weapon animation, warp animation respectively). There seems to be no further
+  user interaction code.
 
 ### Future ideas
 

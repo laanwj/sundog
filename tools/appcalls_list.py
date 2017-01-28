@@ -31,10 +31,11 @@ APPCALLS = {
         0x02: 'DoUserMenu(a,b)',
         0x05: 'DoRepair(a,b,c)',
         0x0f: 'RedFlashToggle',
-        0x16: ('Shiplib16()', 0, 0),
-        0x18: ('ShipFightSomething1()', 0, 0),
-        0x19: ('ShipFightSomething2(x)', 1, 0),
-        0x1a: ('WarpAnimation(a,b,c,d)', 4, 0),
+        0x16: ('DrawStars()', 0, 0), # This draws the viewscreen background
+        0x17: 'Randomize', # Randomize 256 bytes
+        0x18: ('HandleBogeys()', 0, 0), # Handle bogeys (enemy ship movement) in space fight
+        0x19: ('FireWeaponAnimation(x)', 1, 0),
+        0x1a: ('WarpAnimation(a,b,c,vdihandle)', 4, 0),
         0x1b: 'SetFillColor', # VDI 25
         0x1c: 'FillRectangle', # VDI 114
         0x10: 'SetClipAndWriteMode', # VDI 129/32
@@ -60,6 +61,9 @@ APPCALLS = {
     },
     b'XMOVEINB': { # XMOVEINBUILDING
         0x1a: 'SlotMachine()',
+    },
+    b'XDOFIGHT': {
+        0x0b: 'MouseToShipMovement()',
     },
     # Utilities
     b'MAINLIB ': {
@@ -138,7 +142,7 @@ APPCALLS = {
         0x1a: 'SetFillColor', # VDI 25
         0x1c: ('DrawColor(psrc,pdst,vrmode,srcx1,srcx2,srcy1,srcy2,dstx1,dstx2,dsty1,dsty2)', 11, 0), # VDI 109
         0x1d: ('DrawBW(psrc,pdst,fgcolor,bgcolor,writemode,srcx1,srcx2,srcy1,srcy2,dstx1,dstx2,dsty1,dsty2)', 13, 0), # Draw black and white raster gfx VDI 121
-        0x1e: 'GetMousePosition', # VDI 124
+        0x1e: 'GetMousePosition(addrx,addry)', # VDI 124
         0x1f: 'GetMouseButton', # VDI 124 (mouse button 0/1 passed in)
         0x20: 'DrawIcon(idx,vrmode,x,y)', # calls 0x1c
         0x21: 'DrawBWWriteMode', # set writing mode, draw b/w

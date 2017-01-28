@@ -181,7 +181,7 @@ def format_instruction(inst, proc, dseg, proclist):
     elif (op[2] & opcodes.GLOBAL) and (op[2] & (opcodes.LOAD|opcodes.ADDR|opcodes.STORE)):
         (seg,ofs) = inst.get_global_number(seginfo.gseg_num)
         iname = seginfo.references.get(seg, b'???').decode().rstrip()
-        name = '{}_{:x}'.format(iname,ofs)
+        name = '{}_G{:x}'.format(iname,ofs)
         comment = ' {a.cstart};{a.comment} {}{a.reset}'.format(name,a=ATTR)
     # access intermediate or local
     elif (op[2] & (opcodes.INTRMD|opcodes.LOCAL)) and (op[2] & (opcodes.LOAD|opcodes.ADDR|opcodes.STORE)):
@@ -197,7 +197,7 @@ def format_instruction(inst, proc, dseg, proclist):
         # format comment if known
         if meta is not None:
             lnum = inst.get_local_number()
-            name = '{}_{:02x}_{:x}'.format(meta.key[0].decode().rstrip(),meta.key[1],lnum)
+            name = '{}_{:02x}_L{:x}'.format(meta.key[0].decode().rstrip(),meta.key[1],lnum)
             if lnum > meta.num_locals:
                 if lnum < meta.num_locals - meta.delta + 1:
                     name += ' (param {:d})'.format(lnum - meta.num_locals - 1)

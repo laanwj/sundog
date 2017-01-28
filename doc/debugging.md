@@ -28,3 +28,5 @@ Cheats
 
 - Pressing `x` in game will (for now) give you virtually unlimited funds and
   stash the ship's stores with one of every possible item.
+- Pressing `y` in game will print the 512-byte gamestate as hexdump. By comparing this
+  output this could be used to develop further cheats.

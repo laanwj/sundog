@@ -175,6 +175,10 @@ Traceback [tib=6348 sp=72da]
   - First dword (overwritable data?) goes to MAINLIB\_3b2
   - Second dword (jump table address) goes to GEMBIND\_22e, where it looks like never used
   - Third word goes to MAINLIB\_3b0 + 1, added 'A' = drive letter
+- SUNDOG:0x03 allocates 3*512 bytes then reads sector 7 then sector 4,5,6 (into
+  same buffer, at offset 0) - as the first read is discarded this is clearly a
+  way to get a certain instance of a duplicate sector by directing the drive.
+  This reads 0x300 words into [SHIPLIB_6]
 
 ### Weird, may be related or not
 
