@@ -303,9 +303,6 @@ static void handle_call_formal(struct psys_state *s, psys_fulladdr msstat, psys_
     if (PDBG(s, CALL)) {
         psys_debug("call msstat=0x%04x erec=0x%04x proc=0x%02x\n", msstat, erec, procedure);
     }
-    if (!msstat) {
-        msstat = s->base;
-    }
     funcaddr = lookup_procedure(s, erec, procedure, &num_locals, NULL, &newseg);
     if (funcaddr == PSYS_ADDR_ERROR) { /* function out of range or not resident */
         return;
@@ -359,9 +356,8 @@ static const int CALL_LOCAL = 0;
 static void handle_call(struct psys_state *s, psys_word seg, psys_word lexlevel, psys_word procedure)
 {
     /* Determine target erec */
-    psys_fulladdr erec;
-    psys_fulladdr msstat = 0;
-    bool nonlocal        = false;
+    psys_fulladdr erec, msstat;
+    bool nonlocal = false;
     if (seg == 1 && lexlevel == CALL_GLOBAL) { /* RSP */
         struct psys_binding *rsp = (s->num_bindings > 0) ? s->bindings[0] : NULL;
         if (rsp != NULL && procedure < rsp->num_handlers && rsp->handlers[procedure]) {
@@ -381,6 +377,8 @@ static void handle_call(struct psys_state *s, psys_word seg, psys_word lexlevel,
     /* Determine static link (closure) */
     if (lexlevel != CALL_GLOBAL) {
         msstat = intermd_mscw(s, lexlevel);
+    } else {
+        msstat = s->base;
     }
     handle_call_formal(s, msstat, erec, procedure, nonlocal);
 }
