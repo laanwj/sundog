@@ -136,7 +136,8 @@ p-system developed commercially by Softech. I looked at using [ucsd-psystem-vm](
 however this implements version `II.0` which is significantly different. As
 far as I know this is the only open source, publicly available p-system
 IV implementation. It is fairly independent of the game, so if it is useful
-for anything else it could be factored out to a library.
+for anything else it could be factored out to a library. Code for the p-system
+interpreter is in [src/psys](src/psys).
 
 The p-system has a custom disk layout (this is why on the Atari ST the disk
 looks like it has only a small `.prg` and the rest of the disk is empty). This

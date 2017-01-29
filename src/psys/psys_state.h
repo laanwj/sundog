@@ -8,10 +8,14 @@
 
 #include "psys_types.h"
 
+/** Binding for calling native functions from the p-system.
+ * This can overrides procedures in a given segment with a native function
+ * call.
+ */
 struct psys_binding {
     struct psys_segment_id seg;
     int num_handlers; /* number of procedures in handlers table */
-    /* handlers, starting from 1. They should be zero to not
+    /* handlers, starting from 1. They should be NULL to not
      * override a particular procedure.
      */
     psys_bindingfunc **handlers;
@@ -23,11 +27,13 @@ struct psys_binding {
     void *userdata;
 };
 
+/** The main p-system interpreter state.
+ */
 struct psys_state {
     bool running;
-    /* p-system state - program counter can be in high addresses (code
-     * pools), all the other pointers must be in the first 64k that can be
-     * addressed directly.
+    /* Main registers - program counter can be in high addresses (code pools),
+     * and so can curseg (but note that ipc-curseg cannot exceed 64k), all the
+     * other pointers must be in the first 64k that can be addressed directly.
      */
     psys_fulladdr ipc;    /* program counter */
     psys_word sp;         /* stack pointer */
