@@ -475,7 +475,8 @@ static void sdlscreen_get_image(struct game_screen *screen_,
      * synchronizing with the render thread, something we don't have to do here.
      */
     if (sx < 0 || sy < 0 || (sx + width) > SCREEN_WIDTH || (sy + height) > SCREEN_HEIGHT) {
-        psys_panic("get_image: out-of-screen access");
+        psys_debug("get_image: out-of-screen access\n");
+        return;
     }
     *image_ptr      = screen->rows[sy] + sx;
     *bytes_per_line = SCREEN_WIDTH;
@@ -511,7 +512,8 @@ static void sdlscreen_move(struct game_screen *screen_,
     struct sdl_screen *screen = sdl_screen(screen_);
     int cx, cy;
     if (dx < 0 || dy < 0 || (dx + width) > SCREEN_WIDTH || (dy + height) > SCREEN_HEIGHT || sx < 0 || sy < 0 || (sx + width) > SCREEN_WIDTH || (sy + height) > SCREEN_HEIGHT) {
-        psys_panic("move: out-of-screen access\n");
+        psys_debug("move: out-of-screen access\n");
+        return;
     }
     SDL_LockMutex(screen->mutex);
     /* [dest > src]
