@@ -372,8 +372,8 @@ static void sdlscreen_vsc_form(struct game_screen *screen_,
     int y;
     psys_debug("screen vsc_form\n");
     SDL_LockMutex(screen->mutex);
-    screen->cursor_hot_x = (int16_t)mform[0];
-    screen->cursor_hot_y = (int16_t)mform[1];
+    screen->cursor_hot_x = ((int16_t)mform[0])*2;
+    screen->cursor_hot_y = ((int16_t)mform[1])*2;
     /* Convert to SDL format, and blow up 16x16 cursor to 32x32 */
     for (y = 0; y < 16; ++y) {
         uint32_t data = double_bits16(~mform[21 + y] & mform[5 + y]);
