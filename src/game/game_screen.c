@@ -170,7 +170,9 @@ static void sdlscreen_v_pline(struct game_screen *screen_,
 {
     struct sdl_screen *screen = sdl_screen(screen_);
     unsigned i;
+#if 0
     psys_debug("screen v_pline vr=%d col=%d width=%d count=%d\n", vr_mode, line_color, line_width, count);
+#endif
     SDL_LockMutex(screen->mutex);
     for (i = 1; i < count; ++i) {
         draw_line(screen->rows, coordinates[i * 2 - 2], coordinates[i * 2 - 1], coordinates[i * 2 + 0], coordinates[i * 2 + 1],
@@ -186,10 +188,12 @@ static void sdlscreen_v_ellarc(struct game_screen *screen_,
     int begang, int endang)
 {
     struct sdl_screen *screen = sdl_screen(screen_);
+#if 0
     psys_debug("screen v_ellarc vr=%d col=%d width=%d (%d,%d) (%d,%d) (%d,%d)\n",
         vr_mode, line_color, line_width,
         x, y, xradius, yradius,
         begang, endang);
+#endif
     SDL_LockMutex(screen->mutex);
     draw_arc(screen->rows, vr_mode, line_color, line_width, x, y, xradius, yradius, begang, endang, &screen->clip);
     screen->buffer_dirty = true;
