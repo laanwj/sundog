@@ -54,7 +54,7 @@ struct game_screen {
     /* vrt_cpyfm */
     void (*vrt_cpyfm)(struct game_screen *screen,
         unsigned vr_mode, unsigned col0, unsigned col1,
-        uint8_t *src, unsigned src_width, unsigned src_height, unsigned src_wdwidth,
+        const uint8_t *src, unsigned src_width, unsigned src_height, unsigned src_wdwidth,
         int sx0, int sy0, int sx1, int sy1,
         int dx0, int dy0, int dx1, int dy1);
     /* vsc_form */

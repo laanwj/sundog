@@ -77,16 +77,16 @@ static void shiplib_16(struct psys_state *s, struct shiplib_priv *priv, psys_ful
 /** shiplib_18() */
 static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
-    psys_debug("shiplib_18 (stub)\n");
-    psys_word count = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc));
-    psys_sword ship_dx = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xe));
-    psys_sword ship_dy = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xd));
-    psys_byte *points_x = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x13));
-    psys_byte *points_y = points_x + 0x10;
+    psys_debug("shiplib_18\n");
+    psys_word count      = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc));
+    psys_sword ship_dx   = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xe));
+    psys_sword ship_dy   = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xd));
+    psys_byte *points_x  = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x13));
+    psys_byte *points_y  = points_x + 0x10;
     psys_byte *points_dx = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x23));
     psys_byte *points_dy = points_y + 0x10;
-    struct game_screen_point point[16*4*2];
-    int ptn = 0, i, xx, yy;
+    struct game_screen_point point[16 * 4 * 2];
+    int ptn                  = 0, i, xx, yy;
     static int obj_color_idx = 0; /* keep track of current color index */
     unsigned color;
     /* Decrease count and store new value in global */
@@ -101,13 +101,13 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     if (obj_color_idx == 8) {
         obj_color_idx = 0;
     }
-    for (i=0; i<16; ++i) {
+    for (i = 0; i < 16; ++i) {
         uint8_t x = points_x[i];
         uint8_t y = points_y[i];
         if (x) { /* Only process if x coordinate is non-zero */
             /* Clear 2x2 block first */
-            for (yy=0; yy<2; ++yy) {
-                for (xx=0; xx<2; ++xx) {
+            for (yy = 0; yy < 2; ++yy) {
+                for (xx = 0; xx < 2; ++xx) {
                     point[ptn].x     = x + xx;
                     point[ptn].y     = y + yy;
                     point[ptn].color = 0;
@@ -123,8 +123,8 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
             } else { /* store new position and redraw */
                 points_dx[i] = x;
                 points_dy[i] = y;
-                for (yy=0; yy<2; ++yy) {
-                    for (xx=0; xx<2; ++xx) {
+                for (yy = 0; yy < 2; ++yy) {
+                    for (xx = 0; xx < 2; ++xx) {
                         point[ptn].x     = x + xx;
                         point[ptn].y     = y + yy;
                         point[ptn].color = color;
@@ -142,7 +142,35 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
 static void shiplib_19(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
     psys_word x = psys_pop(s);
-    psys_debug("shiplib_19 0x%04x (stub)\n", x);
+    const psys_byte *src;
+    unsigned color;
+    int i, f, y;
+
+    psys_debug("shiplib_19 0x%04x\n", x);
+    /* Draw weapon fire */
+    if (x) {
+        src   = psys_bytes(s, segment + 0x1646);
+        color = 0xc;
+    } else {
+        src   = psys_bytes(s, segment + 0x1b32);
+        color = 0xe;
+    }
+
+    /* Draw, wait, and draw again later to remove again */
+    for (f = 0; f < 2; ++f) {
+        /* Source is 63 rows times 20*8=160 pixels, 10 words per row */
+        y = 117;
+        for (i = 0; i < 63; ++i) {
+            priv->screen->vrt_cpyfm(priv->screen, 3 /*XOR*/, 0, color,
+                src, 160, 63, 10,
+                0, i, 159, i,
+                96, y, 255, y);
+            y -= 1;
+        }
+
+        /* Wait two frames */
+        usleep(2000000 / 50);
+    }
 }
 
 /** shiplib_1A(a,b,c,d) */
@@ -153,6 +181,7 @@ static void shiplib_1A(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     psys_word b = psys_pop(s);
     psys_word a = psys_pop(s);
     psys_debug("shiplib_1A 0x%04x 0x%04x 0x%04x 0x%04x (stub)\n", a, b, c, d);
+    /* Warp animation, no clue what the parameters mean */
 }
 
 static int shiplib_save_state(struct psys_binding *b, int fd)

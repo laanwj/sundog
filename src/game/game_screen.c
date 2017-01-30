@@ -23,7 +23,7 @@ struct rect {
     int x0, y0, x1, y1;
 };
 
-static const struct rect fullscreen = {0,0,SCREEN_WIDTH-1,SCREEN_HEIGHT-1};
+static const struct rect fullscreen = { 0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
 
 /** Cursor info */
 #define CURSOR_WIDTH 32
@@ -323,7 +323,7 @@ static void sdlscreen_vro_cpyfm(struct game_screen *screen_,
 
 static void sdlscreen_vrt_cpyfm(struct game_screen *screen_,
     unsigned vr_mode, unsigned col0, unsigned col1,
-    uint8_t *src, unsigned src_width, unsigned src_height, unsigned src_wdwidth,
+    const uint8_t *src, unsigned src_width, unsigned src_height, unsigned src_wdwidth,
     int sx0, int sy0, int sx1, int sy1,
     int dx0, int dy0, int dx1, int dy1)
 {
