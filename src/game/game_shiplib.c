@@ -25,7 +25,10 @@ struct shiplib_priv {
     struct game_screen *screen;
 };
 
-static const unsigned star_colors[4] = { 0xf, 0xb, 0x3, 0x4 }; /* 1,2,6,4 */
+/* VDI 1,2,6,4 */
+static const unsigned star_colors[4] = { 0xf, 0xb, 0x3, 0x4 };
+/* VDI 0,8,4,12,12,13,13,1 */
+static const unsigned obj_colors[8] = { 0x0, 0x8, 0x4, 0xc, 0xc, 0xe, 0xe, 0xf };
 
 /* shiplib_16() */
 static void shiplib_16(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
@@ -67,20 +70,82 @@ static void shiplib_16(struct psys_state *s, struct shiplib_priv *priv, psys_ful
             rows[y] = 0;
         }
     }
-    priv->screen->draw_points(priv->screen, 1, point, ptn);
+    /* Draw queued pixels */
+    priv->screen->draw_points(priv->screen, 1 /*Replace*/, point, ptn);
 }
 
+/** shiplib_18() */
 static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
     psys_debug("shiplib_18 (stub)\n");
+    psys_word count = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc));
+    psys_sword ship_dx = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xe));
+    psys_sword ship_dy = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xd));
+    psys_byte *points_x = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x13));
+    psys_byte *points_y = points_x + 0x10;
+    psys_byte *points_dx = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x23));
+    psys_byte *points_dy = points_y + 0x10;
+    struct game_screen_point point[16*4*2];
+    int ptn = 0, i, xx, yy;
+    static int obj_color_idx = 0; /* keep track of current color index */
+    unsigned color;
+    /* Decrease count and store new value in global */
+    count -= 1;
+    psys_stw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc), count);
+    /* Ship coordinate deltas are divided by four */
+    ship_dx >>= 2;
+    ship_dy >>= 2;
+    /* Pick the next color from the object color array. This is done globally,
+     * not per object, causing them to all change color at the same time. */
+    color = obj_colors[obj_color_idx++];
+    if (obj_color_idx == 8) {
+        obj_color_idx = 0;
+    }
+    for (i=0; i<16; ++i) {
+        uint8_t x = points_x[i];
+        uint8_t y = points_y[i];
+        if (x) { /* Only process if x coordinate is non-zero */
+            /* Clear 2x2 block first */
+            for (yy=0; yy<2; ++yy) {
+                for (xx=0; xx<2; ++xx) {
+                    point[ptn].x     = x + xx;
+                    point[ptn].y     = y + yy;
+                    point[ptn].color = 0;
+                    ptn += 1;
+                }
+            }
+
+            x += points_dx[y] + ship_dx;
+            y += points_dy[y] + ship_dy;
+
+            if (count == 0 || x <= 96 || y <= 7 || y >= 116) { /* if counter expired or out of viewscreen, nuke it */
+                points_dx[i] = 0;
+            } else { /* store new position and redraw */
+                points_dx[i] = x;
+                points_dy[i] = y;
+                for (yy=0; yy<2; ++yy) {
+                    for (xx=0; xx<2; ++xx) {
+                        point[ptn].x     = x + xx;
+                        point[ptn].y     = y + yy;
+                        point[ptn].color = color;
+                        ptn += 1;
+                    }
+                }
+            }
+        }
+    }
+    /* Draw queued pixels */
+    priv->screen->draw_points(priv->screen, 1 /*Replace*/, point, ptn);
 }
 
+/** shiplib_19(x) */
 static void shiplib_19(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
     psys_word x = psys_pop(s);
     psys_debug("shiplib_19 0x%04x (stub)\n", x);
 }
 
+/** shiplib_1A(a,b,c,d) */
 static void shiplib_1A(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
     psys_word d = psys_pop(s);
