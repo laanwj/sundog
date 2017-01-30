@@ -248,6 +248,27 @@ void psys_debugger(struct psys_state *s)
                 } else {
                     printf("Two arguments are required\n");
                 }
+            } else if (!strcmp(cmd, "stl")) {
+                if (num >= 3) {
+                    unsigned addr = strtol(args[1], NULL, 0);
+                    psys_stw(s, W(s->mp + PSYS_MSCW_VAROFS, addr),
+                            strtol(args[2], NULL, 0));
+                } else {
+                    printf("At least two arguments required\n");
+                }
+            } else if (!strcmp(cmd, "ldl") || !strcmp(cmd, "lla")) {
+                if (num == 2) {
+                    unsigned addr = strtol(args[1], NULL, 0);
+                    if (!strcmp(cmd, "lao")) {
+                        psys_word address = W(s->mp + PSYS_MSCW_VAROFS, addr);
+                        printf("0x%04x\n", address);
+                    } else {
+                        psys_word value = psys_ldw(s, W(s->mp + PSYS_MSCW_VAROFS, addr));
+                        printf("0x%04x\n", value);
+                    }
+                } else {
+                    printf("One argument is required\n");
+                }
             } else if (!strcmp(cmd, "r")) {
                  psys_print_info(s);
             } else if (!strcmp(cmd, "h") || !strcmp(cmd, "?")) {
@@ -257,6 +278,9 @@ void psys_debugger(struct psys_state *s)
                 printf("lao <seg> <g>       Show address of global variable\n");
                 printf("sro <seg> <g> <val> Set global variable\n");
                 printf("ldo <seg> <g>       Examine global variable\n");
+                printf("lla <l>             Show address of local variable\n");
+                printf("stl <l> <val>       Set local variable\n");
+                printf("ldl <l>             Examine local variable\n");
                 printf("h                   This information\n");
                 printf("l                   List environments\n");
                 printf("q                   Quit\n");
