@@ -18,6 +18,12 @@ struct game_screen;
 
 typedef void(game_screen_vblank_func)(struct game_screen *screen, void *arg);
 
+struct game_screen_point {
+    int x;
+    int y;
+    unsigned color;
+};
+
 struct game_screen {
     /* v_pline */
     void (*v_pline)(struct game_screen *screen,
@@ -84,7 +90,13 @@ struct game_screen {
     /* add_vblank_callback - will be run in interpreter thread.
      */
     void (*add_vblank_cb)(struct game_screen *screen, game_screen_vblank_func *f, void *arg);
-
+    /* Draw a series of points.
+     * Not affected by the clip rectangle, although points are clipped to screen.
+     * vr_mode should be either 1 (overwrite) or 3 (xor).
+     */
+    void (*draw_points)(struct game_screen *screen, unsigned vr_mode, struct game_screen_point *points, unsigned npoints);
+    /* Destroy game_screen instance.
+     */
     void (*destroy)(struct game_screen *screen);
 };
 

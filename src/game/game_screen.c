@@ -23,6 +23,8 @@ struct rect {
     int x0, y0, x1, y1;
 };
 
+static const struct rect fullscreen = {0,0,SCREEN_WIDTH-1,SCREEN_HEIGHT-1};
+
 /** Cursor info */
 #define CURSOR_WIDTH 32
 #define CURSOR_SIZE (CURSOR_WIDTH * CURSOR_WIDTH / 8)
@@ -376,8 +378,8 @@ static void sdlscreen_vsc_form(struct game_screen *screen_,
     int y;
     psys_debug("screen vsc_form\n");
     SDL_LockMutex(screen->mutex);
-    screen->cursor_hot_x = ((int16_t)mform[0])*2;
-    screen->cursor_hot_y = ((int16_t)mform[1])*2;
+    screen->cursor_hot_x = ((int16_t)mform[0]) * 2;
+    screen->cursor_hot_y = ((int16_t)mform[1]) * 2;
     /* Convert to SDL format, and blow up 16x16 cursor to 32x32 */
     for (y = 0; y < 16; ++y) {
         uint32_t data = double_bits16(~mform[21 + y] & mform[5 + y]);
@@ -578,6 +580,23 @@ static void sdlscreen_add_vblank_cb(struct game_screen *screen_, game_screen_vbl
     screen->vblank_cb_arg = arg;
 }
 
+static void sdlscreen_draw_points(struct game_screen *screen_, unsigned vr_mode, struct game_screen_point *points, unsigned npoints)
+{
+    struct sdl_screen *screen = sdl_screen(screen_);
+    unsigned i;
+    const struct rect *clip = &fullscreen;
+    SDL_LockMutex(screen->mutex);
+    for (i = 0; i < npoints; ++i) {
+        if (points[i].y < clip->y0 || points[i].y > clip->y1
+            || points[i].x < clip->x0 || points[i].x > clip->x1) {
+            continue;
+        }
+        draw_pixel(vr_mode, screen->rows[points[i].y], points[i].x, 1, 0, points[i].color);
+    }
+    screen->buffer_dirty = true;
+    SDL_UnlockMutex(screen->mutex);
+}
+
 struct game_screen *new_game_screen(void)
 {
     struct sdl_screen *screen = CALLOC_STRUCT(sdl_screen);
@@ -598,6 +617,7 @@ struct game_screen *new_game_screen(void)
     screen->base.move             = &sdlscreen_move;
     screen->base.vblank_interrupt = &sdlscreen_vblank_interrupt;
     screen->base.add_vblank_cb    = &sdlscreen_add_vblank_cb;
+    screen->base.draw_points      = &sdlscreen_draw_points;
     screen->base.destroy          = &sdlscreen_destroy;
 
     screen->mutex = SDL_CreateMutex();

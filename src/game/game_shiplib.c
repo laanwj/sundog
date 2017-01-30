@@ -5,6 +5,8 @@
  */
 #include "game_shiplib.h"
 
+#include "game/game_screen.h"
+#include "psys/psys_constants.h"
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
 #include "psys/psys_state.h"
@@ -20,11 +22,52 @@
 #define SHIPLIB_NUM_PROC 0x26
 
 struct shiplib_priv {
+    struct game_screen *screen;
 };
 
+static const unsigned star_colors[4] = { 0xf, 0xb, 0x3, 0x4 }; /* 1,2,6,4 */
+
+/* shiplib_16() */
 static void shiplib_16(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
-    psys_debug("shiplib_16 (stub)\n");
+#if 0
+    psys_debug("shiplib_16\n");
+#endif
+    /* Draw starfield */
+    psys_word startofs = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0x10));
+    psys_sword startx  = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0x11));
+    psys_sword numrows = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0x12));
+    psys_word bufofs   = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0x6));
+    psys_byte *xbuf    = psys_bytes(s, bufofs);
+    psys_byte *rows    = xbuf + 0x100;
+    unsigned xbufofs;
+    struct game_screen_point point[SCREEN_HEIGHT * 2];
+    int ptn = 0;
+    int x, y;
+    if (numrows > SCREEN_HEIGHT) {
+        psys_debug("shiplib_16: too many rows\n");
+        return;
+    }
+    for (y = 0; y < numrows; ++y) {
+        if (rows[y]) { /* if set for row, clear pixel first */
+            point[ptn].x     = rows[y];
+            point[ptn].y     = 6 + y;
+            point[ptn].color = 0;
+            ptn += 1;
+        }
+        xbufofs = (startofs + 6 + y) & 0xff;
+        x       = (startx + xbuf[xbufofs]) & 0xff;
+        if (x >= 0x60) { /* beyond left edge of viewscreen */
+            point[ptn].x     = x;
+            point[ptn].y     = y + 6;
+            point[ptn].color = star_colors[xbufofs & 3];
+            ptn += 1;
+            rows[y] = x;
+        } else { /* set to 0 which means entry unused */
+            rows[y] = 0;
+        }
+    }
+    priv->screen->draw_points(priv->screen, 1, point, ptn);
 }
 
 static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
@@ -75,6 +118,8 @@ struct psys_binding *new_shiplib(struct psys_state *state, struct game_screen *s
 {
     struct psys_binding *b    = CALLOC_STRUCT(psys_binding);
     struct shiplib_priv *priv = CALLOC_STRUCT(shiplib_priv);
+
+    priv->screen = screen;
     (void)state;
     b->userdata     = priv;
     b->num_handlers = SHIPLIB_NUM_PROC;

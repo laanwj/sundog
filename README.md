@@ -72,11 +72,18 @@ The game can be started using the command line:
 
 Where `<image.st>` is the Sundog disk image to use.
 
-Key shortcuts
-----------------
+Playing
+---------
 
-After starting the program the game will immediately start. The game is
-controlled with the mouse only. There are however some key shortcuts:
+After starting the program the game will immediately start. 
+
+Lots of hints for playing the game, as well as the original manual can be found
+on the excellent [Sundog information page](http://www.lukin.com/sundog/).
+
+### Key shortcuts
+
+The game is controlled with the mouse only. There are however some key
+shortcuts for the interpreter:
 
 - `s` Save state to `sundog.sav` in current directory.
 - `l` Load state from `sundog.sav` in current directory.
@@ -115,7 +122,7 @@ Non-critical:
   sampled sounds).
 - Initial FTL animation is missing: this is an assembly routine that triggers *before*
   the bootstrapping of the p-machine.
-- None of the stuff in SHIPLIB has been implemented. There are four native
+- Not all of the stuff in SHIPLIB has been implemented. There are four native
   procedures in this segment (0x16, 0x18, 0x19, 0x1a) which seem to be
   rendering effects for the ship the viewscreen (stars, moving enemies, fire
   weapon animation, warp animation respectively). There seems to be no further
@@ -124,7 +131,7 @@ Non-critical:
 ### Future ideas
 
 The input for this game is mouse-only, it takes mouse position and two-buttons
-state. The screen resolution is only 320x200 (doubled to 640x400). This makes
+state. The screen resolution is only 320×200 (doubled to 640×400). This makes
 it ideally suited for touch screen. An Android port of this would be would be
 fantastic.
 
