@@ -160,7 +160,7 @@ static void sanitize_rect(int *x0, int *y0, int *x1, int *y1)
     }
 }
 
-#define MAX_PLINE_VERTICES 16
+#define MAX_PLINE_VERTICES 256
 
 /** VDI(handle,opcode,numptsin,numintin) */
 static void gembind_VDI(struct psys_state *s, struct gembind_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
