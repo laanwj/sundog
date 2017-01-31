@@ -84,13 +84,16 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     psys_byte *points_x  = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x13));
     psys_byte *points_y  = points_x + 0x10;
     psys_byte *points_dx = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x23));
-    psys_byte *points_dy = points_y + 0x10;
+    psys_byte *points_dy = points_dx + 0x10;
     struct game_screen_point point[16 * 4 * 2];
     int ptn                  = 0, i, xx, yy;
     static int obj_color_idx = 0; /* keep track of current color index */
     unsigned color;
     /* Decrease count and store new value in global */
-    count -= 1;
+    /* count -= 1; */
+#if 0
+    psys_debug("counter: %d\n");
+#endif
     psys_stw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc), count);
     /* Ship coordinate deltas are divided by four */
     ship_dx >>= 2;
@@ -109,24 +112,29 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
             for (yy = 0; yy < 2; ++yy) {
                 for (xx = 0; xx < 2; ++xx) {
                     point[ptn].x     = x + xx;
-                    point[ptn].y     = y + yy;
+                    point[ptn].y     = y - yy;
                     point[ptn].color = 0;
                     ptn += 1;
                 }
             }
-
-            x += points_dx[y] + ship_dx;
-            y += points_dy[y] + ship_dy;
+#if 0
+            psys_debug("%d pre xy: %d %d dx dy: %d %d ship dx dy %d %d\n", i, x, y, points_dx[i], points_dy[i], ship_dx, ship_dy);
+#endif
+            x += points_dx[i] - ship_dx;
+            y += points_dy[i] + ship_dy;
+#if 0
+            psys_debug("%d post xy: %d %d\n", i, x, y);
+#endif
 
             if (count == 0 || x <= 96 || y <= 7 || y >= 116) { /* if counter expired or out of viewscreen, nuke it */
-                points_dx[i] = 0;
+                points_x[i] = 0;
             } else { /* store new position and redraw */
-                points_dx[i] = x;
-                points_dy[i] = y;
+                points_x[i] = x;
+                points_y[i] = y;
                 for (yy = 0; yy < 2; ++yy) {
                     for (xx = 0; xx < 2; ++xx) {
                         point[ptn].x     = x + xx;
-                        point[ptn].y     = y + yy;
+                        point[ptn].y     = y - yy;
                         point[ptn].color = color;
                         ptn += 1;
                     }
