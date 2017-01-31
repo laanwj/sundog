@@ -15,6 +15,26 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+/** Rudimentary p-system debugger. The following functionality would be nice:
+ * - Load / set VM register (lpr/spr)
+ * - Single-step (execution control in general - this will need the debugger to have state)
+ * - Breakpoints (code, data)
+ *   - Break on runtime fault / error
+ * - Run until end of function
+ * - Show static closure (static links above current stackframe)
+ * - Access intermediate variables (lda, lod, str)
+ * - Up/down stack frame (lda/lod/str lda/lla/stl) should apply to selected stackframe
+ * - Call procedure (with arguments)
+ * - Expression evaluation
+ * - Switch task
+ * - Change task priority
+ * - List tasks (nontrivial, unlike for erecs there seems to be no linked directory of tasks)
+ * - Create/compare execution trace
+ * - Make resident/swap out segment
+ * - Throw runtime fault / error
+ * - Print heap statistics
+ */
+
 /** Primitive argument parsing / splitting.
  * Separates out arguments separated by any number of spaces.
  */
