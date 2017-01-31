@@ -105,14 +105,10 @@ Status
 - Loading / reading save states (`l` and `s` respectively).
 - Ground combat
 
-Is it fully playable? Almost. I haven't tested everything, but see below.
+Is it fully playable? Probably: all the critical things have been implemented,
+but not everything has been tested there may be remaining bugs.
 
 ### To be done
-
-Critical:
-
-- *Untested:* space combat on pirate encounters (some native procedures may need to
-  be implemented for this, probably SHIPLIB:0x18).
 
 Non-critical:
 
@@ -120,8 +116,8 @@ Non-critical:
   emulating the YM2149F PSG sound chip, at least up to a point (or as there
   seems to be a fixed number of 36 sound effects: substituting
   sampled sounds).
-- Initial FTL animation is missing: this is an assembly routine that triggers *before*
-  the bootstrapping of the p-machine.
+- Initial FTL animation is missing: this is an assembly routine that triggers
+  *before* the bootstrapping of the p-machine.
 - Not all of the stuff in SHIPLIB has been implemented. There are four native
   procedures in this segment (0x16, 0x18, 0x19, 0x1a) which seem to be
   rendering effects for the ship the viewscreen (stars, moving enemies, fire
