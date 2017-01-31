@@ -26,6 +26,7 @@ Screenshots
 <img alt="Drahew city" src="screenshots/city.png" width="40%"> <img alt="Drahew exchange" src="screenshots/drahew_ech.png" width="40%">
 <img alt="Ship interior" src="screenshots/moveonship.png" width="40%"> <img alt="Inside pod" src="screenshots/pod.png" width="40%">
 <img alt="Pilotage" src="screenshots/ship_cockpit.png" width="40%"> <img alt="Ship maintenance" src="screenshots/ship_parts.png" width="40%">
+<img alt="Space fight" src="screenshots/ship_fight.png" width="40%">
 
 Disk image
 -------------
