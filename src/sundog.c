@@ -18,6 +18,7 @@
 #include "util/debugger.h"
 #endif
 #include "util/memutil.h"
+#include "util/util_save_state.h"
 
 #include "SDL.h"
 #include <GLES2/gl2.h>
@@ -49,6 +50,7 @@ struct game_state {
     SDL_atomic_t stop_trigger;
     SDL_atomic_t vblank_trigger;
     unsigned vblank_count;
+    unsigned time_offset;
 
     GLuint scr_program;
     GLuint scr_tex;
@@ -85,6 +87,11 @@ static void watch_integrity_check(struct psys_state *s)
 }
 #endif
 
+static unsigned get_60hz_time()
+{
+    return SDL_GetTicks() / 17;
+}
+
 /* Called before every instruction executed.
  * Put debug hooks and tracing here.
  * Enable with: state->trace = psys_trace;
@@ -115,7 +122,7 @@ static void psys_trace(struct psys_state *s, void *gs_)
             gs->vblank_count = 0;
         }
         /* 60hz timer */
-        psys_rsp_settime(gs->rspb, SDL_GetTicks() / 17);
+        psys_rsp_settime(gs->rspb, get_60hz_time() - gs->time_offset);
     }
     watch_integrity_check(s);
 }
@@ -201,8 +208,27 @@ static struct psys_state *setup_state(struct game_screen *screen, const char *im
     return state;
 }
 
+/* Header for savestates */
+#define PSYS_SUND_STATE_ID 0x53554e44
+
 static int game_load_state(struct game_state *gs, int fd)
 {
+    uint32_t id;
+    uint32_t time; /* Read current time at time of writing state */
+    if (FD_READ(fd, id)) {
+        return -1;
+    }
+    if (id != PSYS_SUND_STATE_ID) {
+        psys_debug("Invalid sundog state record %08x\n", id);
+        return -1;
+    }
+    /* get_60hz_time() - gs->time_offset should return the same as at saving time */
+    if (FD_READ(fd, time)) {
+        return -1;
+    }
+    gs->time_offset = get_60hz_time() - time;
+    psys_debug("Time after restore: %d\n", get_60hz_time() - gs->time_offset);
+
     if (psys_load_state(gs->psys, fd) < 0) {
         psys_debug("Error loading p-system state\n");
         return -1;
@@ -216,6 +242,14 @@ static int game_load_state(struct game_state *gs, int fd)
 
 static int game_save_state(struct game_state *gs, int fd)
 {
+    uint32_t id   = PSYS_SUND_STATE_ID;
+    uint32_t time = get_60hz_time() - gs->time_offset; /* Write current time */
+    psys_debug("Time at save: %d\n", time);
+    if (FD_WRITE(fd, id)
+        || FD_WRITE(fd, time)) {
+        return -1;
+    }
+
     if (psys_save_state(gs->psys, fd) < 0) {
         psys_debug("Error loading p-system state\n");
         return -1;
@@ -432,6 +466,9 @@ static void event_loop(struct game_state *gs)
                 psys_debug_hexdump(gs->psys, 0x1f66 + 8 + 0x1f * 2, 512);
                 break;
 #endif
+            case SDLK_t: /* Print timer */
+                psys_debug("Time: %d\n", get_60hz_time() - gs->time_offset);
+                break;
             case SDLK_d: /* Go to interactive debugger */
 #ifdef PSYS_DEBUGGER
                 stop_interpreter_thread(gs); /* stop interpreter thread while debugging */
@@ -528,6 +565,7 @@ int main(int argc, char **argv)
 
     /* Set up "vblank" timer */
     gs->vblank_count = 0;
+    gs->time_offset  = get_60hz_time();
     gs->timer        = SDL_AddTimer(VBLANK_TIME, &timer_callback, gs);
 
     /* Create object to manage rendering from interpreter */
