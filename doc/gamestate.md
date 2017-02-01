@@ -224,7 +224,7 @@ Items/Icons
 0x19 0x1f  j-junc module
 0x1a 0x34  photon bridge
 0x1b 0x55  scanner
-0x1c 0x73  flux modulators
+0x1c 0x73  flux modulator
 0x1d 0x8e  plasma tube
 0x1e 0xbf  s/t distorter
 0x1f 0xff  control node
@@ -283,10 +283,21 @@ Pilotage:
 
 What they all share: busy loop call to vq_mouse VDI to get mouse updates.
 
-Gamestate
+Locals
+--------------
+
+### XDOFIGHT
+
+- `XDOFIGHT_01_L3`  Tractor beam enabled.
+
+Savegame state
 ---------------
 
+512 bytes of game state from MAINLIB are saved for savegames. These contain
+the main player stats, inventory, ship status, location and so on.
+
 State dump with fully repaired and refueled ship:
+
 ```
 01fac: 06 43 68 65 61 74 74 65 61 6e 00 00 00 00 00 00 .Cheattean......
 01fbc: 00 00 00 00 14 db 02 11 0c 0b 07 06 00 98 00 72 ...............r

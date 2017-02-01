@@ -20,7 +20,11 @@ APPCALLS = {
         0x0a: 'LoadData(a,b)',  # Loads list of systems, planets and cities
         0x0f: 'LoadResources()',
         0x11: 'ShowSavedGameStatus()',
+        0x14: 'StartupMenu()',
+        0x15: 'Librarian()',
         0x36: 'AttributeSetting()',
+        0x46: 'IntroText()',
+        0x49: 'PlayerDied()',
     },
     b'DONESOFA': { # DONESOFAR
         0x02: 'DoStartup(flag)',
@@ -63,7 +67,18 @@ APPCALLS = {
         0x1a: 'SlotMachine()',
     },
     b'XDOFIGHT': {
+        0x05: 'TargetDestroyed(x)',
+        0x06: 'FireWeapon()',
         0x0b: 'MouseToShipMovement()',
+        0x0c: 'DoShooting()',  # Get mouse button state, if pressed, fire weapon, handle shooting
+        0x10: 'TacticalMenu(x)',
+        0x13: 'TractorBeam()',
+    },
+    b'XPILOTAG': {
+        0x04: 'WaitUserAction',
+        0x06: 'NavigationMenuSetup',
+        0x07: 'NavigationMenu',
+        0x0a: 'MainMenuSetup',  # Only called if another menu appeared in the meantime
     },
     # Utilities
     b'MAINLIB ': {
@@ -94,10 +109,12 @@ APPCALLS = {
         0x2d: 'ConditionalWait',   # Conditional wait on semaphore MAINLIB+0xa74
         0x2e: 'ConditionalSignal', # Conditional signal on semaphore MAINLIB+0xa74
         0x32: 'PaletteChange()',
+        0x33: 'Nop()',  # Do nothing
         0x34: 'PossiblySetEvilState', # Possibly set state so that RSOD appears
         0x44: 'ErrorMessage',
         0x45: 'CheckDiskResult', # Return 1 if error, 0 otherwise
         0x46: 'CheckCorrectDisk', # Read block 0x3a or 0x06 to see if library/sundog disk is in the drive as expected
+        0x47: 'AskForDisk',  # Ask for a either library or sundog disk to be put in drive
         0x49: 'DiskIO(?,lenwordsmin1,?,addr,count,block,?)', # Seems a general function for disk I/O
         0x4a: 'WeirdDiskCheck', # Read an entire track, compute checksum?
         0x4b: 'LoadImageBase(a,b,c,d,e)', # Load image resource?
