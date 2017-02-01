@@ -20,7 +20,7 @@
  * - Load / set VM register (lpr/spr)
  * - Breakpoints (data)
  *   - Break on runtime fault / error
- * - Run until end of function
+ * - "Step over"
  * - Show static closure (static links above current stackframe)
  * - Access intermediate variables (lda, lod, str) (can be done through ups/downs)
  * - Call procedure (with arguments)
@@ -68,6 +68,13 @@ struct dbg_stackframe {
     struct dbg_stackframe *up_static;
 };
 
+/** Global debugger mode */
+enum debugger_mode {
+    DM_NONE,
+    DM_SINGLE_STEP,  /* Single-stepping */
+    DM_STEP_OUT,     /* Stepping out of function */
+};
+
 /** Global debugger state */
 struct psys_debugger {
     struct psys_state *state;
@@ -75,10 +82,12 @@ struct psys_debugger {
     int num_breakpoints;
     /* Breakpoints */
     struct dbg_breakpoint breakpoints[MAX_BREAKPOINTS];
-    /* Single-step enabled */
-    bool single_step;
+    /* Current debugger mode */
+    enum debugger_mode mode;
     /* Currently selected task (used to filter single-stepping) */
     psys_word curtask;
+    /* Currently selected stack pointer (used for step-out) */
+    psys_word target_mp;
 };
 
 /** Primitive argument parsing / splitting.
@@ -211,8 +220,8 @@ static void stack_frame_print(struct psys_state *s, struct dbg_stackframe *frame
 static struct dbg_stackframe *get_stack_frames(struct psys_state *s)
 {
     psys_word mp_up;
-    struct dbg_stackframe *frame, *outer;
-    outer = frame = CALLOC_STRUCT(dbg_stackframe);
+    struct dbg_stackframe *frame, *lowest;
+    lowest = frame = CALLOC_STRUCT(dbg_stackframe);
     frame->curproc = s->curproc;
     frame->ipc     = s->ipc - s->curseg;
     frame->mp      = s->mp;
@@ -246,7 +255,7 @@ static struct dbg_stackframe *get_stack_frames(struct psys_state *s)
         /* Get new base pointer from erec */
         frame->base = psys_ldw(s, frame->erec + PSYS_EREC_Env_Data);
     }
-    return outer;
+    return lowest;
 }
 
 /** Free stack frames structure (starting at downmost frame) */
@@ -294,7 +303,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
     char *line = NULL;
     if (!user) {
         psys_print_info(s);
-        dbg->single_step = false;
+        dbg->mode = DM_NONE;
     } else {
         printf("** Entering psys debugger: type 'h' for help **\n");
     }
@@ -389,10 +398,13 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 }
             } else if (!strcmp(cmd, "bt")) { /* Print backtrace */
                 psys_print_traceback(s);
-            } else if (!strcmp(cmd, "s") || !strcmp(cmd, "c")) { /* Single-step or continue */
+            } else if (!strcmp(cmd, "s") || !strcmp(cmd, "c") || !strcmp(cmd, "so")) { /* Single-step or continue or step out */
+                dbg->curtask = s->curtask;
                 if (!strcmp(cmd, "s")) {
-                    dbg->single_step = true;
-                    dbg->curtask = s->curtask;
+                    dbg->mode = DM_SINGLE_STEP;
+                } else if (!strcmp(cmd, "so") && frame->up) {
+                    dbg->mode = DM_STEP_OUT;
+                    dbg->target_mp = frame->up->mp;
                 }
                 goto cleanup;
             } else if (!strcmp(cmd, "dm")) { /* Dump memory */
@@ -531,31 +543,38 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 }
             } else if (!strcmp(cmd, "h") || !strcmp(cmd, "?")) {
                 printf("\x1b[38;5;202;48;5;235m>   Help   >\x1b[0m\n");
+                printf(":Breakpoints:\n");
                 printf("b <seg> <addr>      Set breakpoint at seg:addr\n");
                 printf("db <i>              Disable breakpoint i\n");
                 printf("eb <i>              Enable breakpoint i\n");
                 printf("lb                  List breakpoints\n");
                 printf("bt                  Show backtrace\n");
+                printf(":Execution:\n");
                 printf("s                   Single-step\n");
+                printf("so                  Step out of currently selected stack frame\n");
                 printf("c                   Continue execution\n");
+                printf("Variables:\n");
                 printf("lao <seg> <g>       Show address of global variable\n");
                 printf("sro <seg> <g> <val> Set global variable\n");
                 printf("ldo <seg> <g>       Examine global variable\n");
                 printf("lla <l>             Show address of local variable\n");
                 printf("stl <l> <val>       Set local variable\n");
                 printf("ldl <l>             Examine local variable\n");
-                printf("h                   This information\n");
-                printf("l                   List environments\n");
-                printf("q                   Quit\n");
-                printf("r                   Show registers and current instruction\n");
-                printf("dm <file>            Write entire p-system memory to file\n");
-                printf("wb <addr> <val> ... Write byte(s) to address\n");
-                printf("ww <addr> <val> ... Write word(s) to address\n");
-                printf("x <addr>            Examine memory\n");
+                printf(":Stack frames:\n");
                 printf("up                  Up to caller frame\n");
                 printf("ups                 Up to lexical parent\n");
                 printf("down                Down to callee frame\n");
                 printf("downs               Down to lexical child\n");
+                printf(":Memory:\n");
+                printf("dm <file>           Write entire p-system memory to file\n");
+                printf("wb <addr> <val> ... Write byte(s) to address\n");
+                printf("ww <addr> <val> ... Write word(s) to address\n");
+                printf("x <addr>            Examine memory\n");
+                printf(":Misc:\n");
+                printf("h                   This information\n");
+                printf("l                   List environments\n");
+                printf("r                   Show registers and current instruction\n");
+                printf("q                   Quit\n");
                 printf("\n");
                 printf("All values can be specified as decimal or 0xHEX.\n");
             } else {
@@ -571,8 +590,8 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
         free(line);
         line = NULL;
     }
-    return;
 cleanup:
+    /* Clean up state and exit */
     stack_frames_free(frames);
     free(line);
 }
@@ -585,7 +604,10 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
     const psys_byte *segname = psys_bytes(s, sib + PSYS_SIB_Seg_Name);
     psys_word pc = s->ipc - s->curseg; /* PC relative to current segment */
     int i;
-    if (dbg->single_step && s->curtask == dbg->curtask) {
+    if (dbg->mode == DM_SINGLE_STEP && s->curtask == dbg->curtask) {
+        return true;
+    }
+    if (dbg->mode == DM_STEP_OUT && s->curtask == dbg->curtask && s->mp == dbg->target_mp) {
         return true;
     }
     for (i=0; i<dbg->num_breakpoints; ++i) {
