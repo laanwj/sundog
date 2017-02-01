@@ -45,6 +45,9 @@ struct game_state {
 
     struct psys_state *psys;
     struct psys_binding *rspb;
+#ifdef PSYS_DEBUGGER
+    struct psys_debugger *debugger;
+#endif
 
     SDL_atomic_t timer_queued;
     SDL_atomic_t stop_trigger;
@@ -56,6 +59,12 @@ struct game_state {
     GLuint scr_tex;
     GLuint pal_tex;
     GLuint vtx_buf;
+};
+
+/** User-defined event types */
+enum {
+    EVC_TIMER = 0x1000,
+    EVC_DEBUGGER = 0x1001
 };
 
 /** HACK: Sundog has a complex, extremely paranoid integrity checking system.
@@ -125,6 +134,17 @@ static void psys_trace(struct psys_state *s, void *gs_)
         psys_rsp_settime(gs->rspb, get_60hz_time() - gs->time_offset);
     }
     watch_integrity_check(s);
+#ifdef PSYS_DEBUGGER
+    if (psys_debugger_trace(gs->debugger)) {
+        SDL_Event event;
+        /* Stop interpreter loop, break into debugger */
+        psys_stop(s);
+        event.type      = SDL_USEREVENT;
+        event.user.type = SDL_USEREVENT;
+        event.user.code = EVC_DEBUGGER;
+        SDL_PushEvent(&event);
+    }
+#endif
 }
 
 static struct psys_state *setup_state(struct game_screen *screen, const char *imagename, struct psys_binding **rspb_out)
@@ -427,7 +447,7 @@ static Uint32 timer_callback(Uint32 interval, void *param)
         SDL_AtomicSet(&gs->timer_queued, 1);
         event.type      = SDL_USEREVENT;
         event.user.type = SDL_USEREVENT;
-        event.user.code = 0;
+        event.user.code = EVC_TIMER;
         SDL_PushEvent(&event);
     }
     return interval;
@@ -472,7 +492,7 @@ static void event_loop(struct game_state *gs)
             case SDLK_d: /* Go to interactive debugger */
 #ifdef PSYS_DEBUGGER
                 stop_interpreter_thread(gs); /* stop interpreter thread while debugging */
-                psys_debugger(gs->psys);
+                psys_debugger_run(gs->debugger, true);
                 start_interpreter_thread(gs);
 #else
                 psys_debug("Internal debugger was not compiled in.\n");
@@ -509,17 +529,27 @@ static void event_loop(struct game_state *gs)
                 close(fd);
             } break;
             }
-        case SDL_USEREVENT: /* Timer event */
-            /* Update textures from VM state/thread */
-            game_sdlscreen_update_textures(gs->screen, gs->scr_tex, gs->pal_tex);
-            /* Trigger vblank interrupt in interpreter thread */
-            SDL_AtomicSet(&gs->vblank_trigger, 1);
-            /* Draw a frame */
-            draw(gs);
-            SDL_GL_SwapWindow(gs->window);
-            game_sdlscreen_update_cursor(gs->screen, (void **)&gs->cursor);
-            /* Congestion control */
-            SDL_AtomicSet(&gs->timer_queued, 0);
+        case SDL_USEREVENT:
+            switch(event.user.code) {
+            case EVC_TIMER: /* Timer event */
+                /* Update textures from VM state/thread */
+                game_sdlscreen_update_textures(gs->screen, gs->scr_tex, gs->pal_tex);
+                /* Trigger vblank interrupt in interpreter thread */
+                SDL_AtomicSet(&gs->vblank_trigger, 1);
+                /* Draw a frame */
+                draw(gs);
+                SDL_GL_SwapWindow(gs->window);
+                game_sdlscreen_update_cursor(gs->screen, (void **)&gs->cursor);
+                /* Congestion control */
+                SDL_AtomicSet(&gs->timer_queued, 0);
+                break;
+#ifdef PSYS_DEBUGGER
+            case EVC_DEBUGGER: /* Break into debugger */
+                psys_debugger_run(gs->debugger, false);
+                start_interpreter_thread(gs);
+                break;
+#endif
+            }
             break;
         }
     }
@@ -572,6 +602,11 @@ int main(int argc, char **argv)
     gs->screen = new_game_screen();
     gs->psys = state      = setup_state(gs->screen, imagename, &gs->rspb);
     state->trace_userdata = gs;
+
+#ifdef PSYS_DEBUGGER
+    /* Set up debugger */
+    gs->debugger = psys_debugger_new(state);
+#endif
 
     start_interpreter_thread(gs);
 

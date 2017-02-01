@@ -9,6 +9,7 @@
 #include "psys/psys_state.h"
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
+#include "util/memutil.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -34,6 +35,9 @@
  * - Throw runtime fault / error
  * - Print heap statistics
  */
+struct psys_debugger {
+    struct psys_state *state;
+};
 
 /** Primitive argument parsing / splitting.
  * Separates out arguments separated by any number of spaces.
@@ -125,8 +129,9 @@ static bool is_segment_resident(struct psys_state *s, psys_word erec)
 
 #define MAX_ARGS (10)
 
-void psys_debugger(struct psys_state *s)
+void psys_debugger_run(struct psys_debugger *dbg, bool user)
 {
+    struct psys_state *s = dbg->state;
     printf("** Entering psys debugger: type 'h' for help **\n");
     while (true) {
         char *args[MAX_ARGS];
@@ -326,3 +331,20 @@ void psys_debugger(struct psys_state *s)
 
 }
 
+bool psys_debugger_trace(struct psys_debugger *dbg)
+{
+    struct psys_state *s = dbg->state;
+    return false;
+}
+
+struct psys_debugger *psys_debugger_new(struct psys_state *s)
+{
+    struct psys_debugger *dbg = CALLOC_STRUCT(psys_debugger);
+    dbg->state = s;
+    return dbg;
+}
+
+void psys_debugger_destroy(struct psys_debugger *dbg)
+{
+    free(dbg);
+}
