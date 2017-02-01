@@ -20,7 +20,6 @@
  * - Load / set VM register (lpr/spr)
  * - Breakpoints (data)
  *   - Break on runtime fault / error
- * - "Step over"
  * - Show static closure (static links above current stackframe)
  * - Access intermediate variables (lda, lod, str) (can be done through ups/downs)
  * - Call procedure (with arguments)
@@ -73,6 +72,7 @@ enum debugger_mode {
     DM_NONE,
     DM_SINGLE_STEP,  /* Single-stepping */
     DM_STEP_OUT,     /* Stepping out of function */
+    DM_STEP_OVER,    /* Stepping over (next instruction in function or parent) */
 };
 
 /** Global debugger state */
@@ -86,8 +86,9 @@ struct psys_debugger {
     enum debugger_mode mode;
     /* Currently selected task (used to filter single-stepping) */
     psys_word curtask;
-    /* Currently selected stack pointer (used for step-out) */
-    psys_word target_mp;
+    /* Currently selected frame pointers (used for step-out and step-over) */
+    psys_word target_mp1;
+    psys_word target_mp2;
 };
 
 /** Primitive argument parsing / splitting.
@@ -404,7 +405,11 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                     dbg->mode = DM_SINGLE_STEP;
                 } else if (!strcmp(cmd, "so") && frame->up) {
                     dbg->mode = DM_STEP_OUT;
-                    dbg->target_mp = frame->up->mp;
+                    dbg->target_mp1 = frame->up->mp;
+                } else if (!strcmp(cmd, "sn") && frames->up) {
+                    dbg->mode = DM_STEP_OVER;
+                    dbg->target_mp1 = frames->mp;
+                    dbg->target_mp2 = frames->up->mp;
                 }
                 goto cleanup;
             } else if (!strcmp(cmd, "dm")) { /* Dump memory */
@@ -552,6 +557,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 printf(":Execution:\n");
                 printf("s                   Single-step\n");
                 printf("so                  Step out of currently selected stack frame\n");
+                printf("sn                  Step to next function in current or parent stack frame\n");
                 printf("c                   Continue execution\n");
                 printf("Variables:\n");
                 printf("lao <seg> <g>       Show address of global variable\n");
@@ -607,7 +613,11 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
     if (dbg->mode == DM_SINGLE_STEP && s->curtask == dbg->curtask) {
         return true;
     }
-    if (dbg->mode == DM_STEP_OUT && s->curtask == dbg->curtask && s->mp == dbg->target_mp) {
+    if (dbg->mode == DM_STEP_OUT && s->curtask == dbg->curtask && s->mp == dbg->target_mp1) {
+        return true;
+    }
+    if (dbg->mode == DM_STEP_OVER && s->curtask == dbg->curtask
+            && (s->mp == dbg->target_mp1 || s->mp == dbg->target_mp2)) {
         return true;
     }
     for (i=0; i<dbg->num_breakpoints; ++i) {
