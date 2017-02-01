@@ -18,13 +18,11 @@
 
 /** Rudimentary p-system debugger. The following functionality would be nice:
  * - Load / set VM register (lpr/spr)
- * - Single-step (execution control in general - this will need the debugger to have state)
- * - Breakpoints (code, data)
+ * - Breakpoints (data)
  *   - Break on runtime fault / error
  * - Run until end of function
  * - Show static closure (static links above current stackframe)
- * - Access intermediate variables (lda, lod, str)
- * - Up/down stack frame (lda/lod/str lda/lla/stl) should apply to selected stackframe
+ * - Access intermediate variables (lda, lod, str) (can be done through ups/downs)
  * - Call procedure (with arguments)
  * - Expression evaluation
  * - Switch task
@@ -38,6 +36,7 @@
 
 #define MAX_BREAKPOINTS 40
 
+/** One debugger breakpoint */
 struct dbg_breakpoint {
     bool used;
     bool active;
@@ -49,6 +48,27 @@ struct dbg_breakpoint {
     psys_word addr; /* Address relative to segment */
 };
 
+/** Description of one stack frame, with forward
+ * and backward links
+ */
+struct dbg_stackframe {
+    struct psys_segment_id seg; /* Segment name */
+    psys_word curproc;
+    psys_word mp;
+    psys_word base;
+    psys_word erec;
+    psys_word ipc; /* Address relative to segment */
+    psys_word sib;
+    psys_word msstat;
+    /* Double-linked list. Stacks grow downward so "up" refers to the caller
+     * and "down" to the callee.
+     */
+    struct dbg_stackframe *down, *up;
+    /* Pointer to frame for scope encompassing this, if any */
+    struct dbg_stackframe *up_static;
+};
+
+/** Global debugger state */
 struct psys_debugger {
     struct psys_state *state;
     /* Number of breakpoint entries used */
@@ -176,6 +196,93 @@ static struct dbg_breakpoint *new_breakpoint(struct psys_debugger *dbg)
     return NULL;
 }
 
+/*** Frame handling ***/
+static void stack_frame_print(struct psys_state *s, struct dbg_stackframe *frame)
+{
+    psys_debug("  %-8.8s:0x%02x:%04x mp=0x%04x base=0x%04x erec=0x%04x\n",
+        frame->seg.name, frame->curproc, frame->ipc,
+        frame->mp, frame->base, frame->erec);
+}
+
+/** Create doubly-linked list from stack frame.
+ * Returns downmost frame. The result must be freed with
+ * stack_frames_free.
+ */
+static struct dbg_stackframe *get_stack_frames(struct psys_state *s)
+{
+    psys_word mp_up;
+    struct dbg_stackframe *frame, *outer;
+    outer = frame = CALLOC_STRUCT(dbg_stackframe);
+    frame->curproc = s->curproc;
+    frame->ipc     = s->ipc - s->curseg;
+    frame->mp      = s->mp;
+    frame->base    = s->base;
+    frame->erec    = s->erec;
+
+    while (true) {
+        struct dbg_stackframe *frame_down;
+        /** Fill in sib, segment name and static link for current frame */
+        frame->sib     = psys_ldw(s, frame->erec + PSYS_EREC_Env_SIB);
+        memcpy(&frame->seg, psys_bytes(s, frame->sib + PSYS_SIB_Seg_Name), 8);
+        frame->msstat  = psys_ldw(s, frame->mp + PSYS_MSCW_MSSTAT);
+
+        /* Advance to caller frame, if there are any */
+        mp_up   = psys_ldw(s, frame->mp + PSYS_MSCW_MSDYN);
+        if (mp_up == 0 || frame->mp == mp_up) {
+            break; /* At the top, nothing more to do */
+        }
+        /* Create and attach frame */
+        frame_down = frame;
+        frame = CALLOC_STRUCT(dbg_stackframe);
+        frame->down = frame_down;
+        frame_down->up = frame;
+
+        /* As these are stored at procedure call time, take them from caller
+         * frame */
+        frame->mp      = mp_up;
+        frame->erec    = psys_ldw(s, frame_down->mp + PSYS_MSCW_MSENV);
+        frame->curproc = psys_ldsw(s, frame_down->mp + PSYS_MSCW_MPROC);
+        frame->ipc     = psys_ldw(s, frame_down->mp + PSYS_MSCW_IPC);
+        /* Get new base pointer from erec */
+        frame->base = psys_ldw(s, frame->erec + PSYS_EREC_Env_Data);
+    }
+    return outer;
+}
+
+/** Free stack frames structure (starting at downmost frame) */
+static void stack_frames_free(struct dbg_stackframe *frame)
+{
+    struct dbg_stackframe *next;
+    while (frame) {
+        next = frame->up;
+        free(frame);
+        frame = next;
+    }
+}
+
+/** Get static/lexical parent of stack frame, or NULL */
+static struct dbg_stackframe *stack_frame_static_parent(struct dbg_stackframe *frame)
+{
+    psys_word msstat = frame->msstat;
+    while (frame && frame->mp != msstat) {
+        frame = frame->up;
+    }
+    return frame;
+}
+
+/** Get static/lexical child of stack frame, or NULL.
+ * If there are more activation records that refer to lexical children of this procedure,
+ * this returns the first one encountered.
+ */
+static struct dbg_stackframe *stack_frame_static_child(struct dbg_stackframe *frame)
+{
+    psys_word mp = frame->mp;
+    while (frame && frame->msstat != mp) {
+        frame = frame->down;
+    }
+    return frame;
+}
+
 /** Maximum number of arguments for any debugger command.
  */
 #define MAX_ARGS (10)
@@ -183,18 +290,21 @@ static struct dbg_breakpoint *new_breakpoint(struct psys_debugger *dbg)
 void psys_debugger_run(struct psys_debugger *dbg, bool user)
 {
     struct psys_state *s = dbg->state;
+    struct dbg_stackframe *frames, *frame;
+    char *line = NULL;
     if (!user) {
         psys_print_info(s);
         dbg->single_step = false;
     } else {
         printf("** Entering psys debugger: type 'h' for help **\n");
     }
+    frame = frames = get_stack_frames(s);
     while (true) {
         char *args[MAX_ARGS];
         char *cmd;
         unsigned num;
 
-        char *line = readline("\x1b[38;5;220mpsys\x1b[38;5;235m>\x1b[38;5;238m>\x1b[38;5;242m>\x1b[0m ");
+        line = readline("\x1b[38;5;220mpsys\x1b[38;5;235m>\x1b[38;5;238m>\x1b[38;5;242m>\x1b[0m ");
         if (line && *line && *line!=' ') {
             add_history(line);
         }
@@ -239,7 +349,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                         printf("%2d %d at %.8s:0x%x\n", i, brk->active, brk->seg.name, brk->addr);
                     }
                 }
-            } else if (!strcmp(cmd, "l")) {
+            } else if (!strcmp(cmd, "l")) { /* List segments */
                 psys_word erec = first_erec_ptr(s);
                 printf("\x1b[38;5;202;48;5;235merec sib  flg segname  base size \x1b[0m\n");
                 while (erec) {
@@ -277,16 +387,15 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                     }
                     erec = psys_ldw(s, erec + PSYS_EREC_Next_Rec);
                 }
-            } else if (!strcmp(cmd, "bt")) {
+            } else if (!strcmp(cmd, "bt")) { /* Print backtrace */
                 psys_print_traceback(s);
             } else if (!strcmp(cmd, "s") || !strcmp(cmd, "c")) { /* Single-step or continue */
                 if (!strcmp(cmd, "s")) {
                     dbg->single_step = true;
                     dbg->curtask = s->curtask;
                 }
-                free(line);
-                break;
-            } else if (!strcmp(cmd, "dm")) {
+                goto cleanup;
+            } else if (!strcmp(cmd, "dm")) { /* Dump memory */
                 if (num >= 2) {
                     int fd = open(args[1], O_CREAT|O_WRONLY, 0666);
                     int rv = write(fd, s->memory, s->mem_size);
@@ -296,7 +405,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 } else {
                     printf("Two arguments required\n");
                 }
-            } else if (!strcmp(cmd, "x")) { /* examine */
+            } else if (!strcmp(cmd, "x")) { /* Examine memory */
                 if (num >= 2) {
                     unsigned size = 0x100;
                     if (num >= 3) {
@@ -326,7 +435,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 } else {
                     printf("At least two arguments required\n");
                 }
-            } else if (!strcmp(cmd, "sro")) {
+            } else if (!strcmp(cmd, "sro")) { /* Store global */
                 if (num >= 4) {
                     psys_word data_size;
                     psys_fulladdr data_base = get_globals(s, args[1], &data_size);
@@ -344,7 +453,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 } else {
                     printf("At least three arguments required\n");
                 }
-            } else if (!strcmp(cmd, "ldo") || !strcmp(cmd, "lao")) {
+            } else if (!strcmp(cmd, "ldo") || !strcmp(cmd, "lao")) { /* Load global */
                 if (num == 3) {
                     psys_word data_size;
                     psys_fulladdr data_base = get_globals(s, args[1], &data_size);
@@ -367,29 +476,59 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 } else {
                     printf("Two arguments are required\n");
                 }
-            } else if (!strcmp(cmd, "stl")) {
+            } else if (!strcmp(cmd, "stl")) { /* Store local */
                 if (num >= 3) {
                     unsigned addr = strtol(args[1], NULL, 0);
-                    psys_stw(s, W(s->mp + PSYS_MSCW_VAROFS, addr),
+                    psys_stw(s, W(frame->mp + PSYS_MSCW_VAROFS, addr),
                             strtol(args[2], NULL, 0));
                 } else {
                     printf("At least two arguments required\n");
                 }
-            } else if (!strcmp(cmd, "ldl") || !strcmp(cmd, "lla")) {
+            } else if (!strcmp(cmd, "ldl") || !strcmp(cmd, "lla")) { /* Load local */
                 if (num == 2) {
                     unsigned addr = strtol(args[1], NULL, 0);
                     if (!strcmp(cmd, "lao")) {
-                        psys_word address = W(s->mp + PSYS_MSCW_VAROFS, addr);
+                        psys_word address = W(frame->mp + PSYS_MSCW_VAROFS, addr);
                         printf("0x%04x\n", address);
                     } else {
-                        psys_word value = psys_ldw(s, W(s->mp + PSYS_MSCW_VAROFS, addr));
+                        psys_word value = psys_ldw(s, W(frame->mp + PSYS_MSCW_VAROFS, addr));
                         printf("0x%04x\n", value);
                     }
                 } else {
                     printf("One argument is required\n");
                 }
-            } else if (!strcmp(cmd, "r")) {
-                 psys_print_info(s);
+            } else if (!strcmp(cmd, "r")) { /* Print registers */
+                psys_print_info(s);
+            } else if (!strcmp(cmd, "up")) { /* Go to caller stack frame */
+                if (frame->up) {
+                    frame = frame->up;
+                    stack_frame_print(s, frame);
+                } else {
+                    printf("Cannot go further up\n");
+                }
+            } else if (!strcmp(cmd, "ups")) { /* Go up static link (lexical parent) */
+                struct dbg_stackframe *up = stack_frame_static_parent(frame);
+                if (up) {
+                    frame = up;
+                    stack_frame_print(s, frame);
+                } else {
+                    printf("No further lexical parent\n");
+                }
+            } else if (!strcmp(cmd, "down")) { /* Go to callee stack frame */
+                if (frame->down) {
+                    frame = frame->down;
+                    stack_frame_print(s, frame);
+                } else {
+                    printf("Cannot go further down\n");
+                }
+            } else if (!strcmp(cmd, "downs")) { /* Go to lexical child */
+                struct dbg_stackframe *down = stack_frame_static_child(frame);
+                if (down) {
+                    frame = down;
+                    stack_frame_print(s, frame);
+                } else {
+                    printf("Cannot go further down\n");
+                }
             } else if (!strcmp(cmd, "h") || !strcmp(cmd, "?")) {
                 printf("\x1b[38;5;202;48;5;235m>   Help   >\x1b[0m\n");
                 printf("b <seg> <addr>      Set breakpoint at seg:addr\n");
@@ -413,6 +552,10 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 printf("wb <addr> <val> ... Write byte(s) to address\n");
                 printf("ww <addr> <val> ... Write word(s) to address\n");
                 printf("x <addr>            Examine memory\n");
+                printf("up                  Up to caller frame\n");
+                printf("ups                 Up to lexical parent\n");
+                printf("down                Down to callee frame\n");
+                printf("downs               Down to lexical child\n");
                 printf("\n");
                 printf("All values can be specified as decimal or 0xHEX.\n");
             } else {
@@ -426,8 +569,12 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
         }
 
         free(line);
+        line = NULL;
     }
-
+    return;
+cleanup:
+    stack_frames_free(frames);
+    free(line);
 }
 
 /** Called for every instruction - this should break on breakpoints */

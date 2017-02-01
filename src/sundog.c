@@ -63,7 +63,7 @@ struct game_state {
 
 /** User-defined event types */
 enum {
-    EVC_TIMER = 0x1000,
+    EVC_TIMER    = 0x1000,
     EVC_DEBUGGER = 0x1001
 };
 
@@ -530,7 +530,7 @@ static void event_loop(struct game_state *gs)
             } break;
             }
         case SDL_USEREVENT:
-            switch(event.user.code) {
+            switch (event.user.code) {
             case EVC_TIMER: /* Timer event */
                 /* Update textures from VM state/thread */
                 game_sdlscreen_update_textures(gs->screen, gs->scr_tex, gs->pal_tex);
