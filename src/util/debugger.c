@@ -35,8 +35,26 @@
  * - Throw runtime fault / error
  * - Print heap statistics
  */
+
+#define MAX_BREAKPOINTS 40
+
+struct dbg_breakpoint {
+    bool used;
+    bool active;
+    int num;
+    /* Only one type of breakpoint for now:
+     * by code address.
+     */
+    struct psys_segment_id seg; /* Segment name */
+    psys_word addr; /* Address relative to segment */
+};
+
 struct psys_debugger {
     struct psys_state *state;
+    /* Number of breakpoint entries used */
+    int num_breakpoints;
+    /* Breakpoints */
+    struct dbg_breakpoint breakpoints[MAX_BREAKPOINTS];
 };
 
 /** Primitive argument parsing / splitting.
@@ -76,24 +94,32 @@ static psys_fulladdr first_erec_ptr(struct psys_state *s)
     return psys_ldw(s, 0x14e);
 }
 
-/** Get erec for segment by name. Names are case-insensitive, like Pascal.
+/** Assign a segment name. Names are case-insensitive, like Pascal.
+ * Names longer than 8 characters will be truncated.
  */
-static psys_fulladdr get_erec_for_segment(struct psys_state *s, char *name)
+static void assign_segment_id(struct psys_segment_id *id, const char *name)
 {
-    psys_word erec = first_erec_ptr(s);
-    char sname[8];
     unsigned i;
     /* Make truncated, uppercased, space-padded version of name to compare to */
     for (i=0; i<8 && name[i]; ++i) {
-        sname[i] = toupper(name[i]);
+        id->name[i] = toupper(name[i]);
     }
     for (; i<8; ++i) {
-        sname[i] = ' ';
+        id->name[i] = ' ';
     }
+}
+
+/** Get erec for segment by name. Names are case-insensitive, like Pascal.
+ */
+static psys_fulladdr get_erec_for_segment(struct psys_state *s, const char *name)
+{
+    psys_word erec = first_erec_ptr(s);
+    struct psys_segment_id id;
+    assign_segment_id(&id, name);
     /* Traverse linked list of erecs */
     while (erec) {
         psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
-        if (!memcmp(sname, psys_bytes(s, sib + PSYS_SIB_Seg_Name), 8)) {
+        if (!memcmp(id.name, psys_bytes(s, sib + PSYS_SIB_Seg_Name), 8)) {
             return erec;
         }
         erec = psys_ldw(s, erec + PSYS_EREC_Next_Rec);
@@ -127,6 +153,27 @@ static bool is_segment_resident(struct psys_state *s, psys_word erec)
     return seg_base != 0 ? true : false;
 }
 
+/** Get a free breakpoint */
+static struct dbg_breakpoint *new_breakpoint(struct psys_debugger *dbg)
+{
+    int i;
+    for (i=0; i<MAX_BREAKPOINTS; ++i) {
+        struct dbg_breakpoint *brk = &dbg->breakpoints[i];
+        if (!brk->used) {
+            /* Adjust num_breakpoints to include the newly allocated slot */
+            if (i >= dbg->num_breakpoints) {
+                dbg->num_breakpoints = i + 1;
+            }
+            brk->used = true;
+            brk->num = i;
+            return brk;
+        }
+    }
+    return NULL;
+}
+
+/** Maximum number of arguments for any debugger command.
+ */
 #define MAX_ARGS (10)
 
 void psys_debugger_run(struct psys_debugger *dbg, bool user)
@@ -142,6 +189,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
         if (line && *line && *line!=' ') {
             add_history(line);
         }
+        /* num is number of tokens, including command */
         num = parse_args(args, MAX_ARGS, line);
 
         if (num) {
@@ -149,6 +197,39 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
 
             if (!strcmp(cmd, "q")) {
                 exit(1);
+            } else if (!strcmp(cmd, "b")) { /* Set breakpoint */
+                if (num >= 3) {
+                    struct dbg_breakpoint *brk = new_breakpoint(dbg);
+                    assign_segment_id(&brk->seg, args[1]);
+                    brk->addr = strtol(args[2], NULL, 0);
+                    brk->active = true;
+                    printf("Set breakpoint %d at %.8s:0x%x\n", brk->num, brk->seg.name, brk->addr);
+                } else {
+                    printf("Two arguments required\n");
+                }
+            } else if (!strcmp(cmd, "db") || !strcmp(cmd, "eb")) { /* Disable or enable breakpoint */
+                if (num >= 2) {
+                    int i = strtol(args[1], NULL, 0);
+                    bool enable = !strcmp(cmd, "eb");
+                    if (i>=0 && i<dbg->num_breakpoints) {
+                        struct dbg_breakpoint *brk = &dbg->breakpoints[i];
+                        brk->active = enable;
+                        printf("%s breakpoint %d\n", enable?"Enabled":"Disabled", brk->num);
+                    } else {
+                        printf("Breakpoint %i out of range\n", i);
+                    }
+                } else {
+                    printf("One argument required\n");
+                }
+            } else if (!strcmp(cmd, "lb")) { /* List breakpoints */
+                int i;
+                printf("\x1b[38;5;202;48;5;235m>   Breakpoints   >\x1b[0m\n");
+                for (i=0; i<dbg->num_breakpoints; ++i) {
+                    struct dbg_breakpoint *brk = &dbg->breakpoints[i];
+                    if (brk->used) {
+                        printf("%2d %d at %.8s:0x%x\n", i, brk->active, brk->seg.name, brk->addr);
+                    }
+                }
             } else if (!strcmp(cmd, "l")) {
                 psys_word erec = first_erec_ptr(s);
                 printf("\x1b[38;5;202;48;5;235merec sib  flg segname  base size \x1b[0m\n");
@@ -298,6 +379,10 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                  psys_print_info(s);
             } else if (!strcmp(cmd, "h") || !strcmp(cmd, "?")) {
                 printf("\x1b[38;5;202;48;5;235m>   Help   >\x1b[0m\n");
+                printf("b <seg> <addr>      Set breakpoint at seg:addr\n");
+                printf("db <i>              Disable breakpoint i\n");
+                printf("eb <i>              Enable breakpoint i\n");
+                printf("lb                  List breakpoints\n");
                 printf("bt                  Show backtrace\n");
                 printf("c                   Continue execution\n");
                 printf("lao <seg> <g>       Show address of global variable\n");
@@ -331,9 +416,21 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
 
 }
 
+/** Called for every instruction - this should break on breakpoints */
 bool psys_debugger_trace(struct psys_debugger *dbg)
 {
     struct psys_state *s = dbg->state;
+    psys_word sib = psys_ldw(s, s->erec + PSYS_EREC_Env_SIB);
+    const psys_byte *segname = psys_bytes(s, sib + PSYS_SIB_Seg_Name);
+    psys_word pc = s->ipc - s->curseg; /* PC relative to current segment */
+    int i;
+    for (i=0; i<dbg->num_breakpoints; ++i) {
+        struct dbg_breakpoint *brk = &dbg->breakpoints[i];
+        if (brk->used && brk->active && pc == brk->addr && !memcmp(segname, &brk->seg, 8)) {
+            printf("Hit breakpoint %d at %.8s:0x%x\n", i, brk->seg.name, brk->addr);
+            return true;
+        }
+    }
     return false;
 }
 
