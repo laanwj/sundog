@@ -55,6 +55,10 @@ struct psys_debugger {
     int num_breakpoints;
     /* Breakpoints */
     struct dbg_breakpoint breakpoints[MAX_BREAKPOINTS];
+    /* Single-step enabled */
+    bool single_step;
+    /* Currently selected task (used to filter single-stepping) */
+    psys_word curtask;
 };
 
 /** Primitive argument parsing / splitting.
@@ -179,7 +183,12 @@ static struct dbg_breakpoint *new_breakpoint(struct psys_debugger *dbg)
 void psys_debugger_run(struct psys_debugger *dbg, bool user)
 {
     struct psys_state *s = dbg->state;
-    printf("** Entering psys debugger: type 'h' for help **\n");
+    if (!user) {
+        psys_print_info(s);
+        dbg->single_step = false;
+    } else {
+        printf("** Entering psys debugger: type 'h' for help **\n");
+    }
     while (true) {
         char *args[MAX_ARGS];
         char *cmd;
@@ -270,10 +279,14 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 }
             } else if (!strcmp(cmd, "bt")) {
                 psys_print_traceback(s);
-            } else if (!strcmp(cmd, "c")) {
+            } else if (!strcmp(cmd, "s") || !strcmp(cmd, "c")) { /* Single-step or continue */
+                if (!strcmp(cmd, "s")) {
+                    dbg->single_step = true;
+                    dbg->curtask = s->curtask;
+                }
                 free(line);
                 break;
-            } else if (!strcmp(cmd, "s")) {
+            } else if (!strcmp(cmd, "dm")) {
                 if (num >= 2) {
                     int fd = open(args[1], O_CREAT|O_WRONLY, 0666);
                     int rv = write(fd, s->memory, s->mem_size);
@@ -384,6 +397,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 printf("eb <i>              Enable breakpoint i\n");
                 printf("lb                  List breakpoints\n");
                 printf("bt                  Show backtrace\n");
+                printf("s                   Single-step\n");
                 printf("c                   Continue execution\n");
                 printf("lao <seg> <g>       Show address of global variable\n");
                 printf("sro <seg> <g> <val> Set global variable\n");
@@ -395,7 +409,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 printf("l                   List environments\n");
                 printf("q                   Quit\n");
                 printf("r                   Show registers and current instruction\n");
-                printf("s <file>            Write entire p-system memory to file\n");
+                printf("dm <file>            Write entire p-system memory to file\n");
                 printf("wb <addr> <val> ... Write byte(s) to address\n");
                 printf("ww <addr> <val> ... Write word(s) to address\n");
                 printf("x <addr>            Examine memory\n");
@@ -424,6 +438,9 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
     const psys_byte *segname = psys_bytes(s, sib + PSYS_SIB_Seg_Name);
     psys_word pc = s->ipc - s->curseg; /* PC relative to current segment */
     int i;
+    if (dbg->single_step && s->curtask == dbg->curtask) {
+        return true;
+    }
     for (i=0; i<dbg->num_breakpoints; ++i) {
         struct dbg_breakpoint *brk = &dbg->breakpoints[i];
         if (brk->used && brk->active && pc == brk->addr && !memcmp(segname, &brk->seg, 8)) {
