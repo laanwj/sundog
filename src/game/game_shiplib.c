@@ -74,11 +74,11 @@ static void shiplib_16(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     priv->screen->draw_points(priv->screen, 1 /*Replace*/, point, ptn);
 }
 
-/** shiplib_18() */
+/** shiplib_18() - Responsible for explosion effect when a ship is destroyed. */
 static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
     psys_debug("shiplib_18\n");
-    psys_word count      = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc));
+    psys_sword count     = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc));
     psys_sword ship_dx   = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xe));
     psys_sword ship_dy   = psys_ldsw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xd));
     psys_byte *points_x  = psys_bytes(s, W(env_priv + PSYS_MSCW_VAROFS, 0x13));
@@ -90,10 +90,8 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     static int obj_color_idx = 0; /* keep track of current color index */
     unsigned color;
     /* Decrease count and store new value in global */
-    /* count -= 1; */
-#if 0
-    psys_debug("counter: %d\n");
-#endif
+    count -= 1;
+    psys_debug("counter: %d\n", count);
     psys_stw(s, W(env_priv + PSYS_MSCW_VAROFS, 0xc), count);
     /* Ship coordinate deltas are divided by four */
     ship_dx >>= 2;
