@@ -9,6 +9,7 @@
 #include "psys/psys_state.h"
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
+#include "psys/psys_registers.h"
 #include "util/memutil.h"
 
 #include <fcntl.h>
@@ -569,6 +570,22 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                     stack_frame_print(s, frame);
                 } else {
                     printf("No lexical children of current frame\n");
+                }
+            } else if (!strcmp(cmd, "spr")) { /* Store procedure register */
+                if (num == 3) {
+                    int reg = strtol(args[1], NULL, 0);
+                    psys_word value = strtol(args[2], NULL, 0);
+                    psys_spr(s, reg, value);
+                } else {
+                    printf("Two arguments are required\n");
+                }
+            } else if (!strcmp(cmd, "lpr")) { /* Load procedure register */
+                if (num == 2) {
+                    int reg = strtol(args[1], NULL, 0);
+                    psys_word value = psys_lpr(s, reg);
+                    printf("0x%04x\n", value);
+                } else {
+                    printf("One argument is required\n");
                 }
             } else if (!strcmp(cmd, "h") || !strcmp(cmd, "?")) {
                 printf(ATITLE ">   Help   >" ARESET "\n");
