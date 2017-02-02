@@ -29,8 +29,8 @@ typedef void(psys_bindingfunc)(struct psys_state *state, void *data, psys_fullad
 /* 8-byte segment identifier */
 struct psys_segment_id {
     union {
-        uint64_t num;
         char name[8];
+        uint64_t num;
     };
 };
 

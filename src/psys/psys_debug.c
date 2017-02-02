@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void psys_panic(const char *fmt, ...)
 {
@@ -219,12 +220,13 @@ void psys_print_info(struct psys_state *s)
     prev_opcode = opcode;
 }
 
-void psys_print_call_info(struct psys_state *s)
+void psys_print_call_info(struct psys_state *s, struct psys_function_id *ignore, unsigned ignore_len)
 {
     psys_byte opcode;
     int num_in = -1;
     psys_fulladdr erec;
     psys_word procedure;
+    const psys_byte *segname = NULL;
 
     opcode = psys_ldb(s, s->ipc, 0);
 
@@ -232,16 +234,33 @@ void psys_print_call_info(struct psys_state *s)
         return;
     }
 
+    /* In case of call instruction, try to determine which procedure,
+     * and # arguments
+     */
+    if (get_call_destination(s, &erec, &procedure)) {
+        unsigned i;
+        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
+        segname       = psys_bytes(s, sib + PSYS_SIB_Seg_Name);
+        /* It is possible to ignore certain segment-procedure pairs,
+         * which cause a lot of noise.
+         */
+        for (i = 0; i < ignore_len; ++i) {
+            if (!memcmp(segname, &ignore[i].seg, 8) && (ignore[i].proc_num == procedure || ignore[i].proc_num == 0xff)) {
+                return;
+            }
+        }
+        num_in = psys_debug_proc_num_arguments(s, erec, procedure);
+    }
+
     psys_debug("%.8s:0x%02x:%04x tib=%04x ",
         psys_bytes(s, s->curseg + PSYS_SEG_NAME), s->curproc, s->ipc - s->curseg,
         s->curtask);
 
-    /* in case of call instruction, try to determine # arguments */
-    if (get_call_destination(s, &erec, &procedure)) {
-        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
-        psys_debug("%-8.8s:0x%x ", psys_bytes(s, sib + PSYS_SIB_Seg_Name), procedure);
-        num_in = psys_debug_proc_num_arguments(s, erec, procedure);
+    if (segname) {
+        psys_debug("%-8.8s:0x%x ", segname, procedure);
+    }
 
+    if (num_in >= 0) {
         /* print stack input. Arguments are in reversed (pascal) order, thus count down */
         psys_debug(" (");
         for (int x = num_in - 1; x >= 0; --x) {

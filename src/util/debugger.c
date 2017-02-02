@@ -33,6 +33,7 @@
  * - Throw runtime fault / error
  * - Print heap statistics
  * - Disassemble range
+ * - Set/clear interpreter debug flags
  */
 
 #define MAX_BREAKPOINTS 40

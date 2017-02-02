@@ -33,7 +33,7 @@ void psys_debug(const char *fmt, ...);
 
 void psys_print_traceback(struct psys_state *s);
 void psys_print_info(struct psys_state *s);
-void psys_print_call_info(struct psys_state *s);
+void psys_print_call_info(struct psys_state *s, struct psys_function_id *ignore, unsigned ignore_len);
 
 void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigned size);
 void psys_debug_hexdump(struct psys_state *s, psys_fulladdr offset, unsigned size);

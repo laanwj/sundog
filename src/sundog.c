@@ -101,6 +101,38 @@ static unsigned get_60hz_time()
     return SDL_GetTicks() / 17;
 }
 
+/** Procedures to ignore in tracing */
+static struct psys_function_id trace_ignore_procs[] = {
+    { { { "GEMBIND " } }, 0xff },
+    { { { "KERNEL  " } }, 0x0f }, /* moveleft */
+    { { { "KERNEL  " } }, 0x10 }, /* moveright */
+    { { { "KERNEL  " } }, 0x14 }, /* time */
+    { { { "MAINLIB " } }, 0x03 }, /* */
+    { { { "MAINLIB " } }, 0x04 }, /* */
+    { { { "MAINLIB " } }, 0x06 }, /* */
+    { { { "MAINLIB " } }, 0x0b }, /* */
+    { { { "MAINLIB " } }, 0x24 }, /* */
+    { { { "MAINLIB " } }, 0x25 }, /* */
+    { { { "MAINLIB " } }, 0x29 }, /* */
+    { { { "MAINLIB " } }, 0x26 }, /* */
+    { { { "MAINLIB " } }, 0x28 }, /* */
+    { { { "MAINLIB " } }, 0x2a }, /* */
+    { { { "MAINLIB " } }, 0x32 }, /* */
+    { { { "MAINLIB " } }, 0x35 }, /* */
+    { { { "MAINLIB " } }, 0x36 }, /* */
+    { { { "MAINLIB " } }, 0x3c }, /* */
+    { { { "MAINLIB " } }, 0x3f }, /* */
+    { { { "MAINLIB " } }, 0x50 }, /* */
+    { { { "SHIPLIB " } }, 0x0f }, /* */
+    { { { "SHIPLIB " } }, 0x10 }, /* */
+    { { { "SHIPLIB " } }, 0x12 }, /* */
+    { { { "SHIPLIB " } }, 0x1f }, /* */
+    { { { "SHIPLIB " } }, 0x23 }, /* */
+    { { { "SHIPLIB " } }, 0x24 }, /* */
+    { { { "XDOFIGHT" } }, 0x0a }, /* */
+    { { { "XDOFIGHT" } }, 0x0c }, /* */
+};
+
 /* Called before every instruction executed.
  * Put debug hooks and tracing here.
  * Enable with: state->trace = psys_trace;
@@ -112,7 +144,7 @@ static void psys_trace(struct psys_state *s, void *gs_)
         psys_print_info(s);
     }
     if (PDBG(s, TRACE_CALLS)) {
-        psys_print_call_info(s);
+        psys_print_call_info(s, trace_ignore_procs, ARRAY_SIZE(trace_ignore_procs));
     }
     if (SDL_AtomicGet(&gs->stop_trigger)) {
         psys_debug("Interpreter thread stopped\n");
