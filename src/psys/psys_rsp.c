@@ -320,7 +320,7 @@ static void psys_rsp_flipsegbytes(struct psys_state *state, struct psys_rsp_stat
         psys_debug("flipsegbytes %04x %04x %04x\n", erec, offset, nwords);
     }
 
-    segbase = psys_segment_from_erec(state, erec);
+    segbase = psys_segment_from_erec(state, erec, true);
     if (segbase == PSYS_ADDR_ERROR) {
         psys_panic("flipsegbytes on non-resident segment");
     }

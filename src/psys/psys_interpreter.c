@@ -88,30 +88,29 @@ psys_fulladdr psys_pool_get_base(struct psys_state *s, psys_fulladdr pool)
 /* Look up the segment base address and add offset, given an erec offset.
  * Fault if a segment is not resident, and return PSYS_ADDR_ERROR.
  */
-psys_fulladdr psys_segment_from_erec(struct psys_state *s, psys_fulladdr erec)
+psys_fulladdr psys_segment_from_erec(struct psys_state *s, psys_fulladdr erec, bool fault)
 {
     psys_fulladdr sib     = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
     psys_fulladdr poolofs = psys_ldw(s, sib + PSYS_SIB_Seg_Base);
-    if (PDBG(s, CALL)) {
+    if (PDBG(s, CALL) && fault) {
         psys_debug("lookup[%.8s]", psys_bytes(s, sib + PSYS_SIB_Seg_Name));
     }
     if (poolofs == PSYS_NIL) { /* segment not resident - fault */
-        psys_fault(s, s->curtask, erec, 0, PSYS_FAULT_SEG);
+        if (fault) {
+            psys_fault(s, s->curtask, erec, 0, PSYS_FAULT_SEG);
+        }
         return PSYS_ADDR_ERROR;
     } else { /* segment resident */
         psys_fulladdr pool     = psys_ldw(s, sib + PSYS_SIB_Seg_Pool);
         psys_fulladdr poolbase = psys_pool_get_base(s, pool);
-        if (PDBG(s, CALL)) {
+        if (PDBG(s, CALL) && fault) {
             psys_debug("  %08x <- pool %08x: %08x + %04x\n", poolbase + poolofs, pool, poolbase, poolofs);
         }
         return poolbase + poolofs;
     }
 }
 
-/* Look up EREC for segment number in local segment environment (EVEC).
- * Returns 0 if segment not found.
- */
-static inline psys_fulladdr lookup_ref_segment(struct psys_state *s, psys_word segid)
+psys_fulladdr psys_lookup_ref_segment(struct psys_state *s, psys_word segid, bool fault)
 {
     /* Atari ST p-system interpreter caches the current evec. I don't think
      * it makes sense for us to do so as it's just one extra lookup and memory
@@ -123,7 +122,9 @@ static inline psys_fulladdr lookup_ref_segment(struct psys_state *s, psys_word s
         if (PDBG(s, WARNING)) {
             psys_debug("segment id out of range");
         }
-        psys_execerror(s, PSYS_ERR_NOPROC);
+        if (fault) {
+            psys_execerror(s, PSYS_ERR_NOPROC);
+        }
         return PSYS_ADDR_ERROR;
     } else {
         psys_word addr = psys_ldw(s, W(evec + PSYS_EVEC_Vec_Length, segid));
@@ -131,7 +132,9 @@ static inline psys_fulladdr lookup_ref_segment(struct psys_state *s, psys_word s
             if (PDBG(s, WARNING)) {
                 psys_debug("no entry for segment %d in evec\n", segid);
             }
-            psys_execerror(s, PSYS_ERR_NOPROC);
+            if (fault) {
+                psys_execerror(s, PSYS_ERR_NOPROC);
+            }
             return PSYS_ADDR_ERROR;
         }
         return addr;
@@ -162,7 +165,7 @@ static inline psys_fulladdr intermd_addr(struct psys_state *state, unsigned lexl
  */
 static inline psys_fulladdr extended_addr(struct psys_state *state, unsigned seg, unsigned n)
 {
-    psys_fulladdr ext_erec = lookup_ref_segment(state, seg);
+    psys_fulladdr ext_erec = psys_lookup_ref_segment(state, seg, true);
     if (ext_erec != PSYS_ADDR_ERROR) { /* continue only if segment could be found */
         psys_word ext_base = psys_ldw(state, ext_erec + PSYS_EREC_Env_Data);
         return W(ext_base + PSYS_MSCW_VAROFS, n);
@@ -184,7 +187,7 @@ static psys_fulladdr array_descriptor_to_addr(struct psys_state *s, psys_fulladd
     if (erec == PSYS_NIL) { /* memory */
         return ofs;
     } else { /* segment */
-        psys_fulladdr segment = psys_segment_from_erec(s, erec);
+        psys_fulladdr segment = psys_segment_from_erec(s, erec, true);
         if (segment == PSYS_ADDR_ERROR) { /* segment not resident */
             return PSYS_ADDR_ERROR;
         } else {
@@ -228,18 +231,19 @@ static void psys_segment_refcount(struct psys_state *state, psys_fulladdr erec, 
 }
 
 /** Look up procedure address from erec and procedure number. */
-static psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, psys_word procedure, psys_word *num_locals_out, psys_word *end_pointer, psys_fulladdr *segment_out)
+psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, psys_word procedure,
+    bool fault, psys_word *num_locals_out, psys_word *end_pointer, psys_fulladdr *segment_out)
 {
     psys_fulladdr sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
     psys_word num_locals;
-    if (PDBG(s, CALL)) {
+    if (PDBG(s, CALL) && fault) {
         psys_debug("-> %.8s:0x%02x sib=0x%04x\n", psys_bytes(s, sib + PSYS_SIB_Seg_Name), procedure, sib);
     }
     psys_fulladdr segment;
     if (erec == s->erec) { /* current erec - take a shortcut */
         segment = s->curseg;
     } else { /* cross-segment */
-        segment = psys_segment_from_erec(s, erec);
+        segment = psys_segment_from_erec(s, erec, fault);
         if (segment == PSYS_ADDR_ERROR) { /* not resident, bail out */
             return PSYS_ADDR_ERROR;
         }
@@ -248,12 +252,14 @@ static psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, 
      * to flip these. Same for the number of locals. */
     psys_word procdict = psys_ldw(s, segment + PSYS_SEG_PROCDICT);
     psys_word numproc  = psys_ldw(s, W(segment, procdict));
-    if (PDBG(s, CALL)) {
+    if (PDBG(s, CALL) && fault) {
         psys_debug("  segment=0x%05x procdict=0x%05x numproc=%04x\n", segment, procdict, numproc);
     }
     if (procedure == 0 || procedure > numproc) {
         /* procedure number out of range */
-        psys_execerror(s, PSYS_ERR_NOPROC);
+        if (fault) {
+            psys_execerror(s, PSYS_ERR_NOPROC);
+        }
         return PSYS_ADDR_ERROR;
     }
     psys_fulladdr procaddr = W(segment, psys_ldw(s, W(segment, procdict - procedure)));
@@ -267,7 +273,7 @@ static psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, 
     if (segment_out) {
         *segment_out = segment;
     }
-    if (PDBG(s, CALL)) {
+    if (PDBG(s, CALL) && fault) {
         psys_debug("  procaddr=0x%05x num_locals=%04x\n", procaddr, num_locals);
     }
     return procaddr;
@@ -303,7 +309,7 @@ static void handle_call_formal(struct psys_state *s, psys_fulladdr msstat, psys_
     if (PDBG(s, CALL)) {
         psys_debug("call msstat=0x%04x erec=0x%04x proc=0x%02x\n", msstat, erec, procedure);
     }
-    funcaddr = lookup_procedure(s, erec, procedure, &num_locals, NULL, &newseg);
+    funcaddr = lookup_procedure(s, erec, procedure, true, &num_locals, NULL, &newseg);
     if (funcaddr == PSYS_ADDR_ERROR) { /* function out of range or not resident */
         return;
     }
@@ -367,7 +373,7 @@ static void handle_call(struct psys_state *s, psys_word seg, psys_word lexlevel,
         /* just fall through if not found so that KERNEL can handle it */
     }
     if (seg != CALL_CURSEG) { /* lookup segment */
-        erec     = lookup_ref_segment(s, seg);
+        erec     = psys_lookup_ref_segment(s, seg, true);
         nonlocal = true;
     } else { /* current segment */
         erec = s->erec;
@@ -396,7 +402,7 @@ static void handle_return(struct psys_state *s, psys_word count)
 
     /* Bail out early if segment not resident, to make it possible
      * to re-execute the instruction. */
-    caller_seg = psys_segment_from_erec(s, caller_erec);
+    caller_seg = psys_segment_from_erec(s, caller_erec, true);
     if (caller_seg == PSYS_ADDR_ERROR) {
         return;
     }
@@ -420,7 +426,7 @@ static void handle_return(struct psys_state *s, psys_word count)
         }
     } else { /* Returning to a negative procedure number means we need to jump to the end pointer of that procedure */
         psys_word end_addr;
-        if (lookup_procedure(s, caller_erec, -caller_proc, NULL, &end_addr, NULL) == PSYS_ADDR_ERROR) {
+        if (lookup_procedure(s, caller_erec, -caller_proc, true, NULL, &end_addr, NULL) == PSYS_ADDR_ERROR) {
             psys_panic("Segment not resident during error return\n");
         }
         s->curproc = -caller_proc;

@@ -111,6 +111,9 @@ static void psys_trace(struct psys_state *s, void *gs_)
     if (PDBG(s, TRACE)) {
         psys_print_info(s);
     }
+    if (PDBG(s, TRACE_CALLS)) {
+        psys_print_call_info(s);
+    }
     if (SDL_AtomicGet(&gs->stop_trigger)) {
         psys_debug("Interpreter thread stopped\n");
         psys_stop(s);

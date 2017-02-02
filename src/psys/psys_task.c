@@ -183,7 +183,7 @@ void psys_restore_state_from_tib(struct psys_state *s)
     new_erec = psys_ldw(s, s->curtask + PSYS_TIB_ENV);
     if (s->erec != new_erec) {
         psys_fulladdr new_segment;
-        new_segment = psys_segment_from_erec(s, new_erec);
+        new_segment = psys_segment_from_erec(s, new_erec, true);
         if (new_segment == PSYS_ADDR_ERROR) {
             /* TODO: this should probably trigger a fault and correctly go forward instead */
             psys_panic("TIB restore to non-resident segment\n");

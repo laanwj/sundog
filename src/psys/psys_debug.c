@@ -33,6 +33,24 @@ void psys_debug(const char *fmt, ...)
     va_end(args);
 }
 
+int psys_debug_proc_num_arguments(struct psys_state *s, psys_fulladdr erec, psys_word procedure)
+{
+    psys_word num_locals;
+    psys_fulladdr segment;
+    psys_word end_pointer;
+    psys_fulladdr addr = lookup_procedure(s, erec, procedure, false, &num_locals, &end_pointer, &segment);
+    psys_byte *data;
+    if (addr == PSYS_ADDR_ERROR || num_locals == 0xffff) { /* Not resident or native */
+        return -1;
+    }
+    data = psys_bytes(s, segment);
+    if (data[end_pointer] != PSOP_RPU) { /* End pointer does not point to return */
+        return -1;
+    }
+    /* Subtract return argument */
+    return data[end_pointer + 1] - num_locals;
+}
+
 void psys_print_traceback(struct psys_state *s)
 {
     psys_word curproc, mp, base, erec, ipc, sib, mp_up;
@@ -68,6 +86,57 @@ void psys_print_traceback(struct psys_state *s)
     }
 }
 
+/** Return true if *opcode* refers to a call instruction, false otherwise */
+static bool is_call(psys_byte opcode)
+{
+    if ((opcode >= PSOP_CLP && opcode <= PSOP_CXI)
+        || (opcode >= PSOP_SCXG1 && opcode <= PSOP_SCXG8)
+        || opcode == PSOP_CFP
+        || opcode == PSOP_SCIP1
+        || opcode == PSOP_SCIP2) {
+        return true;
+    }
+    return false;
+}
+
+static bool get_call_destination(struct psys_state *s, psys_fulladdr *erec_out, psys_word *procedure_out)
+{
+    psys_byte *instr   = psys_bytes(s, s->ipc);
+    psys_byte opcode   = instr[0];
+    psys_fulladdr erec = s->erec;
+    psys_word procedure;
+
+    if (opcode == PSOP_CLP || opcode == PSOP_CGP || opcode == PSOP_SCIP1 || opcode == PSOP_SCIP2) {
+        procedure = instr[1];
+    } else if (opcode == PSOP_CIP) {
+        procedure = instr[2];
+    } else if (opcode == PSOP_CXL || opcode == PSOP_CXG) {
+        erec      = psys_lookup_ref_segment(s, instr[1], false);
+        procedure = instr[2];
+    } else if (opcode == PSOP_CXI) {
+        erec      = psys_lookup_ref_segment(s, instr[1], false);
+        procedure = instr[3];
+    } else if (opcode >= PSOP_SCXG1 && opcode <= PSOP_SCXG8) {
+        erec      = psys_lookup_ref_segment(s, opcode - PSOP_SCXG1 + 1, false);
+        procedure = instr[1];
+    } else if (opcode == PSOP_CFP) {
+        return false; /* TODO */
+    } else {
+        return false;
+    }
+    if (erec == PSYS_ADDR_ERROR) {
+        return false;
+    }
+
+    if (erec_out) {
+        *erec_out = erec;
+    }
+    if (procedure_out) {
+        *procedure_out = procedure;
+    }
+    return true;
+}
+
 static int prev_opcode = -1;
 
 void psys_print_info(struct psys_state *s)
@@ -75,10 +144,11 @@ void psys_print_info(struct psys_state *s)
     unsigned ptr;
     psys_byte opcode;
     struct psys_opcode_desc *op;
+    int num_in;
 
     if (prev_opcode != -1) {
-        /* print result of previous instruction */
         op = &psys_opcode_descriptions[prev_opcode];
+        /* print result of previous instruction */
         if (op->num_out > 0) {
             psys_debug("    -> (");
             for (int x = 0; x < op->num_out; ++x) {
@@ -126,9 +196,19 @@ void psys_print_info(struct psys_state *s)
         printf("0x%x", val);
     }
 
+    /* in case of call instruction, try to determine # arguments */
+    num_in = op->num_in;
+    if (is_call(opcode)) {
+        psys_fulladdr erec;
+        psys_word procedure;
+        if (get_call_destination(s, &erec, &procedure)) {
+            num_in = psys_debug_proc_num_arguments(s, erec, procedure);
+        }
+    }
+
     /* print stack input */
     psys_debug(" (");
-    for (int x = 0; x < op->num_in; ++x) {
+    for (int x = 0; x < num_in; ++x) {
         if (x != 0)
             psys_debug(" ");
         psys_debug("0x%04x", psys_ldw(s, W(s->sp, x)));
@@ -137,6 +217,42 @@ void psys_print_info(struct psys_state *s)
 
     psys_debug("\n");
     prev_opcode = opcode;
+}
+
+void psys_print_call_info(struct psys_state *s)
+{
+    psys_byte opcode;
+    int num_in = -1;
+    psys_fulladdr erec;
+    psys_word procedure;
+
+    opcode = psys_ldb(s, s->ipc, 0);
+
+    if (!is_call(opcode)) {
+        return;
+    }
+
+    psys_debug("%.8s:0x%02x:%04x tib=%04x ",
+        psys_bytes(s, s->curseg + PSYS_SEG_NAME), s->curproc, s->ipc - s->curseg,
+        s->curtask);
+
+    /* in case of call instruction, try to determine # arguments */
+    if (get_call_destination(s, &erec, &procedure)) {
+        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
+        psys_debug("%-8.8s:0x%x ", psys_bytes(s, sib + PSYS_SIB_Seg_Name), procedure);
+        num_in = psys_debug_proc_num_arguments(s, erec, procedure);
+
+        /* print stack input. Arguments are in reversed (pascal) order, thus count down */
+        psys_debug(" (");
+        for (int x = num_in - 1; x >= 0; --x) {
+            psys_debug("0x%04x", psys_ldw(s, W(s->sp, x)));
+            if (x != 0)
+                psys_debug(", ");
+        }
+        psys_debug(")");
+    }
+
+    psys_debug("\n");
 }
 
 void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigned size)
