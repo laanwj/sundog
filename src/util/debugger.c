@@ -18,22 +18,27 @@
 
 /** Rudimentary p-system debugger. The following functionality would be nice:
  * - Load / set VM register (lpr/spr)
- * - Breakpoints (data)
- *   - Break on runtime fault / error
+ * - Breakpoint on data change
+ * - Break on runtime fault / error
  * - Show static closure (static links above current stackframe)
- * - Access intermediate variables (lda, lod, str) (can be done through ups/downs)
- * - Call procedure (with arguments)
- * - Expression evaluation
+ * - Access intermediate variables (lda, lod, str) (can be done through ups/downs and locals manipulation)
+ * - Call procedure (with arguments) (create fake MSCW)
+ * - Expression evaluation (convenience)
  * - Switch task
  * - Change task priority
  * - List tasks (nontrivial, unlike for erecs there seems to be no linked directory of tasks)
  * - Create/compare execution trace
- * - Make resident/swap out segment
+ * - Make resident/swap out segment (can be done as soon as calling procedures is possible)
  * - Throw runtime fault / error
  * - Print heap statistics
+ * - Disassemble range
  */
 
 #define MAX_BREAKPOINTS 40
+
+#define ATITLE "\x1b[38;5;202;48;5;235m"
+#define ASUBTITLE "\x1b[38;5;214m"
+#define ARESET "\x1b[0m"
 
 /** One debugger breakpoint */
 struct dbg_breakpoint {
@@ -41,14 +46,14 @@ struct dbg_breakpoint {
     bool active;
     int num;
     /* Only one type of breakpoint for now:
-     * by code address.
+     * by segment:offset code address.
      */
     struct psys_segment_id seg; /* Segment name */
     psys_word addr; /* Address relative to segment */
 };
 
 /** Description of one stack frame, with forward
- * and backward links
+ * and backward links.
  */
 struct dbg_stackframe {
     struct psys_segment_id seg; /* Segment name */
@@ -63,8 +68,6 @@ struct dbg_stackframe {
      * and "down" to the callee.
      */
     struct dbg_stackframe *down, *up;
-    /* Pointer to frame for scope encompassing this, if any */
-    struct dbg_stackframe *up_static;
 };
 
 /** Global debugger mode */
@@ -78,6 +81,11 @@ enum debugger_mode {
 /** Global debugger state */
 struct psys_debugger {
     struct psys_state *state;
+    /* While single-stepping this prevents stopping immediately on the same
+     * instruction after the interpreter thread starts.
+     */
+    psys_word curerec;
+    psys_word curipc;
     /* Number of breakpoint entries used */
     int num_breakpoints;
     /* Breakpoints */
@@ -308,15 +316,30 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
     } else {
         printf("** Entering psys debugger: type 'h' for help **\n");
     }
+
     frame = frames = get_stack_frames(s);
     while (true) {
+        bool isrepeat; /* Repeat flag: could be used to continue memory dump/disassembly */
         char *args[MAX_ARGS];
         char *cmd;
         unsigned num;
 
         line = readline("\x1b[38;5;220mpsys\x1b[38;5;235m>\x1b[38;5;238m>\x1b[38;5;242m>\x1b[0m ");
-        if (line && *line && *line!=' ') {
+
+        if (!line) {
+            /* EOF / Ctrl-D */
+            exit(1);
+        } else if (!*line) {
+            /* Empty line: repeat last command */
+            HIST_ENTRY *h = previous_history();
+            if (h) {
+                free(line);
+                line = strdup(h->line);
+                isrepeat = true;
+            }
+        } else {
             add_history(line);
+            isrepeat = false;
         }
         /* num is number of tokens, including command */
         num = parse_args(args, MAX_ARGS, line);
@@ -326,7 +349,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
 
             if (!strcmp(cmd, "q")) {
                 exit(1);
-            } else if (!strcmp(cmd, "b")) { /* Set breakpoint */
+            } else if (!strcmp(cmd, "b")) { /* Set breakpoint or list breakpoints */
                 if (num >= 3) {
                     struct dbg_breakpoint *brk = new_breakpoint(dbg);
                     assign_segment_id(&brk->seg, args[1]);
@@ -334,7 +357,14 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                     brk->active = true;
                     printf("Set breakpoint %d at %.8s:0x%x\n", brk->num, brk->seg.name, brk->addr);
                 } else {
-                    printf("Two arguments required\n");
+                    int i;
+                    printf(ATITLE ">   Breakpoints   >" ARESET "\n");
+                    for (i=0; i<dbg->num_breakpoints; ++i) {
+                        struct dbg_breakpoint *brk = &dbg->breakpoints[i];
+                        if (brk->used) {
+                            printf("%2d %d at %.8s:0x%x\n", i, brk->active, brk->seg.name, brk->addr);
+                        }
+                    }
                 }
             } else if (!strcmp(cmd, "db") || !strcmp(cmd, "eb")) { /* Disable or enable breakpoint */
                 if (num >= 2) {
@@ -350,18 +380,9 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 } else {
                     printf("One argument required\n");
                 }
-            } else if (!strcmp(cmd, "lb")) { /* List breakpoints */
-                int i;
-                printf("\x1b[38;5;202;48;5;235m>   Breakpoints   >\x1b[0m\n");
-                for (i=0; i<dbg->num_breakpoints; ++i) {
-                    struct dbg_breakpoint *brk = &dbg->breakpoints[i];
-                    if (brk->used) {
-                        printf("%2d %d at %.8s:0x%x\n", i, brk->active, brk->seg.name, brk->addr);
-                    }
-                }
             } else if (!strcmp(cmd, "l")) { /* List segments */
                 psys_word erec = first_erec_ptr(s);
-                printf("\x1b[38;5;202;48;5;235merec sib  flg segname  base size \x1b[0m\n");
+                printf(ATITLE "erec sib  flg segname  base size " ARESET "\n");
                 while (erec) {
                     psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
                     psys_word data_base = psys_ldw(s, erec + PSYS_EREC_Env_Data); /* globals start */
@@ -399,14 +420,16 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 }
             } else if (!strcmp(cmd, "bt")) { /* Print backtrace */
                 psys_print_traceback(s);
-            } else if (!strcmp(cmd, "s") || !strcmp(cmd, "c") || !strcmp(cmd, "so")) { /* Single-step or continue or step out */
+            } else if (!strcmp(cmd, "s") || !strcmp(cmd, "c") || !strcmp(cmd, "so") || !strcmp(cmd, "n")) { /* Single-step or continue or step out */
                 dbg->curtask = s->curtask;
+                dbg->curerec = s->erec;
+                dbg->curipc = s->ipc - s->curseg;
                 if (!strcmp(cmd, "s")) {
                     dbg->mode = DM_SINGLE_STEP;
                 } else if (!strcmp(cmd, "so") && frame->up) {
                     dbg->mode = DM_STEP_OUT;
                     dbg->target_mp1 = frame->up->mp;
-                } else if (!strcmp(cmd, "sn") && frames->up) {
+                } else if (!strcmp(cmd, "n") && frames->up) {
                     dbg->mode = DM_STEP_OVER;
                     dbg->target_mp1 = frames->mp;
                     dbg->target_mp2 = frames->up->mp;
@@ -515,6 +538,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                     printf("One argument is required\n");
                 }
             } else if (!strcmp(cmd, "r")) { /* Print registers */
+                /* TODO: print all registers */
                 psys_print_info(s);
             } else if (!strcmp(cmd, "up")) { /* Go to caller stack frame */
                 if (frame->up) {
@@ -544,52 +568,49 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                     frame = down;
                     stack_frame_print(s, frame);
                 } else {
-                    printf("Cannot go further down\n");
+                    printf("No lexical children of current frame\n");
                 }
             } else if (!strcmp(cmd, "h") || !strcmp(cmd, "?")) {
-                printf("\x1b[38;5;202;48;5;235m>   Help   >\x1b[0m\n");
-                printf(":Breakpoints:\n");
+                printf(ATITLE ">   Help   >" ARESET "\n");
+                printf(ASUBTITLE ":Breakpoints:" ARESET "\n");
+                printf("b                   List breakpoints\n");
                 printf("b <seg> <addr>      Set breakpoint at seg:addr\n");
                 printf("db <i>              Disable breakpoint i\n");
                 printf("eb <i>              Enable breakpoint i\n");
-                printf("lb                  List breakpoints\n");
                 printf("bt                  Show backtrace\n");
-                printf(":Execution:\n");
+                printf(ASUBTITLE ":Execution:" ARESET "\n");
                 printf("s                   Single-step\n");
                 printf("so                  Step out of currently selected stack frame\n");
-                printf("sn                  Step to next function in current or parent stack frame\n");
+                printf("n                   Step to next function in current or parent stack frame\n");
                 printf("c                   Continue execution\n");
-                printf("Variables:\n");
+                printf(ASUBTITLE ":Variables:" ARESET "\n");
                 printf("lao <seg> <g>       Show address of global variable\n");
                 printf("sro <seg> <g> <val> Set global variable\n");
                 printf("ldo <seg> <g>       Examine global variable\n");
                 printf("lla <l>             Show address of local variable\n");
                 printf("stl <l> <val>       Set local variable\n");
                 printf("ldl <l>             Examine local variable\n");
-                printf(":Stack frames:\n");
+                printf(ASUBTITLE ":Stack frames:" ARESET "\n");
                 printf("up                  Up to caller frame\n");
                 printf("ups                 Up to lexical parent\n");
                 printf("down                Down to callee frame\n");
                 printf("downs               Down to lexical child\n");
-                printf(":Memory:\n");
+                printf(ASUBTITLE ":Memory:" ARESET "\n");
                 printf("dm <file>           Write entire p-system memory to file\n");
                 printf("wb <addr> <val> ... Write byte(s) to address\n");
                 printf("ww <addr> <val> ... Write word(s) to address\n");
                 printf("x <addr>            Examine memory\n");
-                printf(":Misc:\n");
+                printf(ASUBTITLE ":Misc:" ARESET "\n");
                 printf("h                   This information\n");
                 printf("l                   List environments\n");
                 printf("r                   Show registers and current instruction\n");
+                printf("lpr <r>             Show register r\n");
+                printf("spr <r> <val>       Set register r to val\n");
                 printf("q                   Quit\n");
                 printf("\n");
                 printf("All values can be specified as decimal or 0xHEX.\n");
             } else {
                 printf("Unknown command %s. Type 'h' for help.\n", cmd);
-            }
-        } else {
-            if (!line) {
-                /* EOF / Ctrl-D */
-                exit(1);
             }
         }
 
@@ -610,21 +631,31 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
     const psys_byte *segname = psys_bytes(s, sib + PSYS_SIB_Seg_Name);
     psys_word pc = s->ipc - s->curseg; /* PC relative to current segment */
     int i;
-    if (dbg->mode == DM_SINGLE_STEP && s->curtask == dbg->curtask) {
-        return true;
-    }
-    if (dbg->mode == DM_STEP_OUT && s->curtask == dbg->curtask && s->mp == dbg->target_mp1) {
-        return true;
-    }
-    if (dbg->mode == DM_STEP_OVER && s->curtask == dbg->curtask
-            && (s->mp == dbg->target_mp1 || s->mp == dbg->target_mp2)) {
-        return true;
-    }
-    for (i=0; i<dbg->num_breakpoints; ++i) {
-        struct dbg_breakpoint *brk = &dbg->breakpoints[i];
-        if (brk->used && brk->active && pc == brk->addr && !memcmp(segname, &brk->seg, 8)) {
-            printf("Hit breakpoint %d at %.8s:0x%x\n", i, brk->seg.name, brk->addr);
-            return true;
+    if (!(s->erec == dbg->curerec && pc == dbg->curipc)) {
+        /* Make sure at least one instruction has been executed after the command was set.
+         */
+        if (s->curtask == dbg->curtask) {
+            /* Make sure at least one instruction has been executed and that
+             * we're executing in the right task.
+             */
+            if (dbg->mode == DM_SINGLE_STEP) {
+                return true;
+            }
+            if (dbg->mode == DM_STEP_OUT && s->mp == dbg->target_mp1) {
+                return true;
+            }
+            if (dbg->mode == DM_STEP_OVER
+                    && (s->mp == dbg->target_mp1 || s->mp == dbg->target_mp2)) {
+                return true;
+            }
+        }
+
+        for (i=0; i<dbg->num_breakpoints; ++i) {
+            struct dbg_breakpoint *brk = &dbg->breakpoints[i];
+            if (brk->used && brk->active && pc == brk->addr && !memcmp(segname, &brk->seg, 8)) {
+                printf("Hit breakpoint %d at %.8s:0x%x\n", i, brk->seg.name, brk->addr);
+                return true;
+            }
         }
     }
     return false;

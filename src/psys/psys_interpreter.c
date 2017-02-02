@@ -540,7 +540,7 @@ void psys_interpreter(struct psys_state *s)
     int x; /* Loop variable */
     s->running = true;
 #define STORE_STATE() s->stored_sp = s->sp; s->stored_ipc = s->ipc
-#define DISPATCH() if (!s->running) return; if (s->trace) s->trace(s, s->trace_userdata); STORE_STATE(); op = fetch_UB(s); goto *dispatch_table[op]
+#define DISPATCH() if (s->trace) s->trace(s, s->trace_userdata); if (!s->running) return; STORE_STATE(); op = fetch_UB(s); goto *dispatch_table[op]
 do_nop: /* No operation */
     DISPATCH();
     while(1) {
