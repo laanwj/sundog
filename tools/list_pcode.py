@@ -200,7 +200,13 @@ def format_instruction(inst, proc, dseg, proclist):
             name = '{}_{:02x}_L{:x}'.format(meta.key[0].decode().rstrip(),meta.key[1],lnum)
             if lnum > meta.num_locals:
                 if lnum < meta.num_locals - meta.delta + 1:
-                    name += ' (param {:d})'.format(lnum - meta.num_locals - 1)
+                    num_params = -meta.delta
+                    # Increasing argument numbers 0..num_params
+                    #name += ' (param {:d})'.format(lnum - meta.num_locals - 1)
+                    # Heed PASCAL calling convention:
+                    # Argument numbers count down from num_params-1 to 0
+                    # where 0=leftmost argument, num_params-1=rightmost argument
+                    name += ' (param {:d})'.format(meta.num_locals + num_params - lnum)
                 else:
                     name += ' (retval {:d})'.format(lnum - meta.num_locals + meta.delta - 1)
             comment = ' {a.cstart};{a.comment} {}{a.reset}'.format(name,a=ATTR)
