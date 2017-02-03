@@ -13,7 +13,28 @@ PSYS_DEBUG=0xffff
 
 Individual bits can be set or cleared to enable specific
 classes of debug logging. See [psys_debug.h](../src/psys/psys_debug.h)
-for the list.
+for the list. For example, to show nested procedure call tracing a la *ltrace*
+use:
+
+```
+PSYS_DEBUG=0x80
+```
+
+Example output:
+```
+[006e]       XSTARTUP:0x01:2e11 → XSTARTUP:0x46  ()
+[006e]        XSTARTUP:0x46:26a6 → XSTARTUP:0x48 
+[006e]         XSTARTUP:0x48:2669 → MAINLIB :0x4b 
+[006e]          MAINLIB :0x4b:12df → MAINLIB :0x49  (0x0001, 0x00ff, 0x0000, 0xe34a, 0x0001, 0x005b, 0x0001)
+[006e]           MAINLIB :0x49:0ff6 → MAINLIB :0x2d  ()
+[006e]           MAINLIB :0x49:1016 → MAINLIB :0x8  (0x005b)
+[006e]           MAINLIB :0x49:1085 → MAINLIB :0x54  ()
+[006e]           MAINLIB :0x49:109b → KERNEL  :0x12  (0x0004, 0xe34a, 0x0000, 0x0200, 0x005b, 0x0000)
+[006e]           MAINLIB :0x49:10b0 → MAINLIB :0x45  ()
+```
+
+A list of known procedures can be found in [tools/appcalls\_list.py](../tools/appcalls_list.py) for
+the game and [tools/libcalls\_list.py](../tools/libcalls_list.py) for the p-system library respectively.
 
 Interactive debugger
 ---------------------

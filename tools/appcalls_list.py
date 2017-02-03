@@ -35,6 +35,7 @@ APPCALLS = {
         0x02: 'DoUserMenu(a,b)',
         0x05: 'DoRepair(a,b,c)',
         0x0f: 'RedFlashToggle',
+        0x10: 'SetClipAndWriteMode', # VDI 129/32
         0x16: ('DrawStars()', 0, 0), # This draws the viewscreen background
         0x17: 'Randomize', # Randomize 256 bytes
         0x18: ('HandleBogeys()', 0, 0), # Handle bogeys (enemy ship movement) in space fight
@@ -42,7 +43,6 @@ APPCALLS = {
         0x1a: ('WarpAnimation(a,b,c,vdihandle)', 4, 0),
         0x1b: 'SetFillColor', # VDI 25
         0x1c: 'FillRectangle', # VDI 114
-        0x10: 'SetClipAndWriteMode', # VDI 129/32
     },
     b'GRNDLIB ': {
         0x02: 'DoCombat(a,b,c)',
@@ -53,9 +53,11 @@ APPCALLS = {
         0x07: 'DoSlots()',
     },
     b'XDOREPAI': { # XDOREPAIR (ship repair)
+        0x01: 'XDoRepair',
         0x05: 'Cargo',     # Loads cargo info from disk, shows cargo
     },
     b'XDOUSERM': { # XDOUSERMENU
+        0x01: 'XDoUserMenu',
         0x06: 'WaitEvent',     # Loop until mouse button or MAINLIB+0x03 flag set
         0x07: 'ShowCondition',
         0x0b: 'ShowTime',
@@ -64,9 +66,14 @@ APPCALLS = {
         0x0e: 'ShowLocation',  # Current city/planet
     },
     b'XMOVEINB': { # XMOVEINBUILDING
+        0x01: 'XMoveInBuilding',
         0x1a: 'SlotMachine()',
     },
+    b'XMOVEONS': { # XMOVEONSHIP
+        0x01: 'XMoveOnShip',
+    },
     b'XDOFIGHT': {
+        0x01: 'XDoFight',
         0x05: 'TargetDestroyed(x)',
         0x06: 'FireWeapon()',
         0x0b: 'MouseToShipMovement()',
@@ -74,7 +81,8 @@ APPCALLS = {
         0x10: 'TacticalMenu(x)',
         0x13: 'TractorBeam()',
     },
-    b'XPILOTAG': {
+    b'XPILOTAG': { # XPILOTAGE
+        0x01: 'XPilotage',
         0x04: 'WaitUserAction',
         0x06: 'NavigationMenuSetup',
         0x07: 'NavigationMenu',
@@ -111,6 +119,7 @@ APPCALLS = {
         0x32: 'PaletteChange()',
         0x33: 'Nop()',  # Do nothing
         0x34: 'PossiblySetEvilState', # Possibly set state so that RSOD appears
+        0x38: 'DrawColoredRectangle(color,x0,y0,x1,y1)',
         0x44: 'ErrorMessage',
         0x45: 'CheckDiskResult', # Return 1 if error, 0 otherwise
         0x46: 'CheckCorrectDisk', # Read block 0x3a or 0x06 to see if library/sundog disk is in the drive as expected
@@ -123,6 +132,7 @@ APPCALLS = {
         0x4e: 'TextPrintHelper',
         0x4f: 'FormatPaddedNumber',
         0x50: 'TimeDigit', # local function of DrawTime
+        0x52: '?(i,a:bytearray)', # gets passed an index and a 4-byte array
         0x54: 'PossiblyRunDiskCheck',
         0x15: 'FormatNumber',
     },
