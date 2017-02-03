@@ -55,6 +55,7 @@ APPCALLS = {
     b'XDOREPAI': { # XDOREPAIR (ship repair)
         0x01: 'XDoRepair',
         0x05: 'Cargo',     # Loads cargo info from disk, shows cargo
+        0x07: 'DragItem',
     },
     b'XDOUSERM': { # XDOUSERMENU
         0x01: 'XDoUserMenu',

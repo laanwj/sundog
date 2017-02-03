@@ -20,7 +20,7 @@
 static int prev_opcode = -1;
 
 /** U+2192 RIGHT ARROW */
-#define ARROW "\xe2\x86\x92"
+#define U_RIGHT_ARROW "\xe2\x86\x92"
 
 void psys_panic(const char *fmt, ...)
 {
@@ -304,7 +304,7 @@ void psys_print_call_info(struct psys_state *s, const struct psys_function_id *i
         psys_debug(" ");
     }
 
-    psys_debug("%.8s:0x%02x:%04x " ARROW " ",
+    psys_debug("%.8s:0x%02x:%04x " U_RIGHT_ARROW " ",
         psys_bytes(s, s->curseg + PSYS_SEG_NAME), s->curproc, s->ipc - s->curseg);
 
     if (segname) {

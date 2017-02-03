@@ -1,18 +1,7 @@
-Glossary
-------------
+Project notes
+==============
 
-- words: are 2 bytes (like ST)
-- longs: are 4 bytes (like ST)
-- activation record or MSCW: structure at the base of local/global variables
-  describing static and dynamic call hierarchy.
-- SIB: Segment Information Block
-- TIB: Task Information Block
-- MSCW: Mark Stack Control Word
-- E\_Rec: Environment record
-- E\_Vec: Environment vector
-- RSP: Run-Time Support Package. This is a component related to the interpreter
-  that provides standardized, natively implemented utility calls for I/O and
-  moving memory to the p-system.
+This are some random and all-over-the-place notes about the project.
 
 Which p-system version?
 ------------------------

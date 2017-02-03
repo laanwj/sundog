@@ -238,6 +238,7 @@
 { { { { "XDOFIGHT" } }, 0x13 }, "TractorBeam" },
 { { { { "XDOREPAI" } }, 0x1 }, "XDoRepair" },
 { { { { "XDOREPAI" } }, 0x5 }, "Cargo" },
+{ { { { "XDOREPAI" } }, 0x7 }, "DragItem" },
 { { { { "XDOUSERM" } }, 0x1 }, "XDoUserMenu" },
 { { { { "XDOUSERM" } }, 0x3 }, "ShowStats" },
 { { { { "XDOUSERM" } }, 0x6 }, "WaitEvent" },

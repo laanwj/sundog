@@ -345,6 +345,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
         }
         /* num is number of tokens, including command */
         num = parse_args(args, MAX_ARGS, line);
+        (void) isrepeat; /* unused for now */
 
         if (num) {
             cmd = args[0];

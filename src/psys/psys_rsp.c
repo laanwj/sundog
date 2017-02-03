@@ -3,6 +3,10 @@
  * Distributed under the MIT software license, see the accompanying
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
+/* p-system Run-time Support Package.
+ * This provides OS functions to handle procedure calls on segment 1.
+ * These are also called "standard procedures" in some texts.
+ */
 #include "psys_rsp.h"
 
 #include "psys_constants.h"
@@ -21,11 +25,16 @@
 /* Header for savestates */
 #define PSYS_RSP_STATE_ID 0x50525350
 
+/** Internal helper for setting IORESULT register. */
 static void psys_set_io_result(struct psys_state *state, psys_word result)
 {
     psys_stw(state, state->syscom + PSYS_SYSCOM_IORSLT, result);
 }
 
+/** RELOCSEG relocates the segment pointed to by the ERec.
+ *
+ * In this implementation, no relocation is performed at all because native code is not supported.
+ */
 static void psys_rsp_relocseg(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_word erec = psys_pop(state);
@@ -35,9 +44,16 @@ static void psys_rsp_relocseg(struct psys_state *state, struct psys_rsp_state *r
     /* Nothing to do here - no native code support */
 }
 
+/** moveseg(sib,srcpool,srcoffset)
+ *
+ * MOVESEG moves the segment at offset TOS in the pool described by TOS-1 to
+ * the location specified in the SIB pointed to by TOS-2, and relocates it.
+ * Only segment-relative relocation is performed.
+ *
+ * In this implementation, no relocation is performed at all because native code is not supported.
+ */
 static void psys_rsp_moveseg(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* moveseg(sib,srcpool,srcoffset) */
     psys_word srcoffset       = psys_pop(state);
     psys_word srcpool         = psys_pop(state);
     psys_word sib             = psys_pop(state);
@@ -61,9 +77,12 @@ static void psys_rsp_moveseg(struct psys_state *state, struct psys_rsp_state *rs
         len * 2);
 }
 
+/** moveleft(source,dest:array; length:integer)
+ *
+ * Move bytes one at a time starting from the left (low order byte).
+ */
 static void psys_rsp_moveleft(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* moveleft(source,dest:array; length:integer) */
     psys_sword length     = psys_spop(state);
     psys_word dest_ofs    = psys_pop(state);
     psys_word dest_base   = psys_pop(state);
@@ -84,9 +103,12 @@ static void psys_rsp_moveleft(struct psys_state *state, struct psys_rsp_state *r
     }
 }
 
+/** moveright(source,dest:array; length:integer)
+ *
+ * Move bytes one at a time starting from the right (high order byte).
+ */
 static void psys_rsp_moveright(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* moveright(source,dest:array; length:integer) */
     psys_sword length     = psys_spop(state);
     psys_word dest_ofs    = psys_pop(state);
     psys_word dest_base   = psys_pop(state);
@@ -105,7 +127,7 @@ static void psys_rsp_moveright(struct psys_state *state, struct psys_rsp_state *
     }
 }
 
-/* merged i/o function */
+/** Merged i/o function - internal logic for both unit_read and unit_write */
 static psys_word unitrw(struct psys_state *state, struct psys_rsp_state *rsp, bool wr, psys_word unit, psys_fulladdr buf_addr, psys_word len, psys_word block, psys_word ctrl)
 {
     psys_byte *buf = psys_bytes(state, buf_addr);
@@ -169,9 +191,12 @@ static psys_word unitrw(struct psys_state *state, struct psys_rsp_state *rsp, bo
     return PSYS_IO_NOERROR;
 }
 
+/** unitread(unit:integer; buf:array; len,block,ctrl:integer)
+ *
+ * Read from unit (device).
+ */
 static void psys_rsp_unitread(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    // unitread(unit:integer; buf:array; len,block,ctrl:integer)
     psys_word ctrl     = psys_pop(state);
     psys_word block    = psys_pop(state);
     psys_word len      = psys_pop(state);
@@ -186,9 +211,12 @@ static void psys_rsp_unitread(struct psys_state *state, struct psys_rsp_state *r
         unitrw(state, rsp, false, unit, buf_base + buf_ofs, len, block, ctrl));
 }
 
+/** unitwrite(unit:integer; buf:array; len,block,ctrl:integer)
+ *
+ * Write to unit (device).
+ */
 static void psys_rsp_unitwrite(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    // unitwrite(unit:integer; buf:array; len,block,ctrl:integer)
     psys_word ctrl     = psys_pop(state);
     psys_word block    = psys_pop(state);
     psys_word len      = psys_pop(state);
@@ -203,10 +231,13 @@ static void psys_rsp_unitwrite(struct psys_state *state, struct psys_rsp_state *
         unitrw(state, rsp, true, unit, buf_base + buf_ofs, len, block, ctrl));
 }
 
+/** time(hiword,loword)
+ *
+ * TIME saves the high and low words of the system clock (a 32-bit 60 Hz clock)
+ * in the indicated words.
+ */
 static void psys_rsp_time(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* time(hiword,loword) */
-    /* TIME saves the high and low words of the system clock (a 32-bit 60 Hz clock) in the indicated words */
     psys_word loword = psys_pop(state);
     psys_word hiword = psys_pop(state);
     uint32_t time;
@@ -228,9 +259,16 @@ static void psys_rsp_time(struct psys_state *state, struct psys_rsp_state *rsp, 
     psys_stw(state, loword, time & 0xffff);
 }
 
+/** fillchar(dest:bytearray; n_bytes,value:integer)
+ *
+ * FILLCHAR fills a range of memory with a single-byte value.
+ * TOS is the character. TOS-1 is the length to fill. TOS-2 is the starting
+ * address for the fill. If TOS-1 is zero or negative, no filling is done.
+ * Otherwise, memory is filled with the byte TOS for TOS-1 bytes starting at
+ * address TOS-2.
+ */
 static void psys_rsp_fillchar(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* fillchar(dest:bytearray; n_bytes,value:integer) */
     psys_word value     = psys_pop(state);
     psys_sword n_bytes  = psys_spop(state);
     psys_word dest_ofs  = psys_pop(state);
@@ -245,9 +283,16 @@ static void psys_rsp_fillchar(struct psys_state *state, struct psys_rsp_state *r
     }
 }
 
+/** scan(len,exp,source):int
+ *
+ * Scan memory forward or backward for a certain character. TOS is a mask
+ * field (unused). TOS-1 is a pointer to the array to scan. TOS-2 is the byte
+ * to look for. TOS-3 is the scan kind (0 means until equal, 1 means until not
+ * equal). TOS-4 is the length to scan. If TOS-4 is negative, the scan proceeds
+ * to the left. TOS-S is the function result word.
+ */
 static void psys_rsp_scan(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* scan(len,exp,source):int */
     psys_word mask        = psys_pop(state);
     psys_word source_ofs  = psys_pop(state);
     psys_word source_base = psys_pop(state);
@@ -285,14 +330,23 @@ static void psys_rsp_scan(struct psys_state *state, struct psys_rsp_state *rsp, 
     psys_stw(state, state->sp, i);
 }
 
+/** iocheck()
+ *
+ * IOCHECK tests the p-machine register IORESULT for zero. If the register is
+ * nonzero, an I/O execution error is issued.
+ */
 static void psys_rsp_iocheck(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_panic("iocheck not implemented\n");
 }
 
+/** getpoolbytes(dest,pooldesc,offset,nbytes)
+ *
+ * GETPOOLBYTES get TOS bytes from the pool described by TOS-2 at offset TOS-1,
+ * and places them at TOS-3.
+ */
 static void psys_rsp_getpoolbytes(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* getpoolbytes(dest,pooldesc,offset,nbytes) */
     psys_sword n_bytes  = psys_spop(state);
     psys_word offset   = psys_pop(state);
     psys_word pooldesc = psys_pop(state);
@@ -307,14 +361,23 @@ static void psys_rsp_getpoolbytes(struct psys_state *state, struct psys_rsp_stat
     }
 }
 
+/** putpoolbytes(...).
+ *
+ * PUTPOOLBYTES writes TOS bytes from the buffer TOS-3 to the pool described by
+ * TOS-2 at offset TOS-l.
+ */
 static void psys_rsp_putpoolbytes(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_panic("putpoolbytes not implemented\n");
 }
 
+/** flipsegbytes(erec,offset,nwords)
+ *
+ * FLIPSEGBYTES flips TOS words starting at word offset TOS-1 in the segment
+ * described by TOS-2.
+ */
 static void psys_rsp_flipsegbytes(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* flipsegbytes(erec,offset,nwords) */
     psys_sword nwords = psys_spop(state);
     psys_word offset  = psys_pop(state);
     psys_word erec    = psys_pop(state);
@@ -334,21 +397,38 @@ static void psys_rsp_flipsegbytes(struct psys_state *state, struct psys_rsp_stat
     }
 }
 
+/** quiet()
+ *
+ * QUIET must disable all p-machine events such that no attached semaphore is
+ * signalled until the corresponding call to ENABLE is made.
+ */
 static void psys_rsp_quiet(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* quiet() */
     rsp->events_enabled = true;
 }
 
+/** enable()
+ *
+ * ENABLE reenables p-machine events that have been disabled by QUIET.
+ */
 static void psys_rsp_enable(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* enable() */
     rsp->events_enabled = false;
 }
 
+/** attach(semaphore,vector)
+ *
+ * TOS is the number of a p-machine event vector. It must be in the range 0
+ * through 63. TOS-1 is the address of a semaphore.
+ *
+ * ATTACH associates the semaphore pointed to by TOS-l with the vector TOS such
+ * that whenever the event TOS is recognized, the semaphore is signaled. If
+ * the semaphore pointer is NIL, vector TOS must be unattached from any
+ * sempahore it was formerly attached to. If TOS isn't in the range 0 through
+ * 63, no operation is performed.
+ */
 static void psys_rsp_attach(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* attach(semaphore,vector) */
     psys_word vector    = psys_pop(state);
     psys_word semaphore = psys_pop(state);
     if (PDBG(state, RSP)) {
@@ -359,6 +439,10 @@ static void psys_rsp_attach(struct psys_state *state, struct psys_rsp_state *rsp
     }
 }
 
+/** ioresult(): integer
+ *
+ * IORESULT returns the value of the p-machine register IORESULT.
+ */
 static void psys_rsp_ioresult(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     if (PDBG(state, RSP)) {
@@ -367,24 +451,44 @@ static void psys_rsp_ioresult(struct psys_state *state, struct psys_rsp_state *r
     psys_stw(state, state->sp, psys_ldw(state, state->syscom + PSYS_SYSCOM_IORSLT));
 }
 
+/** unitbusy(unit): boolean
+ *
+ * UNITBUSY returns TRUE if there is any outstanding I/O on device TOS, and
+ * FALSE otherwise. On return, IORESULT contains status information.
+ * This is unused as asynchronous I/O for the p-machine was never defined.
+ */
 static void psys_rsp_unitbusy(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_panic("unitbusy not implemented\n");
 }
 
+/** poweroften(power): real
+ *
+ * Floating-point power of ten.
+ */
 static void psys_rsp_poweroften(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_panic("poweroften not implemented\n");
 }
 
+/** unitwait(...)
+ *
+ * The p-machine waits until all I/O on unit TOS is completed. On return,
+ * IORESULT contains status information.
+ * This is unused as asynchronous I/O for the p-machine was never defined.
+ */
 static void psys_rsp_unitwait(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_panic("unitwait not implemented\n");
 }
 
+/** unitclear(unit)
+ *
+ * The device with unit number TOS is initialized to its "power-up" state. On
+ * return, IORESULT contains status information.
+ */
 static void psys_rsp_unitclear(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* unitclear(unit) */
     psys_word unit   = psys_pop(state);
     psys_word result = PSYS_IO_NOERROR;
     if (PDBG(state, RSP)) {
@@ -403,9 +507,10 @@ static void psys_rsp_unitclear(struct psys_state *state, struct psys_rsp_state *
     psys_set_io_result(state, result);
 }
 
+/** unitstatus(unit,stat_rec,control)
+ */
 static void psys_rsp_unitstatus(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* unitstatus(unit,stat_rec,control) */
     psys_word control  = psys_pop(state);
     psys_word stat_rec = psys_pop(state);
     psys_word unit     = psys_pop(state);
@@ -429,14 +534,24 @@ static void psys_rsp_unitstatus(struct psys_state *state, struct psys_rsp_state 
     psys_set_io_result(state, result);
 }
 
+/** idsearch(...)
+ *
+ * PASCAL reserved identifier search. Used by compiler only.
+ */
 static void psys_rsp_idsearch(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_panic("idsearch not implemented\n");
 }
 
+/** treesearch(root,foundp,target):int
+ *
+ * TREESEARCH searches the symbol table tree TOS-2 for the target string TOS,
+ * returning a pointer to where the target was found in the variable pointed to
+ * by TOS-l. If the target wasn't found, the variable pointed to by TOS-1 will
+ * point to the leaf node of the tree that was searched last.
+ */
 static void psys_rsp_treesearch(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    /* treesearch(root,foundp,target):int */
     psys_word target = psys_pop(state);
     psys_word foundp = psys_pop(state);
     psys_word root   = psys_pop(state);
@@ -485,11 +600,16 @@ static void psys_rsp_treesearch(struct psys_state *state, struct psys_rsp_state 
     psys_stw(state, state->sp, retval);
 }
 
+/** readseg(erec): integer
+ *
+ * READSEG reads the segment described by TOS into memory at the location
+ * described in the SIB. The completion code in p-machine register IORESULT is
+ * returned as the function result.
+ */
 static void psys_rsp_readseg(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_fulladdr sib, vip, block, segpool, segbase, poolbase, seglen;
     psys_word result;
-    /* readseg(erec) */
     psys_word erec = psys_pop(state);
     if (PDBG(state, RSP)) {
         psys_debug("readseg(0x%x)\n", erec);
@@ -505,7 +625,7 @@ static void psys_rsp_readseg(struct psys_state *state, struct psys_rsp_state *rs
         psys_debug("read segment %.8s sib=0x%04x vip=0x%04x block 0x%04x to 0x%08x:0x%04x (maxlen 0x%04x)\n", psys_bytes(state, sib + PSYS_SIB_Seg_Name), sib, vip, block,
             poolbase, segbase, seglen);
     }
-    /* TODO figure out VIP - for now, always read from disk 0 */
+    /* TODO figure out VIP structure - for now, always read from disk 0 */
     result = unitrw(state, rsp, false, PSYS_UNIT_DISK0, poolbase + segbase, seglen * 2, block, 0);
 
     /* write return value (i/o result) */
@@ -513,6 +633,10 @@ static void psys_rsp_readseg(struct psys_state *state, struct psys_rsp_state *rs
     psys_stw(state, state->sp, result);
 }
 
+/** setrestricted(flag)
+ *
+ * ???
+ */
 static void psys_rsp_setrestricted(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     psys_panic("setrestricted not implemented\n");

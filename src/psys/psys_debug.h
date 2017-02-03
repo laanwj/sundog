@@ -43,10 +43,17 @@ struct util_debuginfo {
     unsigned len;
 };
 
+/** Exit with a fatal error message. Use this on unrecoverable errors only. */
 void psys_panic(const char *fmt, ...);
+
+/** Print formattes string to debug console. */
 void psys_debug(const char *fmt, ...);
 
+/** Print a traceback for the current stack to the debug console. */
 void psys_print_traceback(struct psys_state *s);
+
+/** Print information about current state of the p-machine and the current
+ * instruction. */
 void psys_print_info(struct psys_state *s);
 
 /** Print information about current instruction, if it is a call

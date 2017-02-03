@@ -43,7 +43,7 @@ MAINLIB
   [13] ?
   [14] ?
 0x03d  ?  byte array
-0x03f  ?  byte array
+0x03f  4  Items on player
 0x041  ?  byte array
 0x042  2  Score
 0x043  2  Score
@@ -52,6 +52,54 @@ MAINLIB
           (5,4)
           (6,9)
           Looks like another location. Usually the same as 0x2a: ship location?
+0x05b  20 
+  [N*5+0]  "Warp drives" row N col 0 (control node 0x1f)
+  [N*5+1]  "Warp drives" row N col 1 (flux modulator 0x1c)
+  [N*5+2]  "Warp drives" row N col 2 (photon bridge 0x1a)
+  [N*5+3]  "Warp drives" row N col 3 (s/t distorter 0x1e)
+  [N*5+4]  Row status 0..4 (normal item gives 1, shunts 0)
+0x067  4?
+  [0]      "Warp drives" status 4*num working rows, 0x10=max
+0x069  20
+  [N*5+0]  "Sub-c Engines" row N col 0 (control node 0x1f)
+  [N*5+1]  "Sub-c Engines" row N col 1 (flux modulator 0x1c)
+  [N*5+2]  "Sub-c Engines" row N col 2 (s/t distorter 0x1e)
+  [N*5+3]  "Sub-c Engines" row N col 3 (cryofuse 0x18)
+  [N*5+4]  Row status 0..4
+0x075  4?
+  [0]      "Sub-c Engines" status 4*num working rows, 0x10=max
+0x077  20
+  [N*5+0]  "Ship's Guns" row N col 0 (control node 0x1f)
+  [N*5+1]  "Ship's Guns" row N col 1 (cryofuse 0x18)
+  [N*5+2]  "Ship's Guns" row N col 2 (concentrator 0x13)
+  [N*5+3]  "Ship's Guns" row N col 3 (plasma tube 0x1d)
+  [N*5+4]  Row status 0..4
+0x083  4?
+  [0]      "Ship's Guns" status 4*num working rows, 0x10=max
+0x085  20
+  [N*5+0]  "Tactical Disply" row N col 0 (control node 0x1f)
+  [N*5+1]  "Tactical Disply" row N col 1 (scanner 0x1b)
+  [N*5+2]  "Tactical Disply" row N col 2 (decloaker 0x14 or j-junc module 0x19)
+  [N*5+3]  "Tactical Disply" row N col 3 (photon bridge 0x1a)
+  [N*5+4]  Row status 0..4
+0x091  4?
+  [0]      "Tactical Disply" status 4*num working rows, 0x10=max
+0x093  20
+  [N*5+0]  "Force Shields" row N col 0 (control node 0x1f)
+  [N*5+1]  "Force Shields" row N col 1 (cryofuse 0x18)
+  [N*5+2]  "Force Shields" row N col 2 (flux modulator 0x1c)
+  [N*5+3]  "Force Shields" row N col 3 (flux modulator 0x1c)
+  [N*5+4]  Row status 0..4
+0x09f  4?
+  [0]      "Force Shields" status 4*num working rows, 0x10=max
+0x0a1  20
+  [N*5+0]  "Pilotage" row N col 0 (control node 0x1f)
+  [N*5+1]  "Pilotage" row N col 1 (j-junc module 0x19)
+  [N*5+2]  "Pilotage" row N col 2 (scanner 0x1b)
+  [N*5+3]  "Pilotage" row N col 3 (j-junc module 0x19)
+  [N*5+4]  Row status 0..4
+0x0ad  4?
+  [0]      "Pilotage" status 4*num working rows, 0x10=max
 0x0af  20 Ship's locker
 0x0bd  20 Ship's stores
 0x101  2  Pseudo-random state word 1

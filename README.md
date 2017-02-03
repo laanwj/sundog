@@ -104,26 +104,28 @@ Status
 - Sublight flight.
 - Warp (albeit without fancy effects).
 - Loading / reading save states (`l` and `s` respectively).
-- Ground combat
+- Ground combat.
+- Space combat.
 
 Is it fully playable? Probably: all the critical things have been implemented,
-but not everything has been tested there may be remaining bugs.
+but not everything has been tested so there may be remaining bugs.
 
 ### To be done
 
 Non-critical:
 
-- Sound: as the game uses XBIOS DoSound call for sound, this would involve
+- *Sound*: as the game uses XBIOS DoSound call for sound, this would involve
   emulating the YM2149F PSG sound chip, at least up to a point (or as there
   seems to be a fixed number of 36 sound effects: substituting
   sampled sounds).
-- Initial FTL animation is missing: this is an assembly routine that triggers
+- *Initial FTL animation is missing*: this is an assembly routine that triggers
   *before* the bootstrapping of the p-machine.
-- Not all of the stuff in SHIPLIB has been implemented. There are four native
+- *Not all of the stuff in SHIPLIB has been implemented.* There are four native
   procedures in this segment (0x16, 0x18, 0x19, 0x1a) which seem to be
-  rendering effects for the ship the viewscreen (stars, moving enemies, fire
+  rendering effects for the ship the viewscreen (stars, explosion, fire
   weapon animation, warp animation respectively). There seems to be no further
-  user interaction code.
+  user interaction code. Only the warp animation is completely not implemented at this
+  time, the others are at least able-enough placeholders.
 
 ### Future ideas
 

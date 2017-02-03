@@ -58,7 +58,7 @@ static inline psys_word fetch_V(struct psys_state *state)
     return a;
 }
 
-/** Look up intermediate MSCW offset, lexlevel levels
+/** Look up intermediate MSCW offset, *lexlevel* lexical levels
  * above the current one (0=local). This is used for intermediate (e.g. nested
  * scope) variable accesses.
  */
@@ -72,7 +72,7 @@ static inline psys_fulladdr intermd_mscw(struct psys_state *state, unsigned lexl
     return mscw;
 }
 
-/** Get base address of a pool, given the address of a pool descriptor structure.
+/** Get base address of a code pool, given the address of a pool descriptor structure.
  */
 psys_fulladdr psys_pool_get_base(struct psys_state *s, psys_fulladdr pool)
 {
@@ -126,7 +126,7 @@ psys_fulladdr psys_lookup_ref_segment(struct psys_state *s, psys_word segid, boo
             psys_execerror(s, PSYS_ERR_NOPROC);
         }
         return PSYS_ADDR_ERROR;
-    } else {
+    } else { /* in range of EVEC, look it up */
         psys_word addr = psys_ldw(s, W(evec + PSYS_EVEC_Vec_Length, segid));
         if (addr == 0) { /* no entry */
             if (PDBG(s, WARNING)) {
@@ -137,7 +137,7 @@ psys_fulladdr psys_lookup_ref_segment(struct psys_state *s, psys_word segid, boo
             }
             return PSYS_ADDR_ERROR;
         }
-        return addr;
+        return addr; /* Return EREC pointer */
     }
 }
 
@@ -159,7 +159,7 @@ static inline psys_fulladdr intermd_addr(struct psys_state *state, unsigned lexl
     return W(intermd_mscw(state, lexlevel) + PSYS_MSCW_VAROFS, n);
 }
 
-/** Get address of extended variable (a global address from another segment).
+/** Get address of extended variable (a global variable from another segment).
  * This can cause a PSYS_ERR_NOPROC error if the segment could not be found.
  * It does not matter whether the segment is resident: globals are not swapped.
  */
@@ -174,7 +174,7 @@ static inline psys_fulladdr extended_addr(struct psys_state *state, unsigned seg
     }
 }
 
-/** Look up address for string descriptor.
+/** Compute address from string descriptor.
  * A string descriptor is a (erec,ofs) tuple in memory. If erec is NIL,
  * the offset is an offset in memory, if erec is non-null it is an offset
  * into the segment pointed to by the environment record.
@@ -209,7 +209,8 @@ static inline bool seg_needs_endian_flip(struct psys_state *state, psys_fulladdr
     return psys_ldw(state, seg + PSYS_SEG_ENDIAN) != PSYS_ENDIAN_NATIVE;
 }
 
-/** Increase timestamp in SYSCOM */
+/** Increase timestamp in SYSCOM, and put it in EREC.
+ * This should be called every time a segment is exited. */
 void psys_increase_timestamp(struct psys_state *state, psys_fulladdr erec)
 {
     psys_word timestamp = psys_ldw(state, state->syscom + PSYS_SYSCOM_TIMESTAMP);
@@ -242,7 +243,7 @@ psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, psys_wo
     psys_fulladdr segment;
     if (erec == s->erec) { /* current erec - take a shortcut */
         segment = s->curseg;
-    } else { /* cross-segment */
+    } else { /* cross-segment - need a lookup */
         segment = psys_segment_from_erec(s, erec, fault);
         if (segment == PSYS_ADDR_ERROR) { /* not resident, bail out */
             return PSYS_ADDR_ERROR;
@@ -264,13 +265,13 @@ psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, psys_wo
     }
     psys_fulladdr procaddr = W(segment, psys_ldw(s, W(segment, procdict - procedure)));
     num_locals             = psys_ldw(s, procaddr);
-    if (num_locals_out) {
+    if (num_locals_out) { /* Caller requested number of locals */
         *num_locals_out = num_locals;
     }
-    if (end_pointer) {
+    if (end_pointer) { /* Did caller request end pointer? */
         *end_pointer = psys_ldw(s, W(procaddr, -1));
     }
-    if (segment_out) {
+    if (segment_out) { /* Did caller request segment base? */
         *segment_out = segment;
     }
     if (PDBG(s, CALL) && fault) {
@@ -427,6 +428,9 @@ static void handle_return(struct psys_state *s, psys_word count)
     } else { /* Returning to a negative procedure number means we need to jump to the end pointer of that procedure */
         psys_word end_addr;
         if (lookup_procedure(s, caller_erec, -caller_proc, true, NULL, &end_addr, NULL) == PSYS_ADDR_ERROR) {
+            /* TODO: handle this properly. This should raise a fault and make sure the p-machine
+             * state is restored to that of before the return.
+             */
             psys_panic("Segment not resident during error return\n");
         }
         s->curproc = -caller_proc;
