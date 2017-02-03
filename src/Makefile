@@ -29,6 +29,7 @@ GAME_OBJS= \
 	game/game_gembind.o \
 	game/game_screen.o \
 	game/game_shiplib.o \
+	game/game_debug.o \
 	util/debugger.o \
 	util/util_img.o
 
@@ -55,6 +56,7 @@ HEADERS= \
 	util/util_minmax.h \
 	util/util_save_state.h \
 	util/debugger.h \
+	game/game_debug.h \
 	game/game_gembind.h \
 	game/game_screen.h \
 	game/game_shiplib.h \
@@ -91,7 +93,12 @@ test/inst_tests: test/inst_tests.o $(PSYS_OBJS)
 test/img_tests: test/img_tests.o $(PSYS_OBJS) $(GAME_OBJS) $(TEST_OBJS)
 	$(CC) $^ $(LDFLAGS) -o $@
 
+game/game_debuginfo.h: ../tools/gen_debug_info.py ../tools/libcalls_list.py ../tools/appcalls_list.py
+	../tools/gen_debug_info.py $@
+
 $(PSYS_OBJS) $(MAIN_OBJS) $(GAME_OBJS): $(HEADERS)
+
+game/game_debug.o: game/game_debuginfo.h
 
 check: $(EXES)
 	test/set_tests

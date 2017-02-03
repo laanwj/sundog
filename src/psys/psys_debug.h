@@ -28,12 +28,33 @@ enum {
     PSYS_DBG_TRACE_CALLS = 0x80, /* Trace all procedure calls */
 };
 
+/** Debug info entry for one procedure */
+struct util_debuginfo_entry {
+    struct psys_function_id proc;
+    const char *name;
+};
+
+/** Top-level debug info structure.
+ * Procedure entries must be in sorted order by (segment, proc_num) to
+ * allow for fast searching.
+ */
+struct util_debuginfo {
+    const struct util_debuginfo_entry *entry;
+    unsigned len;
+};
+
 void psys_panic(const char *fmt, ...);
 void psys_debug(const char *fmt, ...);
 
 void psys_print_traceback(struct psys_state *s);
 void psys_print_info(struct psys_state *s);
-void psys_print_call_info(struct psys_state *s, const struct psys_function_id *ignore, unsigned ignore_len);
+
+/** Print information about current instruction, if it is a call
+ * instruction. The destination procedure as well as arguments will be printed.
+ * A list of procedures to ignore can be passed, as well as a debug info structure
+ * (for naming of procedures).
+ */
+void psys_print_call_info(struct psys_state *s, const struct psys_function_id *ignore, unsigned ignore_len, const struct util_debuginfo *dbginfo);
 
 void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigned size);
 void psys_debug_hexdump(struct psys_state *s, psys_fulladdr offset, unsigned size);

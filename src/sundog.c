@@ -15,6 +15,7 @@
 #include "psys/psys_save_state.h"
 #include "psys/psys_task.h"
 #ifdef PSYS_DEBUGGER
+#include "game/game_debug.h"
 #include "util/debugger.h"
 #endif
 #include "util/memutil.h"
@@ -148,7 +149,9 @@ static void psys_trace(struct psys_state *s, void *gs_)
         psys_print_info(s);
     }
     if (PDBG(s, TRACE_CALLS)) {
-        psys_print_call_info(s, trace_ignore_procs, ARRAY_SIZE(trace_ignore_procs));
+        psys_print_call_info(s,
+            trace_ignore_procs, ARRAY_SIZE(trace_ignore_procs),
+            get_game_debuginfo());
     }
     if (SDL_AtomicGet(&gs->stop_trigger)) {
         psys_debug("Interpreter thread stopped\n");

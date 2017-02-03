@@ -123,12 +123,12 @@ static bool is_call(psys_byte opcode)
     return false;
 }
 
-static bool get_call_destination(struct psys_state *s, psys_fulladdr *erec_out, psys_word *procedure_out)
+static bool get_call_destination(struct psys_state *s, psys_fulladdr *erec_out, psys_byte *procedure_out)
 {
     psys_byte *instr   = psys_bytes(s, s->ipc);
     psys_byte opcode   = instr[0];
     psys_fulladdr erec = s->erec;
-    psys_word procedure;
+    psys_byte procedure;
 
     if (opcode == PSOP_CLP || opcode == PSOP_CGP || opcode == PSOP_SCIP1 || opcode == PSOP_SCIP2) {
         procedure = instr[1];
@@ -222,7 +222,7 @@ void psys_print_info(struct psys_state *s)
     num_in = op->num_in;
     if (is_call(opcode)) {
         psys_fulladdr erec;
-        psys_word procedure;
+        psys_byte procedure;
         if (get_call_destination(s, &erec, &procedure)) {
             num_in = psys_debug_proc_num_arguments(s, erec, procedure);
         }
@@ -241,14 +241,26 @@ void psys_print_info(struct psys_state *s)
     prev_opcode = opcode;
 }
 
-void psys_print_call_info(struct psys_state *s, const struct psys_function_id *ignore, unsigned ignore_len)
+static int psys_function_id_compare(const void *key_, const void *entry_)
+{
+    const struct psys_function_id *key   = (const struct psys_function_id *)key_;
+    const struct psys_function_id *entry = (const struct psys_function_id *)entry_;
+    int n                                = memcmp(&key->seg, &entry->seg, 8);
+    if (n) {
+        return n;
+    }
+    return key->proc_num - entry->proc_num;
+}
+
+void psys_print_call_info(struct psys_state *s, const struct psys_function_id *ignore,
+    unsigned ignore_len, const struct util_debuginfo *dbginfo)
 {
     psys_byte opcode;
     int num_in = -1;
     psys_fulladdr erec;
-    psys_word procedure;
     const psys_byte *segname = NULL;
-    int i, depth;
+    int depth, i;
+    struct psys_function_id key;
 
     opcode = psys_ldb(s, s->ipc, 0);
 
@@ -259,19 +271,30 @@ void psys_print_call_info(struct psys_state *s, const struct psys_function_id *i
     /* In case of call instruction, try to determine which procedure,
      * and # arguments
      */
-    if (get_call_destination(s, &erec, &procedure)) {
-        unsigned i;
+    if (get_call_destination(s, &erec, &key.proc_num)) {
+        struct psys_function_id key_wild; /* wildcard key */
         psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
         segname       = psys_bytes(s, sib + PSYS_SIB_Seg_Name);
+        memcpy(&key.seg, segname, 8);
+
         /* It is possible to ignore certain segment-procedure pairs,
          * which cause a lot of noise.
          */
-        for (i = 0; i < ignore_len; ++i) {
-            if (!memcmp(segname, &ignore[i].seg, 8) && (ignore[i].proc_num == procedure || ignore[i].proc_num == 0xff)) {
-                return;
-            }
+        if (bsearch(&key, ignore, ignore_len,
+                sizeof(struct psys_function_id), psys_function_id_compare)) {
+            return;
         }
-        num_in = psys_debug_proc_num_arguments(s, erec, procedure);
+        /* It's also possible to ignore all functions in a segment with a special
+         * (segname, 0xff) pair.
+         */
+        key_wild.seg      = key.seg;
+        key_wild.proc_num = 0xff;
+        if (bsearch(&key_wild, ignore, ignore_len,
+                sizeof(struct psys_function_id), psys_function_id_compare)) {
+            return;
+        }
+
+        num_in = psys_debug_proc_num_arguments(s, erec, key.proc_num);
     }
 
     psys_debug("[%04x] ", s->curtask);
@@ -285,12 +308,22 @@ void psys_print_call_info(struct psys_state *s, const struct psys_function_id *i
         psys_bytes(s, s->curseg + PSYS_SEG_NAME), s->curproc, s->ipc - s->curseg);
 
     if (segname) {
-        psys_debug("%-8.8s:0x%x ", segname, procedure);
+        const struct util_debuginfo_entry *entry;
+
+        psys_debug("%-8.8s:0x%x ", key.seg.name, key.proc_num);
+
+        /* If there is an associated debug info entry for this procedure, print
+         * the name. */
+        entry = (const struct util_debuginfo_entry *)bsearch(&key, dbginfo->entry, dbginfo->len,
+            sizeof(struct util_debuginfo_entry), psys_function_id_compare);
+        if (entry) {
+            psys_debug("%s", entry->name);
+        }
     }
 
     if (num_in >= 0) {
         /* print stack input. Arguments are in reversed (pascal) order, thus count down */
-        psys_debug(" (");
+        psys_debug("(");
         for (int x = num_in - 1; x >= 0; --x) {
             psys_debug("0x%04x", psys_ldw(s, W(s->sp, x)));
             if (x != 0)

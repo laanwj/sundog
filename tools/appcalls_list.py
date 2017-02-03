@@ -58,6 +58,7 @@ APPCALLS = {
     },
     b'XDOUSERM': { # XDOUSERMENU
         0x01: 'XDoUserMenu',
+        0x03: 'ShowStats',     # Draws stat bars for vigor, rest, health, noursh
         0x06: 'WaitEvent',     # Loop until mouse button or MAINLIB+0x03 flag set
         0x07: 'ShowCondition',
         0x0b: 'ShowTime',
@@ -96,6 +97,7 @@ APPCALLS = {
         0x06: 'PaletteColor(r,g,b):integer',
         0x07: 'LAnd(a,b):integer', # Logical AND
         0x08: 'Sign(x):integer', # Sign function: -1 if x<0, x if x==0, 1 if x>0
+        0x0a: 'ClampRange(x;pval:^integer;y)', # *pval=min(max(*pval,x),y)
         0x0b: 'PseudoRandom():integer',
         0x0c: 'RandomRange(low,high):integer',
         0x0d: 'Thousands(addrout,?,value)',
@@ -137,7 +139,9 @@ APPCALLS = {
         0x15: 'FormatNumber',
     },
     b'WINDOWLI': {
+        0x05: 'MouseDown(x,y,a,b)', # Mouse pressed
         0x07: 'ShowItemName', # Show item name
+        0x10: 'MouseClick(i,x,y)', # Frequently called while mouse is clicked at position x,y
         0x17: 'DrugEffects(item,b,c,d,e)',
     },
     # Bindings
