@@ -64,7 +64,7 @@ static void psys_rsp_moveseg(struct psys_state *state, struct psys_rsp_state *rs
 static void psys_rsp_moveleft(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     /* moveleft(source,dest:array; length:integer) */
-    psys_word length      = psys_pop(state);
+    psys_sword length     = psys_spop(state);
     psys_word dest_ofs    = psys_pop(state);
     psys_word dest_base   = psys_pop(state);
     psys_word source_ofs  = psys_pop(state);
@@ -87,7 +87,7 @@ static void psys_rsp_moveleft(struct psys_state *state, struct psys_rsp_state *r
 static void psys_rsp_moveright(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     /* moveright(source,dest:array; length:integer) */
-    psys_word length      = psys_pop(state);
+    psys_sword length     = psys_spop(state);
     psys_word dest_ofs    = psys_pop(state);
     psys_word dest_base   = psys_pop(state);
     psys_word source_ofs  = psys_pop(state);
@@ -232,7 +232,7 @@ static void psys_rsp_fillchar(struct psys_state *state, struct psys_rsp_state *r
 {
     /* fillchar(dest:bytearray; n_bytes,value:integer) */
     psys_word value     = psys_pop(state);
-    psys_word n_bytes   = psys_pop(state);
+    psys_sword n_bytes  = psys_spop(state);
     psys_word dest_ofs  = psys_pop(state);
     psys_word dest_base = psys_pop(state);
     psys_byte *dest;
@@ -240,7 +240,9 @@ static void psys_rsp_fillchar(struct psys_state *state, struct psys_rsp_state *r
         psys_debug("fillchar (0x%04x,0x%04x) 0x%04x %04x\n", dest_base, dest_ofs, n_bytes, value);
     }
     dest = psys_bytes(state, dest_base + dest_ofs);
-    memset(dest, value, n_bytes);
+    if (n_bytes > 0) {
+        memset(dest, value, n_bytes);
+    }
 }
 
 static void psys_rsp_scan(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
@@ -291,7 +293,7 @@ static void psys_rsp_iocheck(struct psys_state *state, struct psys_rsp_state *rs
 static void psys_rsp_getpoolbytes(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     /* getpoolbytes(dest,pooldesc,offset,nbytes) */
-    psys_word n_bytes  = psys_pop(state);
+    psys_sword n_bytes  = psys_spop(state);
     psys_word offset   = psys_pop(state);
     psys_word pooldesc = psys_pop(state);
     psys_word dest     = psys_pop(state);
@@ -300,7 +302,9 @@ static void psys_rsp_getpoolbytes(struct psys_state *state, struct psys_rsp_stat
     if (PDBG(state, RSP)) {
         psys_debug("getpoolbytes %04x %04x (base %05x) %04x %04x\n", dest, pooldesc, poolbase, offset, n_bytes);
     }
-    memcpy(psys_bytes(state, dest), psys_bytes(state, poolbase) + offset, n_bytes);
+    if (n_bytes > 0) {
+        memcpy(psys_bytes(state, dest), psys_bytes(state, poolbase) + offset, n_bytes);
+    }
 }
 
 static void psys_rsp_putpoolbytes(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
@@ -311,9 +315,9 @@ static void psys_rsp_putpoolbytes(struct psys_state *state, struct psys_rsp_stat
 static void psys_rsp_flipsegbytes(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
     /* flipsegbytes(erec,offset,nwords) */
-    psys_word nwords = psys_pop(state);
-    psys_word offset = psys_pop(state);
-    psys_word erec   = psys_pop(state);
+    psys_sword nwords = psys_spop(state);
+    psys_word offset  = psys_pop(state);
+    psys_word erec    = psys_pop(state);
     psys_fulladdr segbase;
     psys_word *buf;
     if (PDBG(state, RSP)) {
@@ -325,7 +329,7 @@ static void psys_rsp_flipsegbytes(struct psys_state *state, struct psys_rsp_stat
         psys_panic("flipsegbytes on non-resident segment");
     }
     buf = psys_words(state, W(segbase, offset));
-    for (unsigned x = 0; x < nwords; ++x) {
+    for (int x = 0; x < nwords; ++x) {
         buf[x] = psys_flip_endian(buf[x]);
     }
 }
