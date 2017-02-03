@@ -102,28 +102,28 @@ static unsigned get_60hz_time()
 }
 
 /** Procedures to ignore in tracing */
-static struct psys_function_id trace_ignore_procs[] = {
+static const struct psys_function_id trace_ignore_procs[] = {
     { { { "GEMBIND " } }, 0xff },
     { { { "KERNEL  " } }, 0x0f }, /* moveleft */
     { { { "KERNEL  " } }, 0x10 }, /* moveright */
     { { { "KERNEL  " } }, 0x14 }, /* time */
-    { { { "MAINLIB " } }, 0x03 }, /* */
+    { { { "MAINLIB " } }, 0x03 }, /* Sound(x) */
     { { { "MAINLIB " } }, 0x04 }, /* */
-    { { { "MAINLIB " } }, 0x06 }, /* */
-    { { { "MAINLIB " } }, 0x0b }, /* */
-    { { { "MAINLIB " } }, 0x24 }, /* */
+    { { { "MAINLIB " } }, 0x06 }, /* PaletteColor */
+    { { { "MAINLIB " } }, 0x0b }, /* PseudoRandom */
+    { { { "MAINLIB " } }, 0x24 }, /* DrawTime */
     { { { "MAINLIB " } }, 0x25 }, /* */
-    { { { "MAINLIB " } }, 0x29 }, /* */
     { { { "MAINLIB " } }, 0x26 }, /* */
     { { { "MAINLIB " } }, 0x28 }, /* */
+    { { { "MAINLIB " } }, 0x29 }, /* */
     { { { "MAINLIB " } }, 0x2a }, /* */
-    { { { "MAINLIB " } }, 0x32 }, /* */
+    { { { "MAINLIB " } }, 0x32 }, /* PaletteChange */
     { { { "MAINLIB " } }, 0x35 }, /* */
     { { { "MAINLIB " } }, 0x36 }, /* */
     { { { "MAINLIB " } }, 0x3c }, /* */
     { { { "MAINLIB " } }, 0x3f }, /* */
-    { { { "MAINLIB " } }, 0x50 }, /* */
-    { { { "SHIPLIB " } }, 0x0f }, /* */
+    { { { "MAINLIB " } }, 0x50 }, /* TimeDigit */
+    { { { "SHIPLIB " } }, 0x0f }, /* RedFlashToggle */
     { { { "SHIPLIB " } }, 0x10 }, /* */
     { { { "SHIPLIB " } }, 0x12 }, /* */
     { { { "SHIPLIB " } }, 0x1f }, /* */
@@ -131,6 +131,10 @@ static struct psys_function_id trace_ignore_procs[] = {
     { { { "SHIPLIB " } }, 0x24 }, /* */
     { { { "XDOFIGHT" } }, 0x0a }, /* */
     { { { "XDOFIGHT" } }, 0x0c }, /* */
+    { { { "XDOUSERM" } }, 0x04 }, /* */
+    { { { "XMOVEINB" } }, 0x02 }, /* */
+    { { { "XMOVEINB" } }, 0x1b }, /* */
+    { { { "XMOVEINB" } }, 0x1c }, /* */
 };
 
 /* Called before every instruction executed.

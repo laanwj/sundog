@@ -16,6 +16,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/** HACK: state used for print_info */
+static int prev_opcode = -1;
+
+/** U+2192 RIGHT ARROW */
+#define ARROW "\xe2\x86\x92"
+
 void psys_panic(const char *fmt, ...)
 {
     va_list args;
@@ -87,6 +93,23 @@ void psys_print_traceback(struct psys_state *s)
     }
 }
 
+int psys_debug_stack_depth(struct psys_state *s)
+{
+    psys_word mp = s->mp, mp_up;
+    int depth    = 0;
+
+    while (true) {
+        mp_up = psys_ldw(s, mp + PSYS_MSCW_MSDYN);
+        /* No more stack frames? */
+        if (mp_up == 0 || mp == mp_up) {
+            break;
+        }
+        mp = mp_up;
+        depth += 1;
+    }
+    return depth;
+}
+
 /** Return true if *opcode* refers to a call instruction, false otherwise */
 static bool is_call(psys_byte opcode)
 {
@@ -137,8 +160,6 @@ static bool get_call_destination(struct psys_state *s, psys_fulladdr *erec_out, 
     }
     return true;
 }
-
-static int prev_opcode = -1;
 
 void psys_print_info(struct psys_state *s)
 {
@@ -220,13 +241,14 @@ void psys_print_info(struct psys_state *s)
     prev_opcode = opcode;
 }
 
-void psys_print_call_info(struct psys_state *s, struct psys_function_id *ignore, unsigned ignore_len)
+void psys_print_call_info(struct psys_state *s, const struct psys_function_id *ignore, unsigned ignore_len)
 {
     psys_byte opcode;
     int num_in = -1;
     psys_fulladdr erec;
     psys_word procedure;
     const psys_byte *segname = NULL;
+    int i, depth;
 
     opcode = psys_ldb(s, s->ipc, 0);
 
@@ -252,9 +274,15 @@ void psys_print_call_info(struct psys_state *s, struct psys_function_id *ignore,
         num_in = psys_debug_proc_num_arguments(s, erec, procedure);
     }
 
-    psys_debug("%.8s:0x%02x:%04x tib=%04x ",
-        psys_bytes(s, s->curseg + PSYS_SEG_NAME), s->curproc, s->ipc - s->curseg,
-        s->curtask);
+    psys_debug("[%04x] ", s->curtask);
+    /* Indent for stack depth */
+    depth = psys_debug_stack_depth(s);
+    for (i = 0; i < depth; ++i) {
+        psys_debug(" ");
+    }
+
+    psys_debug("%.8s:0x%02x:%04x " ARROW " ",
+        psys_bytes(s, s->curseg + PSYS_SEG_NAME), s->curproc, s->ipc - s->curseg);
 
     if (segname) {
         psys_debug("%-8.8s:0x%x ", segname, procedure);

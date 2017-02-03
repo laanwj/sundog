@@ -33,10 +33,14 @@ void psys_debug(const char *fmt, ...);
 
 void psys_print_traceback(struct psys_state *s);
 void psys_print_info(struct psys_state *s);
-void psys_print_call_info(struct psys_state *s, struct psys_function_id *ignore, unsigned ignore_len);
+void psys_print_call_info(struct psys_state *s, const struct psys_function_id *ignore, unsigned ignore_len);
 
 void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigned size);
 void psys_debug_hexdump(struct psys_state *s, psys_fulladdr offset, unsigned size);
+
+/** Get current stack depth (number of caller frames on stack).
+ */
+int psys_debug_stack_depth(struct psys_state *s);
 
 /** Guess number of arguments for a procedure from number of locals and number
  * of values removed from stack on return.
