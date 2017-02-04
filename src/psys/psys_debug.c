@@ -335,7 +335,31 @@ void psys_print_call_info(struct psys_state *s, const struct psys_function_id *i
     psys_debug("\n");
 }
 
-void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigned size)
+static void highlight(psys_byte attr)
+{
+    if (attr) {
+        int fg, bg;
+        if ((attr&0x0f) >= 8) {
+            fg = (attr & 0x0f) + 90 - 8;
+        } else {
+            fg = (attr & 0x0f) + 30;
+        }
+        if ((attr>>4) >= 8) {
+            bg = (attr >> 4) + 100 - 8;
+        } else {
+            bg = (attr >> 4) + 40;
+        }
+        printf("\x1b[%d;%dm", fg, bg);
+    }
+}
+static void unhighlight(psys_byte attr)
+{
+    if (attr) {
+        printf("\x1b[0m");
+    }
+}
+
+void psys_debug_hexdump_ofshl(const psys_byte *data, psys_fulladdr offset, unsigned size, psys_byte *hl)
 {
     static const unsigned PER_LINE = 16;
     unsigned ptr                   = 0;
@@ -344,21 +368,38 @@ void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigne
         unsigned remainder = umin(size - ptr, PER_LINE);
         printf("%05x: ", ptr + offset);
         for (x = 0; x < remainder; ++x) {
+            if (hl) {
+                highlight(hl[ptr + x]);
+            }
             printf("%02x ", data[ptr + x]);
+            if (hl) {
+                unhighlight(hl[ptr + x]);
+            }
         }
         for (x = remainder; x < PER_LINE; ++x) {
             printf("   ");
         }
         for (x = 0; x < remainder; ++x) {
             psys_byte ch = data[ptr + x];
+            if (hl) {
+                highlight(hl[ptr + x]);
+            }
             if (ch >= 32 && ch < 127)
                 printf("%c", ch);
             else
                 printf(".");
+            if (hl) {
+                unhighlight(hl[ptr + x]);
+            }
         }
         printf("\n");
         ptr += 16;
     }
+}
+
+void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigned size)
+{
+    psys_debug_hexdump_ofshl(data, offset, size, NULL);
 }
 
 void psys_debug_hexdump(struct psys_state *s, psys_fulladdr offset, unsigned size)

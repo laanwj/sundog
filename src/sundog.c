@@ -501,6 +501,10 @@ static void event_loop(struct game_state *gs)
      * 50fps? Probably badly: there's no framedrop support.
      */
     SDL_Event event;
+#ifdef GAME_CHEATS
+    psys_byte gamestate[512];
+    psys_byte hl[512];
+#endif
     gs->running = true;
     while (gs->running && SDL_WaitEvent(&event)) {
         switch (event.type) {
@@ -524,9 +528,21 @@ static void event_loop(struct game_state *gs)
                 }
                 psys_debug("\x1b[104;31mCHEATER\x1b[0m\n");
             } break;
-            case SDLK_y: /* Dump gamestate as hex */
-                psys_debug_hexdump(gs->psys, 0x1f66 + 8 + 0x1f * 2, 512);
-                break;
+            case SDLK_y: { /* Dump gamestate as hex */
+                unsigned i;
+                psys_byte *curstate = psys_bytes(gs->psys, 0x1f66 + 8 + 0x1f * 2);
+                for (i=0; i<512; ++i)
+                {
+                    if (curstate[i] != gamestate[i]) {
+                        hl[i] = 0x02; /* Highlight changed bytes since last time in green */
+                        gamestate[i] = curstate[i];
+                    } else {
+                        hl[i] = 0;
+                    }
+                }
+                psys_debug_hexdump_ofshl(curstate, 0, 512, hl);
+                psys_debug("\n");
+            } break;
 #endif
             case SDLK_t: /* Print timer */
                 psys_debug("Time: %d\n", get_60hz_time() - gs->time_offset);

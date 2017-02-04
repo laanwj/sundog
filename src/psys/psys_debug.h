@@ -63,6 +63,7 @@ void psys_print_info(struct psys_state *s);
  */
 void psys_print_call_info(struct psys_state *s, const struct psys_function_id *ignore, unsigned ignore_len, const struct util_debuginfo *dbginfo);
 
+void psys_debug_hexdump_ofshl(const psys_byte *data, psys_fulladdr offset, unsigned size, psys_byte *hl);
 void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigned size);
 void psys_debug_hexdump(struct psys_state *s, psys_fulladdr offset, unsigned size);
 
