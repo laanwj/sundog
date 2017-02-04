@@ -12,11 +12,13 @@
 #include "util/util_img.h"
 #include "util/util_minmax.h"
 #include "util/util_save_state.h"
+#include "util/write_bmp.h"
 
 #include "game_screen.h"
 
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 /* Header for savestates */
 #define GAME_GEMBIND_STATE_ID 0x47454d42
@@ -483,6 +485,7 @@ static void gembind_DecompressImage(struct psys_state *s, struct gembind_priv *p
     psys_fulladdr addr2l = psys_lda(s, addr2);
     psys_word addr1w     = psys_ldw(s, W(addr1l, 0)); /* what if addr1l is a negative address? */
     psys_word addr1h     = psys_ldw(s, W(addr1l, 1));
+    unsigned srcsize;
     if (priv->debug_level) {
         psys_debug("gembind_DecompressImage 0x%04x[0x%08x](%d,%d) -> 0x%04x[%08x] (%d,%d)\n",
             addr1, addr1l, addr1w, addr1h, addr2, addr2l, x, y);
@@ -494,7 +497,7 @@ static void gembind_DecompressImage(struct psys_state *s, struct gembind_priv *p
     }
 
     /* Decompress image into staging area */
-    util_img_decompress_image(priv->workspace, gem_bytes(s, priv, addr1l + 4), addr1w, addr1h);
+    util_img_decompress_image(priv->workspace, gem_bytes(s, priv, addr1l + 4), addr1w, addr1h, &srcsize);
 
     /* Perform copy */
     if (addr2l == 0) { /* if to screen */

@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-void util_img_decompress_image(uint8_t *dest, uint8_t *src, unsigned width, unsigned height)
+void util_img_decompress_image(uint8_t *dest, uint8_t *src, unsigned width, unsigned height, unsigned *srcsize_out)
 {
     unsigned sptr = 0, dptr = 0;
     unsigned end = width * height;
@@ -52,6 +52,9 @@ void util_img_decompress_image(uint8_t *dest, uint8_t *src, unsigned width, unsi
     }
     if (dptr != end) {
         psys_panic("util_img_decompress_image: overshot ending by %d pixels\n", (int)(dptr - end));
+    }
+    if (srcsize_out) {
+        *srcsize_out = sptr;
     }
 }
 

@@ -674,6 +674,14 @@ void game_sdlscreen_update_textures(struct game_screen *screen_, unsigned scr_te
             palette_img[x * 4 + 1] = (green << 5) | (green << 2) | (green >> 1);
             palette_img[x * 4 + 2] = (blue << 5) | (blue << 2) | (blue >> 1);
             palette_img[x * 4 + 3] = 255;
+#if 0
+            printf("%d 0x%02x 0x%02x 0x%02x 0x%02x\n",
+                    x,
+                    palette_img[x * 4 + 0],
+                    palette_img[x * 4 + 1],
+                    palette_img[x * 4 + 2],
+                    palette_img[x * 4 + 3]);
+#endif
         }
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SCREEN_COLORS, 1, GL_RGBA, GL_UNSIGNED_BYTE, palette_img);
         screen->palette_dirty = false;

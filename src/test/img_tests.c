@@ -24,6 +24,7 @@ int main()
     size_t destdata_planar_size;
     uint8_t *destdata_planar = load_file("test/compress_dest.bin", &destdata_planar_size);
     unsigned ptr;
+    unsigned size_consumed;
 
     if (sourcedata == NULL || destdata == NULL) {
         printf("Cannot load test data\n");
@@ -41,7 +42,7 @@ int main()
     }
 
     /* Test decompression */
-    util_img_decompress_image(scratch, sourcedata, width, height);
+    util_img_decompress_image(scratch, sourcedata, width, height, &size_consumed);
     for (ptr = 0; ptr < (width * height); ++ptr) {
         if (scratch[ptr] != destdata[ptr]) {
             printf("decompress: Mismatch at 0x%08x our %02x ref %02x\n", ptr,
@@ -54,6 +55,10 @@ int main()
         psys_debug_hexdump_ofs(scratch + 0x1f0, 0x1f0, 0x10);
         printf("ref\n");
         psys_debug_hexdump_ofs(destdata + 0x1f0, 0x1f0, 0x10);
+        return 1;
+    }
+    if (size_consumed != sourcedata_size) {
+        printf("%d source bytes consumed of %d.", (int)size_consumed, (int)sourcedata_size);
         return 1;
     }
 

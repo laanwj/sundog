@@ -42,6 +42,22 @@ ofs     blk   sz   desc
 0x0d800 0x48  ?    MAINLIB:0x4b
 ```
 
+### Images
+
+2b width 2h height then compressed image data:
+
+0x0d800  320x200  0x26b4 Title image
+0x0feb8  224x51   0x323  Sundog logo
+0x101e0  320x200  ?      ?
+0x11552  496x16   0x645  Items
+0x11b9c  16x133   ?      ?
+0x126ca  320x200  0x1057 Ship interior
+0x13726  320x200  ?      ?
+0x1b166  48x40    0x1f0  Background
+0x1b35a  160x32   0x25d  Special buildings
+0x1cd18  416x32   0x698  Buildings
+0x1d3b6  416x32   0x870  Buildings
+
 ### Library disks
 
 Library disks can be used to store extra save games. These are also accessed by

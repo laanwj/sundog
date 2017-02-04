@@ -36,6 +36,9 @@ GAME_OBJS= \
 TEST_OBJS= \
 	test/test_util.o
 
+TOOL_OBJS= \
+	util/write_bmp.o
+
 HEADERS= \
 	psys/psys_bootstrap.h \
 	psys/psys_constants.h \
@@ -67,14 +70,16 @@ MAIN_OBJS= \
 	sundog.o \
         test/img_tests.o \
 	test/inst_tests.o \
-	test/set_tests.o
+	test/set_tests.o \
+	rip_images.o
 
 EXES= \
 	sundog \
 	sundog_compare_trace \
 	test/img_tests \
 	test/inst_tests \
-	test/set_tests
+	test/set_tests \
+	rip_images
 
 all: $(EXES)
 
@@ -82,6 +87,9 @@ sundog: sundog.o $(PSYS_OBJS) $(GAME_OBJS)
 	$(CC) $^ $(LDFLAGS) -o $@
 
 sundog_compare_trace: sundog_compare_trace.o $(PSYS_OBJS) $(GAME_OBJS)
+	$(CC) $^ $(LDFLAGS) -o $@
+
+rip_images: rip_images.o $(PSYS_OBJS) $(GAME_OBJS) $(TOOL_OBJS)
 	$(CC) $^ $(LDFLAGS) -o $@
 
 test/set_tests: test/set_tests.o $(PSYS_OBJS)
@@ -106,4 +114,4 @@ check: $(EXES)
 	test/img_tests
 
 clean:
-	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS)
+	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS) $(TOOL_OBJS)

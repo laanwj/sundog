@@ -25,7 +25,7 @@ static inline uint32_t double_bits16(uint32_t x)
  * one-byte-per-pixel format. Needs width*height bytes space
  * at dest.
  */
-extern void util_img_decompress_image(uint8_t *dest, uint8_t *src, unsigned width, unsigned height);
+extern void util_img_decompress_image(uint8_t *dest, uint8_t *src, unsigned width, unsigned height, unsigned *srcsize_out);
 
 /** Convert planar image to 1-byte-per-pixel grid */
 extern void util_img_unplanarize(uint8_t *destdata, unsigned bytes_per_line, const uint8_t *planar, unsigned srcx, unsigned srcy, unsigned width, unsigned height, unsigned src_wdwidth);
