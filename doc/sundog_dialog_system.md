@@ -14,6 +14,11 @@ There can be multiple alternatives within a phrase, by default
 these are select at random to give some variation, but the script
 can also select a specific variant.
 
+Dumping
+------------
+The tool [tools/dump\_text.py](tools/dump_text.py) can be used to dump all the
+dialog text of the game in a human-readable format.
+
 Stock phrases
 ------------------
 
