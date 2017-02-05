@@ -338,6 +338,12 @@ Locals
 
 - `XDOFIGHT_01_L3`  Tractor beam enabled.
 
+### XDOINTER
+
+- `XDOINTER_01_L64`  Current interaction block is read here
+- `XDOINTER_01_L164`  Block 0x12 and 0x13 of compressed interaction text are read here
+- `XDOINTER_01_L1e` current pointer into XDOINTER_01_L64
+
 Savegame state
 ---------------
 

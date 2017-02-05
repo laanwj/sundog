@@ -79,6 +79,7 @@ although that one went even more full out nuts:
   same buffer, at offset 0) - as the first read is discarded this is clearly a
   way to get a certain instance of a duplicate sector by directing the drive.
   This reads 0x300 words into [SHIPLIB\_6]
+- XDOINTER:0x22 Reads a sector then immediately reads sector 4.
 
 ### Weird, may be related or not
 

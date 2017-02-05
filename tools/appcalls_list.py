@@ -90,6 +90,23 @@ APPCALLS = {
         0x07: 'NavigationMenu',
         0x0a: 'MainMenuSetup',  # Only called if another menu appeared in the meantime
     },
+    b'XDOINTER': { # XDOINTERACTION
+        0x01: 'XDoInteraction(a,b,c)',
+        0x0a: 'GetStringOffset(x):integer', # Get offset for string x
+        0x0b: 'LookupString(x,y,addr)', # Copy string x (alt y if y>=0) to addr
+        0x0c: 'SeekStringAlt(y,base,len)',
+        0x0d: 'MapCase()', # Map character 0x5c/0x7c to 'I', and capitals to lower-case letters
+        0x0e: 'GetNextByte(addr)',
+        0x10: 'OuterIndirectOut(i)', # Process string at offset i*2: substitute other strings
+        0x11: 'StringCharOut(x)', # Process string *x*: outer
+        0x13: 'HandleChar(x)', # ?
+        0x14: 'StringIndirectOut2(addr,?,?)', # ?
+        0x16: 'StartInteraction(addr)',
+        0x1d: 'ComputeStringOffsets(a,b,c)',
+        0x22: 'WeirdLoadSector(addr,block)',
+        0x24: 'InitDialogs()',  # Load main dialog words
+        0x1f: 'LoadDialogBlocks()',  # Load misc dialog words/"code"
+    },
     # Utilities
     b'MAINLIB ': {
         0x02: 'WaitMouseRelease',  # Wait until no mouse buttons pressed
