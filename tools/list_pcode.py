@@ -223,6 +223,10 @@ def format_instruction(inst, proc, dseg, proclist):
                 comment = ' {a.cstart};{a.comment} "{}" @ 0x{:04x}{a.reset}'.format(s.decode(),ofs,a=ATTR)
             else:
                 comment = ' {a.cstart};{a.comment} 0x{:04x}{a.reset}'.format(ofs,a=ATTR)
+    # ldc: print offset
+    elif opc == opcodes.LDC:
+        ofs = dseg.datastart + args[1] * 2
+        comment = ' {a.cstart};{a.comment} 0x{:04x}{a.reset}'.format(ofs,a=ATTR)
     # xjp: print jump table
     elif opc == opcodes.XJP:
         ofs = dseg.datastart + args[0] * 2
@@ -594,13 +598,16 @@ def control_flow_analysis(proc, dseg, proclist, debug=False):
 
 def crossreference_constants(dseg):
     '''
-    Cross-reference lcos to determine constant pool references.
+    Cross-reference LCOs and LDCs to determine constant pool references.
     '''
     dseg.cpool = {}
     for proc in dseg.procedures:
         for inst in proc.instructions:
             if inst.opcode == opcodes.LCO:
                 ofs = dseg.datastart + inst.args[0] * 2
+                dseg.cpool.setdefault(ofs, []).append(inst.addr)
+            elif inst.opcode == opcodes.LDC:
+                ofs = dseg.datastart + inst.args[1] * 2
                 dseg.cpool.setdefault(ofs, []).append(inst.addr)
 
 def crossreference_syscom(segments):
