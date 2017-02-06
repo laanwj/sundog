@@ -2,29 +2,29 @@
 #include "util/util_img.h"
 #include "util/write_bmp.h"
 
-#include <stdio.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
 
 static void write_image(unsigned addr, const psys_byte *data, unsigned width, unsigned height)
 {
     static const unsigned char palette[16][4] = {
-        {0x00,0x00,0x00,0xff},
-        {0x00,0x00,0xb6,0xff},
-        {0x00,0x92,0x00,0xff},
-        {0x00,0xb6,0xb6,0xff},
-        {0xb6,0x00,0x00,0xff},
-        {0xb6,0x00,0xb6,0xff},
-        {0x92,0x6d,0x00,0xff},
-        {0xb6,0xb6,0xb6,0xff},
-        {0x49,0x49,0x49,0xff},
-        {0x24,0x49,0xff,0xff},
-        {0x00,0xff,0x00,0xff},
-        {0x00,0xff,0xff,0xff},
-        {0xff,0x00,0x00,0xff},
-        {0xff,0x00,0xff,0xff},
-        {0xff,0xff,0x00,0xff},
-        {0xff,0xff,0xff,0xff},
+        { 0x00, 0x00, 0x00, 0xff },
+        { 0x00, 0x00, 0xb6, 0xff },
+        { 0x00, 0x92, 0x00, 0xff },
+        { 0x00, 0xb6, 0xb6, 0xff },
+        { 0xb6, 0x00, 0x00, 0xff },
+        { 0xb6, 0x00, 0xb6, 0xff },
+        { 0x92, 0x6d, 0x00, 0xff },
+        { 0xb6, 0xb6, 0xb6, 0xff },
+        { 0x49, 0x49, 0x49, 0xff },
+        { 0x24, 0x49, 0xff, 0xff },
+        { 0x00, 0xff, 0x00, 0xff },
+        { 0x00, 0xff, 0xff, 0xff },
+        { 0xff, 0x00, 0x00, 0xff },
+        { 0xff, 0x00, 0xff, 0xff },
+        { 0xff, 0xff, 0x00, 0xff },
+        { 0xff, 0xff, 0xff, 0xff },
     };
     unsigned char *rgba = malloc(width * height * 4);
     char filename[80];
@@ -32,16 +32,16 @@ static void write_image(unsigned addr, const psys_byte *data, unsigned width, un
 
     sprintf(filename, "image_%05x.bmp", addr);
     ptr = 0;
-    for (yy=0; yy<height; ++yy) {
-        for (xx=0; xx<width; ++xx) {
-            rgba[ptr*4 + 0] = palette[data[ptr]][0];
-            rgba[ptr*4 + 1] = palette[data[ptr]][1];
-            rgba[ptr*4 + 2] = palette[data[ptr]][2];
-            rgba[ptr*4 + 3] = palette[data[ptr]][3];
+    for (yy = 0; yy < height; ++yy) {
+        for (xx = 0; xx < width; ++xx) {
+            rgba[ptr * 4 + 0] = palette[data[ptr]][0];
+            rgba[ptr * 4 + 1] = palette[data[ptr]][1];
+            rgba[ptr * 4 + 2] = palette[data[ptr]][2];
+            rgba[ptr * 4 + 3] = palette[data[ptr]][3];
             ptr++;
         }
     }
-    bmp_dump32_ex((char*)rgba, width, height, true, false, false, filename);
+    bmp_dump32_ex((char *)rgba, width, height, true, false, false, filename);
     free(rgba);
     printf("Wrote image to %s\n", filename);
 }
@@ -77,11 +77,10 @@ static void rip_images(const char *imagename)
     ptr = 0x0d800;
     while (true) {
         unsigned srcsize;
-        width = (disk_data[ptr] << 8) | disk_data[ptr+1];
-        height = (disk_data[ptr+2] << 8) | disk_data[ptr+3];
+        width  = (disk_data[ptr] << 8) | disk_data[ptr + 1];
+        height = (disk_data[ptr + 2] << 8) | disk_data[ptr + 3];
 
-        if (width == 0 || height == 0)
-        {
+        if (width == 0 || height == 0) {
             break;
         }
 
@@ -105,7 +104,6 @@ static void rip_images(const char *imagename)
         }
     }
 }
-
 
 int main(int argc, char **argv)
 {

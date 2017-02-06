@@ -302,7 +302,7 @@ static int game_load_state(struct game_state *gs, int fd)
 
 static int game_save_state(struct game_state *gs, int fd)
 {
-    uint32_t id   = PSYS_SUND_STATE_ID;
+    uint32_t id = PSYS_SUND_STATE_ID;
     if (FD_WRITE(fd, id)
         || FD_WRITE(fd, gs->saved_time)) {
         return -1;
@@ -330,7 +330,7 @@ static void start_interpreter_thread(struct game_state *gs)
 {
     SDL_AtomicSet(&gs->stop_trigger, 0);
     gs->time_offset = get_60hz_time() - gs->saved_time; /* Set time to saved time when thread last stopped */
-    gs->thread = SDL_CreateThread(interpreter_thread, "interpreter_thread", gs->psys);
+    gs->thread      = SDL_CreateThread(interpreter_thread, "interpreter_thread", gs->psys);
 #if 0
     psys_debug("[%d] Interpreter thread started\n", get_60hz_time() - gs->time_offset);
 #endif
@@ -535,10 +535,9 @@ static void event_loop(struct game_state *gs)
             case SDLK_y: { /* Dump gamestate as hex */
                 unsigned i;
                 psys_byte *curstate = psys_bytes(gs->psys, 0x1f66 + 8 + 0x1f * 2);
-                for (i=0; i<512; ++i)
-                {
+                for (i = 0; i < 512; ++i) {
                     if (curstate[i] != gamestate[i]) {
-                        hl[i] = 0x02; /* Highlight changed bytes since last time in green */
+                        hl[i]        = 0x02; /* Highlight changed bytes since last time in green */
                         gamestate[i] = curstate[i];
                     } else {
                         hl[i] = 0;

@@ -339,12 +339,12 @@ static void highlight(psys_byte attr)
 {
     if (attr) {
         int fg, bg;
-        if ((attr&0x0f) >= 8) {
+        if ((attr & 0x0f) >= 8) {
             fg = (attr & 0x0f) + 90 - 8;
         } else {
             fg = (attr & 0x0f) + 30;
         }
-        if ((attr>>4) >= 8) {
+        if ((attr >> 4) >= 8) {
             bg = (attr >> 4) + 100 - 8;
         } else {
             bg = (attr >> 4) + 40;

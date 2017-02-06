@@ -347,7 +347,7 @@ static void psys_rsp_iocheck(struct psys_state *state, struct psys_rsp_state *rs
  */
 static void psys_rsp_getpoolbytes(struct psys_state *state, struct psys_rsp_state *rsp, psys_fulladdr segment, psys_fulladdr env_data)
 {
-    psys_sword n_bytes  = psys_spop(state);
+    psys_sword n_bytes = psys_spop(state);
     psys_word offset   = psys_pop(state);
     psys_word pooldesc = psys_pop(state);
     psys_word dest     = psys_pop(state);
