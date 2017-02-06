@@ -16,9 +16,9 @@
 
 #include "game_screen.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
 
 /* Header for savestates */
 #define GAME_GEMBIND_STATE_ID 0x47454d42
@@ -523,10 +523,73 @@ static void gembind_DecompressImage(struct psys_state *s, struct gembind_priv *p
  */
 static void gembind_DoSound(struct psys_state *s, struct gembind_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
-    psys_word a = psys_pop(s);
+    psys_word a     = psys_pop(s);
+    uint8_t tempreg = 0;
+    unsigned len    = 0;
     (void)a;
 #if 0 /* too "noisy" */
     psys_debug("gembind_DoSound 0x%04x\n", a);
+#endif
+    /* Determine length of sound data */
+    while (1) {
+        uint8_t cmd = psys_ldb(s, a, len);
+        len += 1;
+        if ((cmd & 0xf0) == 0 || cmd == 0x80) { /* one-byte argument */
+#if 0
+            psys_debug("r%02x=%02x\n", cmd, psys_ldb(s, a, len));
+#endif
+            len += 1;
+        } else if (cmd == 0x80) { /* set temp register */
+            tempreg = psys_ldb(s, a, len);
+#if 0
+            psys_debug("tmp=%02x\n", cmd, tempreg);
+#endif
+            len += 1;
+        } else if (cmd == 0x81) {                   /* Loop */
+            uint8_t arg0 = psys_ldb(s, a, len);     /* Register */
+            uint8_t arg1 = psys_ldb(s, a, len + 1); /* Value to add every tick */
+            uint8_t arg2 = psys_ldb(s, a, len + 2); /* Value to match at end */
+            unsigned gcd;
+            (void)arg0;
+#if 0
+            psys_debug("loop r%02x %02x -> %02x\n", arg0, arg1, arg2);
+#endif
+            len += 3;
+            /* Does it ever terminate?
+             * Solve linear congruence:
+             *   tempreg + arg1*x == arg2 (mod 256)
+             *   arg1*x == arg2 - tempreg (mod 256)
+             *   gcd(arg1,256) divides (arg2 - tempreg)
+             */
+            /* gcd(x,256) is simply least significant bit set */
+            for (gcd = 1; gcd < 256; gcd *= 2) {
+                if (arg1 & gcd) {
+                    break;
+                }
+            }
+            /* Check divides */
+            if (((arg2 - tempreg) & (gcd - 1)) != 0) {
+                /* This never terminates, so this is the end */
+                break;
+            }
+            /* Tempreg will have value arg2 when this terminates */
+            tempreg = arg2;
+        } else if (cmd >= 0x82) { /* Delay */
+            uint8_t arg = psys_ldb(s, a, len);
+#if 0
+            psys_debug("delay %02x %02x\n", cmd, arg);
+#endif
+            len += 1;
+            if (arg == 0) { /* Zero delay terminates sequence */
+                break;
+            }
+        } else { /* Unknown opcode */
+            psys_debug("gembind_DoSound unknown opcode 0x%02x at offset 0x%04x\n", cmd, len);
+            return;
+        }
+    }
+#if 0
+    psys_debug_hexdump(s, a, len);
 #endif
 }
 
