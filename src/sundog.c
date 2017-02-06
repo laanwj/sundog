@@ -55,6 +55,7 @@ struct game_state {
     SDL_atomic_t vblank_trigger;
     unsigned vblank_count;
     unsigned time_offset;
+    uint32_t saved_time;
 
     GLuint scr_program;
     GLuint scr_tex;
@@ -276,7 +277,6 @@ static struct psys_state *setup_state(struct game_screen *screen, const char *im
 static int game_load_state(struct game_state *gs, int fd)
 {
     uint32_t id;
-    uint32_t time; /* Read current time at time of writing state */
     if (FD_READ(fd, id)) {
         return -1;
     }
@@ -285,11 +285,9 @@ static int game_load_state(struct game_state *gs, int fd)
         return -1;
     }
     /* get_60hz_time() - gs->time_offset should return the same as at saving time */
-    if (FD_READ(fd, time)) {
+    if (FD_READ(fd, gs->saved_time)) {
         return -1;
     }
-    gs->time_offset = get_60hz_time() - time;
-    psys_debug("Time after restore: %d\n", get_60hz_time() - gs->time_offset);
 
     if (psys_load_state(gs->psys, fd) < 0) {
         psys_debug("Error loading p-system state\n");
@@ -305,10 +303,8 @@ static int game_load_state(struct game_state *gs, int fd)
 static int game_save_state(struct game_state *gs, int fd)
 {
     uint32_t id   = PSYS_SUND_STATE_ID;
-    uint32_t time = get_60hz_time() - gs->time_offset; /* Write current time */
-    psys_debug("Time at save: %d\n", time);
     if (FD_WRITE(fd, id)
-        || FD_WRITE(fd, time)) {
+        || FD_WRITE(fd, gs->saved_time)) {
         return -1;
     }
 
@@ -333,7 +329,11 @@ static int interpreter_thread(void *ptr)
 static void start_interpreter_thread(struct game_state *gs)
 {
     SDL_AtomicSet(&gs->stop_trigger, 0);
+    gs->time_offset = get_60hz_time() - gs->saved_time; /* Set time to saved time when thread last stopped */
     gs->thread = SDL_CreateThread(interpreter_thread, "interpreter_thread", gs->psys);
+#if 0
+    psys_debug("[%d] Interpreter thread started\n", get_60hz_time() - gs->time_offset);
+#endif
 }
 
 /** Stop interpreter thread, and wait for it */
@@ -341,6 +341,10 @@ static void stop_interpreter_thread(struct game_state *gs)
 {
     SDL_AtomicSet(&gs->stop_trigger, 1);
     SDL_WaitThread(gs->thread, NULL);
+    gs->saved_time = get_60hz_time() - gs->time_offset; /* Write current time */
+#if 0
+    psys_debug("[%d] Interpreter thread stopped\n", gs->saved_time);
+#endif
 }
 
 static void shader_source(GLuint shader, const char *shader_str)
@@ -654,6 +658,7 @@ int main(int argc, char **argv)
     /* Set up "vblank" timer */
     gs->vblank_count = 0;
     gs->time_offset  = get_60hz_time();
+    gs->saved_time   = 0;
     gs->timer        = SDL_AddTimer(VBLANK_TIME, &timer_callback, gs);
 
     /* Create object to manage rendering from interpreter */
