@@ -676,6 +676,10 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
                 return true;
             }
         }
+    } else {
+        /* Clear these, so that the breakpoint will hit here next time */
+        dbg->curerec = 0;
+        dbg->curipc = 0;
     }
     return false;
 }
