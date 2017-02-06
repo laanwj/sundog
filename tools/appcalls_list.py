@@ -37,7 +37,7 @@ APPCALLS = {
         0x0f: 'RedFlashToggle',
         0x10: 'SetClipAndWriteMode', # VDI 129/32
         0x16: ('DrawStars()', 0, 0), # This draws the viewscreen background
-        0x17: 'Randomize', # Randomize 256 bytes
+        0x17: 'RandomizeStars', # Randomize 256 bytes (star positions)
         0x18: ('HandleBogeys()', 0, 0), # Handle bogeys (enemy ship movement) in space fight
         0x19: ('FireWeaponAnimation(x)', 1, 0),
         0x1a: ('WarpAnimation(a,b,c,vdihandle)', 4, 0),
@@ -105,7 +105,7 @@ APPCALLS = {
         0x1d: 'ComputeStringOffsets(a,b,c)',
         0x22: 'WeirdLoadSector(addr,block)',
         0x24: 'InitDialogs()',  # Load main dialog words
-        0x1f: 'LoadDialogBlocks()',  # Load misc dialog words/"code"
+        0x1f: 'LoadDialogBlocks(x)',  # Load misc dialog words/"code"
     },
     # Utilities
     b'MAINLIB ': {
@@ -119,6 +119,9 @@ APPCALLS = {
         0x0b: 'PseudoRandom():integer',
         0x0c: 'RandomRange(low,high):integer',
         0x0d: 'Thousands(addrout,?,value)',
+        0x0e: 'GT32(addra,addrb):integer', # addra[0]>addrb[0] || (addra[0]==addrb[0] && addra[1]>addrb[1])
+        0x0f: '??32(addra,addrb)', # Some 32-bit operation on two arguments
+        0x10: '??32(addra,addrb)', # Some 32-bit operation on two arguments (calls 0x0f)
         0x11: 'GetScore():integer',
         0x12: 'SumData',           # Simple checksum
         0x13: 'SumAndDeobfuscate(_,stride,_,_,addr,count,key)', # Sum then deobfuscate data
@@ -131,7 +134,7 @@ APPCALLS = {
         0x1e: 'PrintNumber2', # uses different print function
         0x1f: 'FormatMoney(a,b,c)',
         0x20: 'PrintMoney(amountptr)',
-        0x21: 'SetGlobal7',
+        0x21: 'FontRenderConfig(x)',  # Not sure what this actually sets
         0x24: 'DrawTime(a,b,c,d,e)',
         0x2c: 'WaitEvent',  # Wait for mouse click or other event
         0x2d: 'ConditionalWait',   # Conditional wait on semaphore MAINLIB+0xa74
@@ -152,6 +155,7 @@ APPCALLS = {
         0x4e: 'TextPrintHelper',
         0x4f: 'FormatPaddedNumber',
         0x50: 'TimeDigit', # local function of DrawTime
+        0x51: 'Sign32(addra)', # (addra[0]<0 || addra[1]<0)?-1:1
         0x52: '?(i,a:bytearray)', # gets passed an index and a 4-byte array
         0x54: 'PossiblyRunDiskCheck',
         0x15: 'FormatNumber',
@@ -159,8 +163,12 @@ APPCALLS = {
     b'WINDOWLI': {
         0x05: 'MouseDown(x,y,a,b)', # Mouse pressed
         0x07: 'ShowItemName', # Show item name
+        0x0f: 'DrawButtons(a)',
         0x10: 'MouseClick(i,x,y)', # Frequently called while mouse is clicked at position x,y
+        0x14: 'SetButtonText(i,text:string)',
+        0x15: 'DrawWindow(a,b,c)',
         0x17: 'DrugEffects(item,b,c,d,e)',
+        0x19: 'DrawButton(a,b,c)',
     },
     # Bindings
     b'GEMBIND ': {
