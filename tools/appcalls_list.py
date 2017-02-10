@@ -142,7 +142,9 @@ APPCALLS = {
         0x32: 'PaletteChange()',
         0x33: 'Nop()',  # Do nothing
         0x34: 'PossiblySetEvilState', # Possibly set state so that RSOD appears
+        0x37: 'FillLayoutRectangle(color,n)', # Fill layout rectangle n with color
         0x38: 'DrawColoredRectangle(color,x0,y0,x1,y1)',
+        0x3d: 'PrintLnHelper(a,b,c)', # Called from PrintLn
         0x44: 'ErrorMessage',
         0x45: 'CheckDiskResult', # Return 1 if error, 0 otherwise
         0x46: 'CheckCorrectDisk', # Read block 0x3a or 0x06 to see if library/sundog disk is in the drive as expected
@@ -165,6 +167,7 @@ APPCALLS = {
         0x07: 'ShowItemName', # Show item name
         0x0f: 'DrawButtons(a)',
         0x10: 'MouseClick(i,x,y)', # Frequently called while mouse is clicked at position x,y
+        0x13: 'SetButtonLayout(x)',
         0x14: 'SetButtonText(i,text:string)',
         0x15: 'DrawWindow(a,b,c)',
         0x17: 'DrugEffects(item,b,c,d,e)',

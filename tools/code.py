@@ -117,6 +117,18 @@ class Instruction:
         else:
             return None
 
+    def get_constant(self):
+        '''
+        Return value for load constants, or None if
+        not a constant.
+        '''
+        if opcodes.SLDC0 <= self.opcode <= opcodes.SLDC31:
+            return self.opcode - opcodes.SLDC0
+        elif self.opcode in {opcodes.LDCI,opcodes.LDCB}:
+            return self.args[0]
+        else:
+            return None
+
 class Procedure:
     def __init__(self):
         self.num = None

@@ -19,6 +19,7 @@ from code import Instruction, Procedure, Segment
 from disass import disassemble_unit
 from segdir import SegmentInfo,SegmentDirectory
 import sundog_info
+from decompile import pcode_decompile
 
 # TODO
 # - calltree metadata: cross-reference where procedures are called from
@@ -725,13 +726,16 @@ def main():
 
             if args.mode == 1:
                 list_unit(data, base, endian, seg.imports)
-            if args.mode == 2:
+            elif args.mode == 2:
                 dseg = disassemble_unit(data[base:base+seg.codesize], proclist, seg)
                 disopt = DisassemblyPrintOptions()
                 disopt.procedure = selection[1]
                 print_disassembly(dseg, data[base:base+seg.codesize], endian, proclist, disopt, selection[1])
                 print('{a.cstart};{a.comment} ----------------------------------{a.reset}'.format(a=ATTR))
-            if args.mode >= 3: # disassemble all units for statistics
+            elif args.mode == 9:
+                dseg = disassemble_unit(data[base:base+seg.codesize], proclist, seg)
+                pcode_decompile(dseg, proclist, selection[1])
+            elif args.mode >= 3: # disassemble all units for statistics
                 segments.append(disassemble_unit(data[base:base+seg.codesize], proclist, seg))
 
     if args.mode == 3:
