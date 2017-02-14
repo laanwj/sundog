@@ -80,8 +80,8 @@ def analyze_basic_block(proc, dseg, proclist, bb, debug):
                 tgt = inst.get_call_target(seg.seg_num)
                 if tgt is not None:
                     tgtmeta = proclist[seg.references[tgt[0]],tgt[1]]
-                    if tgtmeta.delta is not None:
-                        intypes = [StackType.INT] * (-tgtmeta.delta)
+                    if tgtmeta.num_params is not None:
+                        intypes = [StackType.INT] * tgtmeta.num_params
                         outtypes = [] # XXX outtypes in case of return value
                     else: # unknown delta for procedure (native without proper metadata)
                         assert(False)

@@ -16,6 +16,17 @@ class ProcedureMetaData:
         self.parent = None     # lexical parent if known else None
     def __repr__(self):
         return '(%s,%s,%s,%s,%s,%s)' % (self.key, self.name, self.delta, self.ins, self.outs, self.parent)
+    @property
+    def num_params(self):
+        '''Number of parameters of this procedure'''
+        if self.delta is not None:
+            return -self.delta
+        else:
+            return None
+    @property
+    def rv_offset(self):
+        '''Offset of return value in locals'''
+        return self.num_locals + self.num_params + 1
 
 class ProcedureList:
     '''

@@ -117,6 +117,8 @@ Overall flow:
 #
 #  - function calls: figure out what is called
 #  - xjp: jump tables
+#  - lco: strings in-place?
+#  - sind: indexing
 
 ####### Top level ########
 
@@ -189,13 +191,11 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
             if lnum is None:
                 return None
             if lnum > meta.num_locals:
-                if lnum < meta.num_locals - meta.delta + 1:
-                    num_params = -meta.delta
-                    # Increasing argument numbers 0..num_params
-                    param = meta.num_locals + num_params - lnum
-                    return ParameterRef(meta.key, param)
+                if lnum < meta.rv_offset:
+                    # PASCAL-style argument numbers 0..num_params
+                    return ParameterRef(meta.key, meta.rv_offset - lnum - 1)
                 else:
-                    return ReturnValueRef(meta.key, lnum - meta.num_locals + meta.delta - 1)
+                    return ReturnValueRef(meta.key, lnum - meta.rv_offset)
             else:
                 return LocalVariableRef(meta.key, lnum)
         else:
