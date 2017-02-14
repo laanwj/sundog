@@ -148,7 +148,7 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
     # index of next temporary to be dealt out
     tcount = 0
 
-    def new_temporary(out):
+    def new_temporary():
         '''
         Get a new temporary. These are local to a function,
         but can be shared between basic blocks.
@@ -274,7 +274,7 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
                 multout = len(inst.data.outs) > 1
                 if inst.opcode == opcodes.DUP1: # Dups must assign a temporary to the *input* to avoid entirely awkward (but not incorrect) code
                     out = inst.data.ins[0]
-                    t = new_temporary(out)
+                    t = new_temporary()
                     # TODO: emit and store an actual statement
                     print('  %04x: %s = %s' % (inst.addr, t, out_to_expr(out)))
                     out.temp = t
@@ -282,9 +282,9 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
                     # This is handled in out_to_expr
                     pass
                 else:
-                    if multout:
+                    if multout: # Multiple outputs
                         for out in inst.data.outs:
-                            out.temp = new_temporary(out)
+                            out.temp = new_temporary()
                         temps = [repr(o.temp) for o in inst.data.outs]
                         # TODO: emit and store an actual statement
                         print('  %04x: mult %s = %s' % (inst.addr, ', '.join(temps), inst_to_expr(inst)))
@@ -295,7 +295,7 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
                             raise ValueError('No uses for output %s' % out)
                         if len(out.uses)>1 or out.uses[0].addr > nextaddr:
                             #print('Statement: %s used: %04x nextaddr: %04x' % (out, out.uses[0].addr, nextaddr))
-                            t = new_temporary(out)
+                            t = new_temporary()
                             # TODO: emit and store an actual statement
                             print('  %04x: %s = %s' % (inst.addr, t, out_to_expr(out)))
                             out.temp = t
@@ -303,7 +303,17 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
             # at sequence point: emit statement
             inst = bb.instructions[ptr]
             op = opcodes.OPCODES[inst.opcode]
-            print('  %04x: %s' % (inst.addr, inst_to_expr(inst)))
+            if inst.data.outs:
+                assert(len(inst.data.outs)==1)
+                out = inst.data.outs[0]
+                t = new_temporary()
+                # TODO: emit and store an actual statement
+                print('  %04x: %s = %s' % (inst.addr, t, out_to_expr(out)))
+                out.temp = t
+            else:
+                # TODO: emit and store an actual statement
+                print('  %04x: %s' % (inst.addr, inst_to_expr(inst)))
+            ptr += 1
 
 
 def decompile_procedure(proc, dseg, proclist, debug=False):

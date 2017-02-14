@@ -13,8 +13,9 @@ class ILAInfo:
 class StackType:
     INT = 0
     SET = 1
+    SINK = 2 # Ignore value (can only be used on input), used for procedure return values
 
-    by_idx = ['INT','SET']
+    by_idx = ['INT','SET','SINK']
 
 class INode:
     temp = None # name for this node, or None
@@ -81,8 +82,8 @@ def analyze_basic_block(proc, dseg, proclist, bb, debug):
                 if tgt is not None:
                     tgtmeta = proclist[seg.references[tgt[0]],tgt[1]]
                     if tgtmeta.num_params is not None:
-                        intypes = [StackType.INT] * tgtmeta.num_params
-                        outtypes = [] # XXX outtypes in case of return value
+                        intypes = [StackType.INT] * tgtmeta.num_params + [StackType.SINK] * tgtmeta.num_retvals
+                        outtypes = [StackType.INT] * tgtmeta.num_retvals
                     else: # unknown delta for procedure (native without proper metadata)
                         assert(False)
                 else: # unknown target; RPU
@@ -136,13 +137,14 @@ def analyze_basic_block(proc, dseg, proclist, bb, debug):
                     for d in data: # back-reference: mark uses
                         d.uses.append(val)
                 else:
-                    assert(val.type_ == typ)
+                    assert(val.type_ == typ or (typ == StackType.SINK and val.type_ == StackType.INT))
             else: # nothing on stack, this is a bb input
                 i = BBInput(typ, len(bb.ins))
                 bb.ins.append(i)
                 val = i
             val.uses.append(inst) # back-reference
-            inst.data.ins.append(val)
+            if typ != StackType.SINK:
+                inst.data.ins.append(val)
         # reverse ins from pop order to pascal order TOS-x..TOS-0
         inst.data.ins = list(reversed(inst.data.ins))
 
