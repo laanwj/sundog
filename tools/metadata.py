@@ -14,6 +14,7 @@ class ProcedureMetaData:
         self.outs = None       # stack: word pushes
         self.num_locals = None # stack: number of locals
         self.parent = None     # lexical parent if known else None
+        self.num_retvals = None # stack: number of return values
     def __repr__(self):
         return '(%s,%s,%s,%s,%s,%s)' % (self.key, self.name, self.delta, self.ins, self.outs, self.parent)
     @property
@@ -51,6 +52,7 @@ class ProcedureList:
                     (meta.name,meta.ins,meta.outs) = procname
                     if meta.ins is not None and meta.outs is not None:
                         meta.delta = meta.outs - meta.ins
+                        meta.num_retvals = meta.outs
                 else:
                     meta.name = procname
 
@@ -58,7 +60,7 @@ class ProcedureList:
         '''Load stack deltas'''
         for (key, data) in deltas.items():
             meta = self.ref(key)
-            (meta.delta, meta.ins, meta.outs, meta.num_locals) = data
+            (meta.delta, meta.ins, meta.outs, meta.num_locals, meta.num_retvals) = data
 
     def load_hierarchy(self, hierarchy):
         '''Load lexical hierarchy'''
