@@ -266,6 +266,8 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
             op = opcodes.OPCODES[inst.opcode]
             if op[2] & (opcodes.STORE | opcodes.CALL | opcodes.CFLOW):
                 seqpoints.append((i,inst.addr))
+        # add virtual sequence one past the end of BB to catch BB outputs after the last statement
+        seqpoints.append((len(bb.instructions), inst.addr+1)) 
 
         ptr = 0
         for (nexti,nextaddr) in seqpoints:
@@ -300,7 +302,11 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
                             print('  %04x: %s = %s' % (inst.addr, t, out_to_expr(out)))
                             out.temp = t
                 ptr += 1
+            if ptr >= len(bb.instructions):
+                break
             # at sequence point: emit statement
+            # this code conceptually the same as the above, except that a statement is forced,
+            # and should be rolled into it
             inst = bb.instructions[ptr]
             op = opcodes.OPCODES[inst.opcode]
             if inst.data.outs:

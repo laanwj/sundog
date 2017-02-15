@@ -6,23 +6,38 @@ import opcodes
 ####### Instruction-level data flow analysis ########
 
 class ILAInfo:
+    '''
+    Result of instruction-level data flow analysis. Instructions will be
+    augmented with this structure, pointing to inputs and outputs.
+    '''
     def __init__(self):
         self.ins = []  # inputs, from ..., TOS-1, TOS0, in reverse order of pop
         self.outs = [] # outputs, from ..., TOS-1, TOS0 in order of push
 
 class StackType:
-    INT = 0
-    SET = 1
+    '''
+    Enumeration of stack types.
+    '''
+    INT = 0  # Basic 16-bit integer
+    SET = 1  # Set of up to 256 words / 4096 bits
     SINK = 2 # Ignore value (can only be used on input), used for procedure return values
 
     by_idx = ['INT','SET','SINK']
 
 class INode:
+    '''
+    Base class for instruction nodes.
+    '''
     temp = None # name for this node, or None
     def __init__(self):
         self.uses = [] # List of instructions and other INodes where this value is used
 
 class BBInput(INode):
+    '''
+    Virtual instruction node representing a basic block input.
+    BBinput instructions can be thought as of before the instructions of the basic block,
+    pushing their values on the stack.
+    '''
     def __init__(self, type_, idx):
         INode.__init__(self)
         self.type_ = type_
@@ -31,6 +46,10 @@ class BBInput(INode):
         return 'BBInput(%s,%d)' % (StackType.by_idx[self.type_],self.idx)
 
 class IOutput(INode):
+    '''
+    Instruction output node. Represents one (usually the only)
+    output of an instruction.
+    '''
     def __init__(self, type_, inst, idx):
         INode.__init__(self)
         self.type_ = type_
@@ -40,6 +59,10 @@ class IOutput(INode):
         return 'IOutput(%s,inst@%04x,%d)' % (StackType.by_idx[self.type_],self.inst.addr,self.idx)
 
 class OMakeSet(INode):
+    '''
+    Virtual instruction node that converts a a certain number of integer values
+    on the stack to a set.
+    '''
     def __init__(self, addr, size, data):
         INode.__init__(self)
         self.addr = addr
@@ -50,7 +73,11 @@ class OMakeSet(INode):
         return 'OMakeSet(%s)' % (self.data)
 
 class EndOfBasicBlock(INode):
-    '''Special marker for uses at end of basic block'''
+    '''
+    Virtual instruction node representing a basic block output.
+    BBoutput instructions can be thought as of after the instructions of the basic block,
+    popping values that the basic block left on the stack.
+    '''
     def __init__(self, addr):
         self.addr = addr
 
@@ -89,13 +116,13 @@ def analyze_basic_block(proc, dseg, proclist, bb, debug):
                 else: # unknown target; RPU
                     assert(inst.opcode == opcodes.RPU)
                     break 
-            elif inst.opcode == opcodes.STM: # store # words from stack
+            elif inst.opcode == opcodes.STM: # store N words from stack
                 intypes = [StackType.INT] * inst.args[0]
                 outtypes = []
-            elif inst.opcode == opcodes.LDM: # load # words to stack
+            elif inst.opcode == opcodes.LDM: # load N words to stack
                 intypes = []
                 outtypes = [StackType.INT] * inst.args[0]
-            elif inst.opcode == opcodes.LDC: # load # words to stack
+            elif inst.opcode == opcodes.LDC: # load N words to stack
                 intypes = []
                 outtypes = [StackType.INT] * inst.args[2]
             else: # unknown delta for this instruction (set ops etc)
@@ -154,7 +181,7 @@ def analyze_basic_block(proc, dseg, proclist, bb, debug):
             stack.append(o)
             inst.data.outs.append(o)
 
-    end = EndOfBasicBlock(inst.addr+1) # pointer beyond end
+    end = EndOfBasicBlock(0xffffffff) # pointer beyond end
     bb.outs = list(reversed(stack))
     for out in bb.outs:
         out.uses.append(end)
