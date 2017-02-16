@@ -18,11 +18,22 @@ class OpExpression(Expression):
         return '%s(%s)' % (self.op, ', '.join(repr(s) for s in self.args))
 
 class ConstantExpression(Expression):
+    '''Any kind of constant expression'''
+    pass
+
+class ConstantIntExpression(ConstantExpression):
     def __init__(self, val):
         self.val = val
 
     def __repr__(self):
         return '0x%x' % (self.val)
+
+class NilExpression(ConstantExpression):
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return 'nil'
 
 class FunctionCall(Expression):
     '''Function call expression'''

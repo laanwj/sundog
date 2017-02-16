@@ -4,8 +4,9 @@
 import opcodes
 from decompiler.basicblock import find_basic_blocks
 from decompiler.dataflow import analyze_basic_block, BBInput, IOutput, OMakeSet
-from decompiler.expression import (Expression, OpExpression, ConstantExpression, FunctionCall, TakeAddressOf,
-        VariableRef, GlobalVariableRef, ParameterRef, ReturnValueRef, LocalVariableRef, TempVariableRef)
+from decompiler.expression import (Expression, OpExpression, ConstantIntExpression, FunctionCall, TakeAddressOf,
+        VariableRef, GlobalVariableRef, ParameterRef, ReturnValueRef, LocalVariableRef, TempVariableRef,
+        NilExpression)
 from decompiler.statement import Statement, ExprStatement, AssignmentStatement
 '''
 p-code decompilation:
@@ -115,7 +116,7 @@ Overall flow:
 #    - swap (handled by simply regarding expressions as swapped)
 #    - dup1 (handled by assigning expression to temporary)
 #
-#  - function calls: figure out what is called
+#  - function calls: figure out what is called - there is already code for this in inst.get_call_target()
 #  - xjp: jump tables
 #  - lco: strings in-place?
 #  - sind: indexing
@@ -206,7 +207,7 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
         Default instruction to expression (create a OpExpression).
         '''
         op = opcodes.OPCODES[inst.opcode]
-        args = [ConstantExpression(x) for x in inst.args] + [out_to_expr(out) for out in inst.data.ins]
+        args = [ConstantIntExpression(x) for x in inst.args] + [out_to_expr(out) for out in inst.data.ins]
         return OpExpression(op[0].lower(), args)
 
     def inst_to_expr(inst):
@@ -218,11 +219,11 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
         #   CALL -> FunctionCall / ReturnStatement
         #   ADDR -> TakeAddressOf
         #   CFLOW -> ControlFlowStatement
-        # If instruction is simply a constant load, replace it with a ConstantExpression
+        # If instruction is simply a constant load, replace it with a ConstantIntExpression
         constval = inst.get_constant()
         ref = get_variable_ref(inst)
         if constval is not None:
-            return ConstantExpression(constval)
+            return ConstantIntExpression(constval)
         elif ref is not None:
             if op[2] & opcodes.LOAD: # LOAD -> VariableRef
                 return ref
@@ -234,6 +235,8 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
                 return default_inst_to_expr(inst)
         elif inst.opcode == opcodes.DUP1: # if a DUP, just bypass it
             return out_to_expr(inst.data.ins[0])
+        elif inst.opcode == opcodes.LDCN: # Load NIL
+            return NilExpression()
         else:
             return default_inst_to_expr(inst)
 
