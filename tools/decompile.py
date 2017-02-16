@@ -116,7 +116,6 @@ Overall flow:
 #    - swap (handled by simply regarding expressions as swapped)
 #    - dup1 (handled by assigning expression to temporary)
 #
-#  - function calls: figure out what is called - there is already code for this in inst.get_call_target()
 #  - xjp: jump tables
 #  - lco: strings in-place?
 #  - sind: indexing
@@ -274,6 +273,7 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
         # If instruction is simply a constant load, replace it with a ConstantIntExpression
         constval = inst.get_constant()
         ref = get_variable_ref(inst)
+        call = inst.get_call_target(seginfo.seg_num)
         if constval is not None:
             return ConstantIntExpression(constval)
         elif ref is not None:
@@ -285,6 +285,11 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
                 return TakeAddressOf(ref)
             else:
                 return default_inst_to_expr(inst)
+        elif call is not None:
+            # Determine scope
+            scope = inst.get_lex_level()
+            refseg = seginfo.references.get(call[0], b'???')
+            return FunctionCall((refseg,call[1]),[out_to_expr(x) for x in inst.data.ins], scope)
         elif inst.opcode == opcodes.DUP1: # if a DUP, just bypass it
             return out_to_expr(inst.data.ins[0])
         elif inst.opcode == opcodes.LDCN: # Load NIL
