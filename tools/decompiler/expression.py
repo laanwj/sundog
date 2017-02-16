@@ -37,15 +37,19 @@ class NilExpression(ConstantExpression):
 
 class FunctionCall(Expression):
     '''Function call expression'''
-    def __init__(self, func, sargs, scope):
+    def __init__(self, func, sargs, scope, meta=None):
         self.func = func
         self.sargs = sargs
         self.scope = scope # lex level, or None for global
+        self.meta = meta
 
     def __repr__(self):
         seg = self.func[0].rstrip().decode()
         scope = '' if self.scope is None else '[l%d]' % (self.scope)
-        return '%s%s_%02X(%s)' % (scope, seg, self.func[1], ', '.join(repr(s) for s in self.sargs))
+        name = ''
+        if self.meta is not None and self.meta.name is not None:
+            name = '_' + self.meta.name.partition('(')[0]
+        return '%s%s_%02X%s(%s)' % (scope, seg, self.func[1], name, ', '.join(repr(s) for s in self.sargs))
 
 class TakeAddressOf(Expression):
     '''Take address of expression'''

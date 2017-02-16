@@ -289,7 +289,9 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
             # Determine scope
             scope = inst.get_lex_level()
             refseg = seginfo.references.get(call[0], b'???')
-            return FunctionCall((refseg,call[1]),[out_to_expr(x) for x in inst.data.ins], scope)
+            key = (refseg,call[1])
+            return FunctionCall(key,[out_to_expr(x) for x in inst.data.ins], scope,
+                    proclist[key])
         elif inst.opcode == opcodes.DUP1: # if a DUP, just bypass it
             return out_to_expr(inst.data.ins[0])
         elif inst.opcode == opcodes.LDCN: # Load NIL
@@ -388,7 +390,12 @@ def decompile_procedure(proc, dseg, proclist, debug=False):
     if proc.is_native: # Cannot do native code
         return
     if debug:
-        print('Procedure %s:0x%02x' % (dseg.name, proc.num))
+        procmeta = proclist[(dseg.name, proc.num)]
+        seg = dseg.name.rstrip().decode()
+        name = ''
+        if procmeta.name is not None:
+            name = '_' + procmeta.name
+        print('Procedure %s_0x%02x%s' % (seg, proc.num, name))
     seg = dseg.info
 
     basic_blocks = find_basic_blocks(proc, dseg, proclist, debug=False)
