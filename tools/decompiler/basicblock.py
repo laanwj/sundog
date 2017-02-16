@@ -12,6 +12,12 @@ class BasicBlock:
         self.instructions = [] # Instructions in basic block
         self.pred = [] # Predecessors
         self.succ = [] # Successors
+        # Filled in by dataflow analysis:
+        # self.ins
+        # self.outs
+
+    def __repr__(self):
+        return 'bb@0x%04x' % self.addr
 
 class BasicBlocks:
     '''Container for basic blocks'''

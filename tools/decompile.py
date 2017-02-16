@@ -123,6 +123,58 @@ Overall flow:
 
 ####### Top level ########
 
+def link_basic_blocks(basic_blocks):
+    '''Link together basic blocks inputs and outputs with temporaries'''
+    # The overall algorithm is to visit all outputs of all basic blocks,
+    # and group them together. Each such group is assigned a temporary.
+    # Outputs belong to the same group if they share an input on some bb.
+    # Inputs are labeled with the same temporary.
+
+    # TODO: as it is a stack oriented machine, it is possible for BB outputs to
+    # 'jump over' basic blocks if something is pushed deeper on the stack of
+    # the origin bb than the target bb will consume. To handle this it'd be
+    # necessary to consider longer paths instead of just direct connections.
+    # For now, assert that ins match outs. This seems to be enough to get us
+    # through SYSTEM.STARTUP.
+    for bb in basic_blocks.blocks:
+        for bbs in bb.succ:
+            if len(bbs.ins) != len(bb.outs):
+                print('DIFFERENCE: %05x outs %d versus %05x ins %d' % (bb.addr, len(bb.outs), bbs.addr, len(bbs.ins)))
+                print(bb.outs)
+                print(bbs.ins)
+                raise NotImplementedError
+
+    tcount = 0x100 # Non-local temps
+    # Iterate, assign temporaries
+    for bb in basic_blocks.blocks:
+        if not bb.outs: # not interesting if there are no outputs
+            continue
+        if bb.outs[0].temp is not None: # bb was already visited as part of group
+            continue
+        # Build group of basic blocks
+        # We can take this shortcut of making a group of bb-prev and bb-succs
+        # because of the above assumption that number of inputs will match number of outputs
+        # for every pair of them.
+        pred = set()
+        succ = set()
+        todo = {bb}
+        while todo:
+            bbi = todo.pop()
+            pred.add(bbi)
+            for bbs in bbi.succ:
+                succ.add(bbs)
+                for bbp in bbs.pred:
+                    if not bbp in pred:
+                        todo.add(bbp)
+        # Assign temporaries to group
+        for i,_ in enumerate(bb.outs):
+            temp = TempVariableRef(tcount)
+            tcount += 1
+            for bbp in pred:
+                bbp.outs[i].temp = temp
+            for bbs in succ:
+                bbs.ins[i].temp = temp
+
 def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
     seginfo = dseg.info
     # make expression trees and statements
@@ -212,7 +264,7 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
 
     def inst_to_expr(inst):
         '''
-        Instruction to expression tree.
+        Instruction (and its dependency tree) to expression tree.
         '''
         op = opcodes.OPCODES[inst.opcode]
         # TODO: instruction-specific handling
@@ -242,7 +294,7 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
 
     def out_to_expr(out):
         '''
-        Instruction output to expression tree.
+        Instruction output (and its dependency tree) to expression tree.
         '''
         if out.temp is not None:
             return out.temp
@@ -300,10 +352,10 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
                             raise ValueError('No uses for output %s' % out)
                         if len(out.uses)>1 or out.uses[0].addr > nextaddr:
                             #print('Statement: %s used: %04x nextaddr: %04x' % (out, out.uses[0].addr, nextaddr))
-                            t = new_temporary()
+                            if out.temp is None:
+                                out.temp = new_temporary()
                             # TODO: emit and store an actual statement
-                            print('  %04x: %s = %s' % (inst.addr, t, out_to_expr(out)))
-                            out.temp = t
+                            print('  %04x: %s = %s' % (inst.addr, out.temp, inst_to_expr(inst)))
                 ptr += 1
             if ptr >= len(bb.instructions):
                 break
@@ -315,15 +367,14 @@ def emit_statements(proc, dseg, proclist, basic_blocks, debug=False):
             if inst.data.outs:
                 assert(len(inst.data.outs)==1)
                 out = inst.data.outs[0]
-                t = new_temporary()
+                if out.temp is None:
+                    out.temp = new_temporary()
                 # TODO: emit and store an actual statement
-                print('  %04x: %s = %s' % (inst.addr, t, out_to_expr(out)))
-                out.temp = t
+                print('  %04x: %s = %s' % (inst.addr, out.temp, inst_to_expr(inst)))
             else:
                 # TODO: emit and store an actual statement
                 print('  %04x: %s' % (inst.addr, inst_to_expr(inst)))
             ptr += 1
-
 
 def decompile_procedure(proc, dseg, proclist, debug=False):
     '''
@@ -336,8 +387,11 @@ def decompile_procedure(proc, dseg, proclist, debug=False):
     seg = dseg.info
 
     basic_blocks = find_basic_blocks(proc, dseg, proclist, debug=False)
+
     for bb in basic_blocks.blocks:
         analyze_basic_block(proc, dseg, proclist, bb, debug=False)
+
+    link_basic_blocks(basic_blocks)
 
     emit_statements(proc,dseg,proclist,basic_blocks,debug=True)
 
