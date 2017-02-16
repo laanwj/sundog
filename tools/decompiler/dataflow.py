@@ -117,10 +117,10 @@ def analyze_basic_block(proc, dseg, proclist, bb, debug):
                     assert(inst.opcode == opcodes.RPU)
                     break 
             elif inst.opcode == opcodes.STM: # store N words from stack
-                intypes = [StackType.INT] * inst.args[0]
+                intypes = [StackType.INT] * inst.args[0] + [StackType.INT] # block,addr
                 outtypes = []
             elif inst.opcode == opcodes.LDM: # load N words to stack
-                intypes = []
+                intypes = [StackType.INT] # addr
                 outtypes = [StackType.INT] * inst.args[0]
             elif inst.opcode == opcodes.LDC: # load N words to stack
                 intypes = []

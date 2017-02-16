@@ -578,9 +578,9 @@ def control_flow_analysis(proc, dseg, proclist, debug=False):
                     else: # unknown target
                         delta = None
                 elif inst.opcode == opcodes.STM: # store # words from stack
-                    delta = -inst.args[0]
+                    delta = 1-inst.args[0]
                 elif inst.opcode == opcodes.LDM: # load # words to stack
-                    delta = inst.args[0]
+                    delta = inst.args[0]-1
                 elif inst.opcode == opcodes.LDC: # load # words to stack
                     delta = inst.args[2]
                 else: # unknown delta for this instruction (set ops etc)
