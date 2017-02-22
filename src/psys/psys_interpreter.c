@@ -509,22 +509,22 @@ void psys_interpreter(struct psys_state *s)
      *   LDC, LDM, ADJ, SRS, CLP, CGP, SCIPn, CIP, CXL, SCXGn, CXG, CXI, CFP
      *   This does not seem to be implemented in the Atari ST version.
      */
-    int op; /* Stored opcode */
-    int arg0,arg1,arg2; /* Instruction arguments */
-    int tos0,tos1,tos2,tos3; /* Top Of Stack,-1, -2, -3, ... */
-    int x; /* Loop variable */
+    int op;                     /* Stored opcode */
+    int arg0, arg1, arg2;       /* Instruction arguments */
+    int tos0, tos1, tos2, tos3; /* Top Of Stack,-1, -2, -3, ... */
+    int x;                      /* Loop variable */
     s->running = true;
-    while(1) {
+    while (1) {
         if (s->trace) {
             s->trace(s, s->trace_userdata);
         }
         if (!s->running) {
             return;
         }
-        s->stored_sp = s->sp;
+        s->stored_sp  = s->sp;
         s->stored_ipc = s->ipc;
-        op = fetch_UB(s);
-        switch(op) {
+        op            = fetch_UB(s);
+        switch (op) {
         case PSOP_SLDC0: /* Short load constant */
         case PSOP_SLDC1:
         case PSOP_SLDC2:
@@ -646,7 +646,7 @@ void psys_interpreter(struct psys_state *s)
             arg0 = fetch_UB(s);
             psys_push(s, arg0);
             break;
-        case PSOP_LDCI:  /* Load constant integer */
+        case PSOP_LDCI: /* Load constant integer */
             arg0 = fetch_W(s);
             psys_push(s, arg0);
             break;
@@ -659,21 +659,21 @@ void psys_interpreter(struct psys_state *s)
             arg0 = fetch_UB(s); /* flag: 0 keep as is, 2 flip endian if necessary */
             arg1 = fetch_V(s);  /* word offset into current segment */
             arg2 = fetch_UB(s); /* number of words */
-            src = s->curseg + seg_cpool_ofs(s, s->curseg, arg1);
+            src  = s->curseg + seg_cpool_ofs(s, s->curseg, arg1);
 
             /* perform endian swap if requested and necessary.
              * push in reversed order because the words should appear in the same order.
              */
             if (arg0 == 2 && seg_needs_endian_flip(s, s->curseg)) {
-                for (x=arg2-1; x>=0; --x) {
+                for (x = arg2 - 1; x >= 0; --x) {
                     psys_push(s, psys_flip_endian(psys_ldw(s, W(src, x))));
                 }
             } else {
-                for (x=arg2-1; x>=0; --x) {
+                for (x = arg2 - 1; x >= 0; --x) {
                     psys_push(s, psys_ldw(s, W(src, x)));
                 }
             }
-            } break;
+        } break;
         case PSOP_LLA: /* Load local address */
             arg0 = fetch_V(s);
             psys_push(s, local_addr(s, arg0));
@@ -723,12 +723,12 @@ void psys_interpreter(struct psys_state *s)
         case PSOP_STM: { /* Store multiple */
             psys_fulladdr dst;
             arg0 = fetch_UB(s);
-            dst = psys_ldw(s, W(s->sp, arg0));
-            for (x=0; x<arg0; ++x) {
+            dst  = psys_ldw(s, W(s->sp, arg0));
+            for (x = 0; x < arg0; ++x) {
                 psys_stw(s, W(dst, x), psys_pop(s));
             }
             psys_pop(s); /* pop dst */
-            } break;
+        } break;
         case PSOP_MODI: /* Modulo integers */
             tos0 = psys_spop(s);
             tos1 = psys_spop(s);
@@ -737,7 +737,7 @@ void psys_interpreter(struct psys_state *s)
             } else {
                 psys_sword r = tos1 % tos0;
                 /* p-systems interpretation of MOD always returns positive numbers */
-                psys_push(s, (r < 0)?(r+tos0):r);
+                psys_push(s, (r < 0) ? (r + tos0) : r);
             }
             break;
         case PSOP_CLP: /* Call local procedure */
@@ -795,7 +795,7 @@ void psys_interpreter(struct psys_state *s)
             if (addr != PSYS_ADDR_ERROR) { /* continue only if segment could be found - if not, error will already have been set */
                 psys_push(s, psys_ldw(s, addr));
             }
-            } break;
+        } break;
         case PSOP_LAE: { /* Load address extended */
             psys_fulladdr addr;
             arg0 = fetch_UB(s);
@@ -804,7 +804,7 @@ void psys_interpreter(struct psys_state *s)
             if (addr != PSYS_ADDR_ERROR) { /* continue only if segment could be found - if not, error will already have been set */
                 psys_push(s, addr);
             }
-            } break;
+        } break;
         case PSOP_LPR: /* Load processor register */
             tos0 = psys_spop(s);
             psys_push(s, psys_lpr(s, tos0));
@@ -871,9 +871,9 @@ void psys_interpreter(struct psys_state *s)
             tos1 = psys_pop(s); /* destination for the array */
             addr = array_descriptor_to_addr(s, tos0);
             if (addr != PSYS_ADDR_ERROR) {
-                memcpy(psys_words(s, tos1), psys_words(s, addr), arg0*2);
+                memcpy(psys_words(s, tos1), psys_words(s, addr), arg0 * 2);
             }
-            } break;
+        } break;
         case PSOP_CSP: { /* Copy string parameter */ /* segf */
             psys_fulladdr addr;
             arg0 = fetch_UB(s); /* maximum size of string in bytes */
@@ -886,13 +886,13 @@ void psys_interpreter(struct psys_state *s)
                     psys_execerror(s, PSYS_ERR_S2LONG);
                 } else {
                     if (PDBG(s, STRINGS)) {
-                        psys_debug("string: %05x '%.*s' (len %d of %d)\n", addr, length, psys_bytes(s, addr)+1, length, arg0);
-                        psys_debug_hexdump(s, addr, length+1);
+                        psys_debug("string: %05x '%.*s' (len %d of %d)\n", addr, length, psys_bytes(s, addr) + 1, length, arg0);
+                        psys_debug_hexdump(s, addr, length + 1);
                     }
-                    memcpy(psys_words(s, tos1), psys_words(s, addr), (length/2 + 1)*2);
+                    memcpy(psys_words(s, tos1), psys_words(s, addr), (length / 2 + 1) * 2);
                 }
             }
-            } break;
+        } break;
         case PSOP_SLOD1: /* Short load intermediate */
         case PSOP_SLOD2:
             arg0 = fetch_V(s);
@@ -933,19 +933,19 @@ void psys_interpreter(struct psys_state *s)
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
             psys_push(s, psys_set_is_equal(stos1, stos0));
-            } break;
+        } break;
         case PSOP_LEPWR: { /* Less Than or Equal Set (TRUE if TOS-1 is a subset of TOS) */
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
             psys_push(s, psys_set_is_subset(stos1, stos0));
-            } break;
+        } break;
         case PSOP_GEPWR: { /* Greater Than or Equal Set (TRUE if TOS-l is a superset of TOS) */
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
             psys_push(s, psys_set_is_superset(stos1, stos0));
-            } break;
+        } break;
         case PSOP_EQBYTE: /* Equal Byte Array */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
@@ -979,7 +979,7 @@ void psys_interpreter(struct psys_state *s)
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } break;
+        } break;
         case PSOP_SWAP: /* Swap */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
@@ -998,49 +998,49 @@ void psys_interpreter(struct psys_state *s)
             arg1 = fetch_V(s);  /* number of words to copy */
             tos0 = psys_pop(s); /* src addr|ofs */
             tos1 = psys_pop(s); /* dst addr */
-            src = psys_words(s, memory_or_segment_addr(s, arg0, tos0));
-            dst = psys_words(s, tos1);
+            src  = psys_words(s, memory_or_segment_addr(s, arg0, tos0));
+            dst  = psys_words(s, tos1);
 #if 0
             psys_debug("MOV: copying 0x%04x words from %05x to %05x\n", arg1, memory_or_segment_addr(s, arg0, tos0), tos1);
 #endif
             if (arg0 == 2 && seg_needs_endian_flip(s, s->curseg)) { /* flip bytes if requested and necessary */
-                for (x=0; x<arg1; ++x) {
+                for (x = 0; x < arg1; ++x) {
 #if 0
                     psys_debug("  %04x\n", psys_flip_endian(src[x]));
 #endif
                     dst[x] = psys_flip_endian(src[x]);
                 }
             } else {
-                for (x=0; x<arg1; ++x) {
+                for (x = 0; x < arg1; ++x) {
 #if 0
                     psys_debug("  %04x\n", src[x]);
 #endif
                     dst[x] = src[x];
                 }
             }
-            } break;
+        } break;
         case PSOP_ADJ: { /* Adjust set */
             psys_set a;
             arg0 = fetch_UB(s);
             psys_set_pop(s, a);
-            if (psys_set_adj(a, arg0)) { /* push set without length word */
-                psys_push_n(s, arg0); /* make room for enough words on stack */
-                memcpy(psys_stack_words(s, 0), &a[1], arg0*2); /* copy entire structure */
+            if (psys_set_adj(a, arg0)) {                         /* push set without length word */
+                psys_push_n(s, arg0);                            /* make room for enough words on stack */
+                memcpy(psys_stack_words(s, 0), &a[1], arg0 * 2); /* copy entire structure */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } break;
-        case PSOP_STB: /* Store byte */
+        } break;
+        case PSOP_STB:          /* Store byte */
             tos0 = psys_pop(s); /* Value to write */
             tos1 = psys_pop(s); /* Offset */
             tos2 = psys_pop(s); /* Word address of target */
             psys_stb(s, tos2, tos1, tos0);
             break;
-        case PSOP_LDP: /* Load packed */
+        case PSOP_LDP:          /* Load packed */
             tos0 = psys_pop(s); /* Number of rightmost bit of the field */
             tos1 = psys_pop(s); /* Number of bits in field */
             tos2 = psys_pop(s); /* Address of the word */
-            psys_push(s, (psys_ldw(s, tos2) >> tos0) & (BIT(tos1)-1));
+            psys_push(s, (psys_ldw(s, tos2) >> tos0) & (BIT(tos1) - 1));
             break;
         case PSOP_STP: { /* Store packed */
             unsigned mask;
@@ -1048,9 +1048,9 @@ void psys_interpreter(struct psys_state *s)
             tos1 = psys_pop(s); /* Number of rightmost bit of the field */
             tos2 = psys_pop(s); /* Number of bits in field */
             tos3 = psys_pop(s); /* Address of the word */
-            mask = (BIT(tos2)-1) << tos1;
+            mask = (BIT(tos2) - 1) << tos1;
             psys_stw(s, tos3, (psys_ldw(s, tos3) & ~mask) | ((tos0 << tos1) & mask));
-            } break;
+        } break;
         case PSOP_CHK: /* Check subrange bounds */
             tos0 = psys_spop(s);
             tos1 = psys_spop(s);
@@ -1067,7 +1067,7 @@ void psys_interpreter(struct psys_state *s)
             /* push in reversed order because the words should appear in the same order
              * on the stack as in memory.
              */
-            for (x=arg0-1; x>=0; --x) {
+            for (x = arg0 - 1; x >= 0; --x) {
                 psys_push(s, psys_ldw(s, W(tos0, x)));
             }
             break;
@@ -1109,21 +1109,20 @@ void psys_interpreter(struct psys_state *s)
         case PSOP_XJP: { /* Case jump */
             int addr, b, e;
             bool flip = seg_needs_endian_flip(s, s->curseg);
-            arg0 = fetch_V(s);
-            tos0 = psys_spop(s);
-            addr = s->curseg + seg_cpool_ofs(s, s->curseg, arg0);
-            b = psys_ldsw_flip(s, W(addr, 0), flip);
-            e = psys_ldsw_flip(s, W(addr, 1), flip);
-            if (tos0 >= b && tos0 <= e)
-            {
+            arg0      = fetch_V(s);
+            tos0      = psys_spop(s);
+            addr      = s->curseg + seg_cpool_ofs(s, s->curseg, arg0);
+            b         = psys_ldsw_flip(s, W(addr, 0), flip);
+            e         = psys_ldsw_flip(s, W(addr, 1), flip);
+            if (tos0 >= b && tos0 <= e) {
                 s->ipc += psys_ldsw_flip(s, W(addr, 2 + tos0 - b), flip);
             }
-            } break;
+        } break;
         case PSOP_IXA: /* Index array */
             arg0 = fetch_V(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
-            psys_push(s, W(tos1, arg0*tos0));
+            psys_push(s, W(tos1, arg0 * tos0));
             break;
         case PSOP_IXP: /* Index packed array */
             arg0 = fetch_UB(s);
@@ -1143,50 +1142,50 @@ void psys_interpreter(struct psys_state *s)
             if (addr) { /* continue only if segment could be found */
                 psys_stw(s, addr, tos0);
             }
-            } break;
+        } break;
         case PSOP_INN: { /* Set membership */
             /* Note: arguments order is reversed compared to p-system reference:
              * set is on the top of the stack, the element to check membership of is below that.
              */
             psys_word *data = psys_stack_words(s, 0); /* set length|set|tos1 */
-            psys_word ofs = psys_set_words(data);
+            psys_word ofs   = psys_set_words(data);
             /* overwrite input word on stack */
             psys_stw(s, W(s->sp, ofs), psys_set_in(data, psys_ldw(s, W(s->sp, ofs))));
             psys_pop_n(s, ofs); /* drop set size and set */
-            } break;
+        } break;
         case PSOP_UNI: { /* Set union (bitwise OR) */
             psys_set result;
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             if (psys_set_union(result, stos1, stos0)) {
                 psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
-                psys_set_push(s, result); /* push result */
+                psys_set_push(s, result);                                     /* push result */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } break;
+        } break;
         case PSOP_INT: { /* Set intersection (bitwise AND) */
             psys_set result;
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             if (psys_set_intersection(result, stos1, stos0)) {
                 psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
-                psys_set_push(s, result); /* push result */
+                psys_set_push(s, result);                                     /* push result */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } break;
+        } break;
         case PSOP_DIF: { /* Set difference (TOS-1 AND NOT TOS) */
             psys_set result;
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             if (psys_set_difference(result, stos1, stos0)) {
                 psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
-                psys_set_push(s, result); /* push result */
+                psys_set_push(s, result);                                     /* push result */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } break;
+        } break;
         case PSOP_SIGNAL: /* Signal */ /* segf */
             tos0 = psys_pop(s);
             psys_signal(s, tos0, true);
@@ -1250,15 +1249,15 @@ void psys_interpreter(struct psys_state *s)
             arg1 = fetch_UB(s); /* decared size of destination */
             tos0 = psys_pop(s); /* src addr|ofs */
             tos1 = psys_pop(s); /* dst addr */
-            src = psys_bytes(s, memory_or_segment_addr(s, arg0, tos0));
-            dst = psys_bytes(s, tos1);
+            src  = psys_bytes(s, memory_or_segment_addr(s, arg0, tos0));
+            dst  = psys_bytes(s, tos1);
             if (src[0] > arg1) { /* source is larger than destination */
                 psys_execerror(s, PSYS_ERR_S2LONG);
             } else { /* copy string and length byte */
-                memcpy(dst, src, src[0]+1);
+                memcpy(dst, src, src[0] + 1);
             }
-            } break;
-        case PSOP_CSTR: /* Check string index */
+        } break;
+        case PSOP_CSTR:         /* Check string index */
             tos0 = psys_pop(s); /* index into variable */
             tos1 = psys_pop(s); /* address of string variable */
             if (tos0 < 1 || tos0 > psys_ldb(s, tos1, 0)) {
@@ -1289,16 +1288,16 @@ void psys_interpreter(struct psys_state *s)
             }
             break;
         /* Floating point ops - not implemented */
-        case PSOP_FLT: /* Float */
+        case PSOP_FLT:    /* Float */
         case PSOP_EQREAL: /* Equal Real */
         case PSOP_LEREAL: /* Less Than or Equal Real */
         case PSOP_GEREAL: /* Greater Than or Equal Real */
-        case PSOP_DUP2: /* Duplicate Real */
-        case PSOP_ABR: /* Absolute Real */
-        case PSOP_NGR: /* Negate Real */
-        case PSOP_LDCRL: /* Load Constant Real */
-        case PSOP_LDRL: /* Load Real */
-        case PSOP_STRL: /* Store Real */
+        case PSOP_DUP2:   /* Duplicate Real */
+        case PSOP_ABR:    /* Absolute Real */
+        case PSOP_NGR:    /* Negate Real */
+        case PSOP_LDCRL:  /* Load Constant Real */
+        case PSOP_LDRL:   /* Load Real */
+        case PSOP_STRL:   /* Store Real */
             psys_execerror(s, PSYS_ERR_FPIERR);
             break;
         case PSOP_NOP: /* No operation */
