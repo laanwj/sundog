@@ -509,92 +509,152 @@ void psys_interpreter(struct psys_state *s)
      *   LDC, LDM, ADJ, SRS, CLP, CGP, SCIPn, CIP, CXL, SCXGn, CXG, CXI, CFP
      *   This does not seem to be implemented in the Atari ST version.
      */
-    // clang-format off
-    static const void *dispatch_table[256] = {
-    &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,
-    &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,
-    &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,
-    &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,      &&do_sldc,
-    &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,
-    &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,      &&do_sldl,
-    &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,
-    &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,      &&do_sldo,
-    &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,
-    &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,
-    &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,
-    &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,
-    &&do_slla,      &&do_slla,      &&do_slla,      &&do_slla,      &&do_slla,      &&do_slla,      &&do_slla,      &&do_slla,
-    &&do_sstl,      &&do_sstl,      &&do_sstl,      &&do_sstl,      &&do_sstl,      &&do_sstl,      &&do_sstl,      &&do_sstl,
-    &&do_scxg,      &&do_scxg,      &&do_scxg,      &&do_scxg,      &&do_scxg,      &&do_scxg,      &&do_scxg,      &&do_scxg,
-    &&do_sind,      &&do_sind,      &&do_sind,      &&do_sind,      &&do_sind,      &&do_sind,      &&do_sind,      &&do_sind,
-    &&do_ldcb,      &&do_ldci,      &&do_lco,       &&do_ldc,       &&do_lla,       &&do_ldo,       &&do_lao,       &&do_ldl,
-    &&do_lda,       &&do_lod,       &&do_ujp,       &&do_ujpl,      &&do_mpi,       &&do_dvi,       &&do_stm,       &&do_modi,
-    &&do_clp,       &&do_cgp,       &&do_cip,       &&do_cxl,       &&do_cxg,       &&do_cxi,       &&do_rpu,       &&do_cfp,
-    &&do_ldcn,      &&do_lsl,       &&do_lde,       &&do_lae,       &&do_nop,       &&do_lpr,       &&do_bpt,       &&do_bnot,
-    &&do_lor,       &&do_land,      &&do_adi,       &&do_sbi,       &&do_stl,       &&do_sro,       &&do_str,       &&do_ldb,
-    &&do_native,    &&do_nat_info,  &&do_invalid,   &&do_cap,       &&do_csp,       &&do_slod,      &&do_slod,      &&do_invalid,
-    &&do_equi,      &&do_neqi,      &&do_leqi,      &&do_geqi,      &&do_leusw,     &&do_geusw,     &&do_eqpwr,     &&do_lepwr,
-    &&do_gepwr,     &&do_eqbyte,    &&do_lebyte,    &&do_gebyte,    &&do_srs,       &&do_swap,      &&do_invalid,   &&do_invalid,
-    &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_sto,       &&do_mov,       &&do_dup2,      &&do_adj,
-    &&do_stb,       &&do_ldp,       &&do_stp,       &&do_chk,       &&do_flt,       &&do_eqreal,    &&do_lereal,    &&do_gereal,
-    &&do_ldm,       &&do_spr,       &&do_efj,       &&do_nfj,       &&do_fjp,       &&do_fjpl,      &&do_xjp,       &&do_ixa,
-    &&do_ixp,       &&do_ste,       &&do_inn,       &&do_uni,       &&do_int,       &&do_dif,       &&do_signal,    &&do_wait,
-    &&do_abi,       &&do_ngi,       &&do_dup1,      &&do_abr,       &&do_ngr,       &&do_lnot,      &&do_ind,       &&do_inc,
-    &&do_eqstr,     &&do_lestr,     &&do_gestr,     &&do_astr,      &&do_cstr,      &&do_inci,      &&do_deci,      &&do_scip,
-    &&do_scip,      &&do_tjp,       &&do_ldcrl,     &&do_ldrl,      &&do_strl,      &&do_invalid,   &&do_invalid,   &&do_invalid,
-    &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid,   &&do_invalid
-    };
     int op; /* Stored opcode */
     int arg0,arg1,arg2; /* Instruction arguments */
     int tos0,tos1,tos2,tos3; /* Top Of Stack,-1, -2, -3, ... */
     int x; /* Loop variable */
     s->running = true;
-#define STORE_STATE() s->stored_sp = s->sp; s->stored_ipc = s->ipc
-#define DISPATCH() if (s->trace) s->trace(s, s->trace_userdata); if (!s->running) return; STORE_STATE(); op = fetch_UB(s); goto *dispatch_table[op]
-do_nop: /* No operation */
-    DISPATCH();
     while(1) {
-        do_sldc: /* Short load constant */
+        if (s->trace) {
+            s->trace(s, s->trace_userdata);
+        }
+        if (!s->running) {
+            return;
+        }
+        s->stored_sp = s->sp;
+        s->stored_ipc = s->ipc;
+        op = fetch_UB(s);
+        switch(op) {
+        case PSOP_SLDC0: /* Short load constant */
+        case PSOP_SLDC1:
+        case PSOP_SLDC2:
+        case PSOP_SLDC3:
+        case PSOP_SLDC4:
+        case PSOP_SLDC5:
+        case PSOP_SLDC6:
+        case PSOP_SLDC7:
+        case PSOP_SLDC8:
+        case PSOP_SLDC9:
+        case PSOP_SLDC10:
+        case PSOP_SLDC11:
+        case PSOP_SLDC12:
+        case PSOP_SLDC13:
+        case PSOP_SLDC14:
+        case PSOP_SLDC15:
+        case PSOP_SLDC16:
+        case PSOP_SLDC17:
+        case PSOP_SLDC18:
+        case PSOP_SLDC19:
+        case PSOP_SLDC20:
+        case PSOP_SLDC21:
+        case PSOP_SLDC22:
+        case PSOP_SLDC23:
+        case PSOP_SLDC24:
+        case PSOP_SLDC25:
+        case PSOP_SLDC26:
+        case PSOP_SLDC27:
+        case PSOP_SLDC28:
+        case PSOP_SLDC29:
+        case PSOP_SLDC30:
+        case PSOP_SLDC31:
             psys_push(s, op - PSOP_SLDC0);
-            DISPATCH();
-        do_sldl: /* Short load local */
+            break;
+        case PSOP_SLDL1: /* Short load local */
+        case PSOP_SLDL2:
+        case PSOP_SLDL3:
+        case PSOP_SLDL4:
+        case PSOP_SLDL5:
+        case PSOP_SLDL6:
+        case PSOP_SLDL7:
+        case PSOP_SLDL8:
+        case PSOP_SLDL9:
+        case PSOP_SLDL10:
+        case PSOP_SLDL11:
+        case PSOP_SLDL12:
+        case PSOP_SLDL13:
+        case PSOP_SLDL14:
+        case PSOP_SLDL15:
+        case PSOP_SLDL16:
             psys_push(s, psys_ldw(s, local_addr(s, op - PSOP_SLDL1 + 1)));
-            DISPATCH();
-        do_sldo: /* Short local global */
+            break;
+        case PSOP_SLDO1: /* Short local global */
+        case PSOP_SLDO2:
+        case PSOP_SLDO3:
+        case PSOP_SLDO4:
+        case PSOP_SLDO5:
+        case PSOP_SLDO6:
+        case PSOP_SLDO7:
+        case PSOP_SLDO8:
+        case PSOP_SLDO9:
+        case PSOP_SLDO10:
+        case PSOP_SLDO11:
+        case PSOP_SLDO12:
+        case PSOP_SLDO13:
+        case PSOP_SLDO14:
+        case PSOP_SLDO15:
+        case PSOP_SLDO16:
             psys_push(s, psys_ldw(s, global_addr(s, op - PSOP_SLDO1 + 1)));
-            DISPATCH();
-        do_slla: /* Short load local address */
+            break;
+        case PSOP_SLLA1: /* Short load local address */
+        case PSOP_SLLA2:
+        case PSOP_SLLA3:
+        case PSOP_SLLA4:
+        case PSOP_SLLA5:
+        case PSOP_SLLA6:
+        case PSOP_SLLA7:
+        case PSOP_SLLA8:
             psys_push(s, local_addr(s, op - PSOP_SLLA1 + 1));
-            DISPATCH();
-        do_sstl: /* Short store local */
+            break;
+        case PSOP_SSTL1: /* Short store local */
+        case PSOP_SSTL2:
+        case PSOP_SSTL3:
+        case PSOP_SSTL4:
+        case PSOP_SSTL5:
+        case PSOP_SSTL6:
+        case PSOP_SSTL7:
+        case PSOP_SSTL8:
             tos0 = psys_pop(s);
             psys_stw(s, local_addr(s, op - PSOP_SSTL1 + 1), tos0);
-            DISPATCH();
-        do_scxg: /* Short call intersegment */ /* segf */
+            break;
+        case PSOP_SCXG1: /* Short call intersegment */ /* segf */
+        case PSOP_SCXG2:
+        case PSOP_SCXG3:
+        case PSOP_SCXG4:
+        case PSOP_SCXG5:
+        case PSOP_SCXG6:
+        case PSOP_SCXG7:
+        case PSOP_SCXG8:
             arg0 = fetch_UB(s);
             handle_call(s, op - PSOP_SCXG1 + 1, CALL_GLOBAL, arg0);
-            DISPATCH();
-        do_sind: /* Short index */
+            break;
+        case PSOP_SIND0: /* Short index */
+        case PSOP_SIND1:
+        case PSOP_SIND2:
+        case PSOP_SIND3:
+        case PSOP_SIND4:
+        case PSOP_SIND5:
+        case PSOP_SIND6:
+        case PSOP_SIND7:
             tos0 = psys_pop(s);
 #if 0
             psys_debug("SIND %05x\n", W(tos0, op - PSOP_SIND0));
             psys_debug_hexdump(s, tos0, 32);
 #endif
             psys_push(s, psys_ldw(s, W(tos0, op - PSOP_SIND0)));
-            DISPATCH();
-        do_ldcb: /* Load constant (unsigned) byte */
+            break;
+        case PSOP_LDCB: /* Load constant (unsigned) byte */
             arg0 = fetch_UB(s);
             psys_push(s, arg0);
-            DISPATCH();
-        do_ldci:  /* Load constant integer */
+            break;
+        case PSOP_LDCI:  /* Load constant integer */
             arg0 = fetch_W(s);
             psys_push(s, arg0);
-            DISPATCH();
-        do_lco: /* Load constant offset */
+            break;
+        case PSOP_LCO: /* Load constant offset */
             arg0 = fetch_V(s);
             psys_push(s, seg_cpool_ofs(s, s->curseg, arg0));
-            DISPATCH();
-        do_ldc: { /* Load constant (words) */
+            break;
+        case PSOP_LDC: { /* Load constant (words) */
             psys_fulladdr src;
             arg0 = fetch_UB(s); /* flag: 0 keep as is, 2 flip endian if necessary */
             arg1 = fetch_V(s);  /* word offset into current segment */
@@ -613,45 +673,45 @@ do_nop: /* No operation */
                     psys_push(s, psys_ldw(s, W(src, x)));
                 }
             }
-            } DISPATCH();
-        do_lla: /* Load local address */
+            } break;
+        case PSOP_LLA: /* Load local address */
             arg0 = fetch_V(s);
             psys_push(s, local_addr(s, arg0));
-            DISPATCH();
-        do_ldo: /* Load global */
+            break;
+        case PSOP_LDO: /* Load global */
             arg0 = fetch_V(s);
             psys_push(s, psys_ldw(s, global_addr(s, arg0)));
-            DISPATCH();
-        do_lao: /* Load global address */
+            break;
+        case PSOP_LAO: /* Load global address */
             arg0 = fetch_V(s);
             psys_push(s, global_addr(s, arg0));
-            DISPATCH();
-        do_ldl: /* Load local */
+            break;
+        case PSOP_LDL: /* Load local */
             arg0 = fetch_V(s);
             psys_push(s, psys_ldw(s, local_addr(s, arg0)));
-            DISPATCH();
-        do_lda: /* Load intermediate address */
+            break;
+        case PSOP_LDA: /* Load intermediate address */
             arg0 = fetch_UB(s);
             arg1 = fetch_V(s);
             psys_push(s, intermd_addr(s, arg0, arg1));
-            DISPATCH();
-        do_lod: /* Load intermediate */
+            break;
+        case PSOP_LOD: /* Load intermediate */
             arg0 = fetch_UB(s);
             arg1 = fetch_V(s);
             psys_push(s, psys_ldw(s, intermd_addr(s, arg0, arg1)));
-            DISPATCH();
-        do_ujp: /* Unconditional jump */
+            break;
+        case PSOP_UJP: /* Unconditional jump */
             s->ipc += fetch_SB(s);
-            DISPATCH();
-        do_ujpl: /* Unconditional jump long */
+            break;
+        case PSOP_UJPL: /* Unconditional jump long */
             s->ipc += fetch_W(s);
-            DISPATCH();
-        do_mpi: /* Multiply (unsigned) integer */
+            break;
+        case PSOP_MPI: /* Multiply (unsigned) integer */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 * tos0);
-            DISPATCH();
-        do_dvi: /* Divide (signed) integer */
+            break;
+        case PSOP_DVI: /* Divide (signed) integer */
             tos0 = psys_spop(s);
             tos1 = psys_spop(s);
             if (tos0 == 0) {
@@ -659,8 +719,8 @@ do_nop: /* No operation */
             } else {
                 psys_push(s, tos1 / tos0);
             }
-            DISPATCH();
-        do_stm: { /* Store multiple */
+            break;
+        case PSOP_STM: { /* Store multiple */
             psys_fulladdr dst;
             arg0 = fetch_UB(s);
             dst = psys_ldw(s, W(s->sp, arg0));
@@ -668,8 +728,8 @@ do_nop: /* No operation */
                 psys_stw(s, W(dst, x), psys_pop(s));
             }
             psys_pop(s); /* pop dst */
-            } DISPATCH();
-        do_modi: /* Modulo integers */
+            } break;
+        case PSOP_MODI: /* Modulo integers */
             tos0 = psys_spop(s);
             tos1 = psys_spop(s);
             if (tos0 == 0) {
@@ -679,55 +739,55 @@ do_nop: /* No operation */
                 /* p-systems interpretation of MOD always returns positive numbers */
                 psys_push(s, (r < 0)?(r+tos0):r);
             }
-            DISPATCH();
-        do_clp: /* Call local procedure */
+            break;
+        case PSOP_CLP: /* Call local procedure */
             arg0 = fetch_UB(s);
             handle_call(s, CALL_CURSEG, CALL_LOCAL, arg0);
-            DISPATCH();
-        do_cgp: /* Call global procedure */
+            break;
+        case PSOP_CGP: /* Call global procedure */
             arg0 = fetch_UB(s);
             handle_call(s, CALL_CURSEG, CALL_GLOBAL, arg0);
-            DISPATCH();
-        do_cip: /* Call intermediate procedure */
+            break;
+        case PSOP_CIP: /* Call intermediate procedure */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             handle_call(s, CALL_CURSEG, arg0, arg1);
-            DISPATCH();
-        do_cxl: /* Call intersegment local procedure */ /* segf */
+            break;
+        case PSOP_CXL: /* Call intersegment local procedure */ /* segf */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             handle_call(s, arg0, CALL_LOCAL, arg1);
-            DISPATCH();
-        do_cxg: /* Call intersegment global procedure */ /* segf */
+            break;
+        case PSOP_CXG: /* Call intersegment global procedure */ /* segf */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             handle_call(s, arg0, CALL_GLOBAL, arg1);
-            DISPATCH();
-        do_cxi: /* Call intersegment intermediate procedure */ /* segf */
+            break;
+        case PSOP_CXI: /* Call intersegment intermediate procedure */ /* segf */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             arg2 = fetch_UB(s);
             handle_call(s, arg0, arg1, arg2);
-            DISPATCH();
-        do_rpu: /* Return from procedure */ /* segf */
+            break;
+        case PSOP_RPU: /* Return from procedure */ /* segf */
             arg0 = fetch_V(s);
             handle_return(s, arg0);
-            DISPATCH();
-        do_cfp: /* Call formal procedure */ /* segf */
+            break;
+        case PSOP_CFP: /* Call formal procedure */ /* segf */
             /* In contrast to what the p-systems internal reference manual says, this has no argument */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             tos2 = psys_pop(s);
             handle_call_formal(s, tos0, tos1, tos2, true);
-            DISPATCH();
-        do_ldcn: /* Load constant NIL */
+            break;
+        case PSOP_LDCN: /* Load constant NIL */
             psys_push(s, PSYS_NIL);
-            DISPATCH();
-        do_lsl: /* Load static link */
+            break;
+        case PSOP_LSL: /* Load static link */
             arg0 = fetch_UB(s);
             psys_push(s, intermd_mscw(s, arg0));
-            DISPATCH();
-        do_lde: { /* Load extended */
+            break;
+        case PSOP_LDE: { /* Load extended */
             psys_fulladdr addr;
             arg0 = fetch_UB(s);
             arg1 = fetch_V(s);
@@ -735,8 +795,8 @@ do_nop: /* No operation */
             if (addr != PSYS_ADDR_ERROR) { /* continue only if segment could be found - if not, error will already have been set */
                 psys_push(s, psys_ldw(s, addr));
             }
-            } DISPATCH();
-        do_lae: { /* Load address extended */
+            } break;
+        case PSOP_LAE: { /* Load address extended */
             psys_fulladdr addr;
             arg0 = fetch_UB(s);
             arg1 = fetch_V(s);
@@ -744,67 +804,67 @@ do_nop: /* No operation */
             if (addr != PSYS_ADDR_ERROR) { /* continue only if segment could be found - if not, error will already have been set */
                 psys_push(s, addr);
             }
-            } DISPATCH();
-        do_lpr: /* Load processor register */
+            } break;
+        case PSOP_LPR: /* Load processor register */
             tos0 = psys_spop(s);
             psys_push(s, psys_lpr(s, tos0));
-            DISPATCH();
-        do_bpt: /* Breakpoint */
+            break;
+        case PSOP_BPT: /* Breakpoint */
             psys_execerror(s, PSYS_ERR_BRKPNT);
-            DISPATCH();
-        do_bnot: /* Boolean NOT */
+            break;
+        case PSOP_BNOT: /* Boolean NOT */
             tos0 = psys_pop(s);
             psys_push(s, !BOOL(tos0));
-            DISPATCH();
-        do_lor: /* Logical OR */
+            break;
+        case PSOP_LOR: /* Logical OR */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 | tos0);
-            DISPATCH();
-        do_land: /* Logical AND */
+            break;
+        case PSOP_LAND: /* Logical AND */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 & tos0);
-            DISPATCH();
-        do_adi: /* Add integers */
+            break;
+        case PSOP_ADI: /* Add integers */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 + tos0);
-            DISPATCH();
-        do_sbi: /* Subtract integers */
+            break;
+        case PSOP_SBI: /* Subtract integers */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 - tos0);
-            DISPATCH();
-        do_stl: /* Store local */
+            break;
+        case PSOP_STL: /* Store local */
             arg0 = fetch_V(s);
             tos0 = psys_pop(s);
             psys_stw(s, local_addr(s, arg0), tos0);
-            DISPATCH();
-        do_sro: /* Store global */
+            break;
+        case PSOP_SRO: /* Store global */
             arg0 = fetch_V(s);
             tos0 = psys_pop(s);
             psys_stw(s, global_addr(s, arg0), tos0);
-            DISPATCH();
-        do_str: /* Store Intermediate */
+            break;
+        case PSOP_STR: /* Store Intermediate */
             arg0 = fetch_UB(s);
             arg1 = fetch_V(s);
             tos0 = psys_pop(s);
             psys_stw(s, intermd_addr(s, arg0, arg1), tos0);
-            DISPATCH();
-        do_ldb: /* Load byte */
+            break;
+        case PSOP_LDB: /* Load byte */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, psys_ldb(s, tos1, tos0));
-            DISPATCH();
-        do_native: /* Enter native code */
+            break;
+        case PSOP_NATIVE: /* Enter native code */
             psys_panic("NATIVE not supported");
             return;
-        do_nat_info: /* Native code information (skip PC forward over metadata) */
+        case PSOP_NAT_INFO: /* Native code information (skip PC forward over metadata) */
             arg0 = fetch_V(s);
             s->ipc += arg0;
-            DISPATCH();
-        do_cap: { /* Copy array parameter */ /* segf */
+            break;
+        case PSOP_CAP: { /* Copy array parameter */ /* segf */
             psys_fulladdr addr;
             arg0 = fetch_V(s);  /* size of array in words */
             tos0 = psys_pop(s); /* address of a parameter descriptor for a packed array of characters */
@@ -813,8 +873,8 @@ do_nop: /* No operation */
             if (addr != PSYS_ADDR_ERROR) {
                 memcpy(psys_words(s, tos1), psys_words(s, addr), arg0*2);
             }
-            } DISPATCH();
-        do_csp: { /* Copy string parameter */ /* segf */
+            } break;
+        case PSOP_CSP: { /* Copy string parameter */ /* segf */
             psys_fulladdr addr;
             arg0 = fetch_UB(s); /* maximum size of string in bytes */
             tos0 = psys_pop(s); /* address of a parameter descriptor for a packed array of characters */
@@ -832,84 +892,85 @@ do_nop: /* No operation */
                     memcpy(psys_words(s, tos1), psys_words(s, addr), (length/2 + 1)*2);
                 }
             }
-            } DISPATCH();
-        do_slod: /* Short load intermediate */
+            } break;
+        case PSOP_SLOD1: /* Short load intermediate */
+        case PSOP_SLOD2:
             arg0 = fetch_V(s);
             psys_push(s, psys_ldw(s, intermd_addr(s, op - PSOP_SLOD1 + 1, arg0)));
-            DISPATCH();
-        do_equi: /* Equal Integer */
+            break;
+        case PSOP_EQUI: /* Equal Integer */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 == tos0);
-            DISPATCH();
-        do_neqi: /* Not Equal Integer */
+            break;
+        case PSOP_NEQI: /* Not Equal Integer */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 != tos0);
-            DISPATCH();
-        do_leqi: /* Less Than or Equal Integer */
+            break;
+        case PSOP_LEQI: /* Less Than or Equal Integer */
             tos0 = psys_spop(s);
             tos1 = psys_spop(s);
             psys_push(s, tos1 <= tos0);
-            DISPATCH();
-        do_geqi: /* Greater Than or Equal Integer */
+            break;
+        case PSOP_GEQI: /* Greater Than or Equal Integer */
             tos0 = psys_spop(s);
             tos1 = psys_spop(s);
             psys_push(s, tos1 >= tos0);
-            DISPATCH();
-        do_leusw: /* Less Than or Equal Unsigned */
+            break;
+        case PSOP_LEUSW: /* Less Than or Equal Unsigned */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 <= tos0);
-            DISPATCH();
-        do_geusw: /* Greater Than or Equal Unsigned */
+            break;
+        case PSOP_GEUSW: /* Greater Than or Equal Unsigned */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos1 >= tos0);
-            DISPATCH();
-        do_eqpwr: { /* Equal Set (TRUE if all elements match) */
+            break;
+        case PSOP_EQPWR: { /* Equal Set (TRUE if all elements match) */
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
             psys_push(s, psys_set_is_equal(stos1, stos0));
-            } DISPATCH();
-        do_lepwr: { /* Less Than or Equal Set (TRUE if TOS-1 is a subset of TOS) */
+            } break;
+        case PSOP_LEPWR: { /* Less Than or Equal Set (TRUE if TOS-1 is a subset of TOS) */
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
             psys_push(s, psys_set_is_subset(stos1, stos0));
-            } DISPATCH();
-        do_gepwr: { /* Greater Than or Equal Set (TRUE if TOS-l is a superset of TOS) */
+            } break;
+        case PSOP_GEPWR: { /* Greater Than or Equal Set (TRUE if TOS-l is a superset of TOS) */
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
             psys_pop_n(s, psys_set_words(stos0) + psys_set_words(stos1)); /* drop both sets from stack */
             psys_push(s, psys_set_is_superset(stos1, stos0));
-            } DISPATCH();
-        do_eqbyte: /* Equal Byte Array */
+            } break;
+        case PSOP_EQBYTE: /* Equal Byte Array */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             arg2 = fetch_V(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, compare_bytearrays(s, arg1, tos1, arg0, tos0, arg2) == 0);
-            DISPATCH();
-        do_lebyte: /* Less Than or Equal Byte Array */
+            break;
+        case PSOP_LEBYTE: /* Less Than or Equal Byte Array */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             arg2 = fetch_V(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, compare_bytearrays(s, arg1, tos1, arg0, tos0, arg2) <= 0);
-            DISPATCH();
-        do_gebyte: /* Greater Than or Equal Byte Array */
+            break;
+        case PSOP_GEBYTE: /* Greater Than or Equal Byte Array */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             arg2 = fetch_V(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, compare_bytearrays(s, arg1, tos1, arg0, tos0, arg2) >= 0);
-            DISPATCH();
-        do_srs: { /* Subrange set */
+            break;
+        case PSOP_SRS: { /* Subrange set */
             psys_set result;
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
@@ -918,19 +979,19 @@ do_nop: /* No operation */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } DISPATCH();
-        do_swap: /* Swap */
+            } break;
+        case PSOP_SWAP: /* Swap */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, tos0);
             psys_push(s, tos1);
-            DISPATCH();
-        do_sto: /* Store - TOS is stored in the word pointed to by TOS-1 */
+            break;
+        case PSOP_STO: /* Store - TOS is stored in the word pointed to by TOS-1 */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_stw(s, tos1, tos0);
-            DISPATCH();
-        do_mov: { /* Move */
+            break;
+        case PSOP_MOV: { /* Move */
             const psys_word *src;
             psys_word *dst;
             arg0 = fetch_UB(s); /* flag: src from 0) memory or 1)segment 2)segment byteswapped */
@@ -957,8 +1018,8 @@ do_nop: /* No operation */
                     dst[x] = src[x];
                 }
             }
-            } DISPATCH();
-        do_adj: { /* Adjust set */
+            } break;
+        case PSOP_ADJ: { /* Adjust set */
             psys_set a;
             arg0 = fetch_UB(s);
             psys_set_pop(s, a);
@@ -968,20 +1029,20 @@ do_nop: /* No operation */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } DISPATCH();
-        do_stb: /* Store byte */
+            } break;
+        case PSOP_STB: /* Store byte */
             tos0 = psys_pop(s); /* Value to write */
             tos1 = psys_pop(s); /* Offset */
             tos2 = psys_pop(s); /* Word address of target */
             psys_stb(s, tos2, tos1, tos0);
-            DISPATCH();
-        do_ldp: /* Load packed */
+            break;
+        case PSOP_LDP: /* Load packed */
             tos0 = psys_pop(s); /* Number of rightmost bit of the field */
             tos1 = psys_pop(s); /* Number of bits in field */
             tos2 = psys_pop(s); /* Address of the word */
             psys_push(s, (psys_ldw(s, tos2) >> tos0) & (BIT(tos1)-1));
-            DISPATCH();
-        do_stp: { /* Store packed */
+            break;
+        case PSOP_STP: { /* Store packed */
             unsigned mask;
             tos0 = psys_pop(s); /* Value to store */
             tos1 = psys_pop(s); /* Number of rightmost bit of the field */
@@ -989,8 +1050,8 @@ do_nop: /* No operation */
             tos3 = psys_pop(s); /* Address of the word */
             mask = (BIT(tos2)-1) << tos1;
             psys_stw(s, tos3, (psys_ldw(s, tos3) & ~mask) | ((tos0 << tos1) & mask));
-            } DISPATCH();
-        do_chk: /* Check subrange bounds */
+            } break;
+        case PSOP_CHK: /* Check subrange bounds */
             tos0 = psys_spop(s);
             tos1 = psys_spop(s);
             tos2 = psys_spop(s);
@@ -999,8 +1060,8 @@ do_nop: /* No operation */
             } else {
                 psys_push(s, tos2);
             }
-            DISPATCH();
-        do_ldm: /* Load multiple */
+            break;
+        case PSOP_LDM: /* Load multiple */
             arg0 = fetch_UB(s);
             tos0 = psys_pop(s);
             /* push in reversed order because the words should appear in the same order
@@ -1009,43 +1070,43 @@ do_nop: /* No operation */
             for (x=arg0-1; x>=0; --x) {
                 psys_push(s, psys_ldw(s, W(tos0, x)));
             }
-            DISPATCH();
-        do_spr: /* Store processor register */
+            break;
+        case PSOP_SPR: /* Store processor register */
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_spr(s, tos1, tos0);
-            DISPATCH();
-        do_efj: /* Equal false jump */
+            break;
+        case PSOP_EFJ: /* Equal false jump */
             arg0 = fetch_SB(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             if (tos1 != tos0) {
                 s->ipc += arg0;
             }
-            DISPATCH();
-        do_nfj: /* Not equal false jump */
+            break;
+        case PSOP_NFJ: /* Not equal false jump */
             arg0 = fetch_SB(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             if (tos1 == tos0) {
                 s->ipc += arg0;
             }
-            DISPATCH();
-        do_fjp: /* False jump */
+            break;
+        case PSOP_FJP: /* False jump */
             arg0 = fetch_SB(s);
             tos0 = psys_pop(s);
             if (!BOOL(tos0)) {
                 s->ipc += arg0;
             }
-            DISPATCH();
-        do_fjpl: /* False jump long */
+            break;
+        case PSOP_FJPL: /* False jump long */
             arg0 = fetch_W(s);
             tos0 = psys_pop(s);
             if (!BOOL(tos0)) {
                 s->ipc += arg0;
             }
-            DISPATCH();
-        do_xjp: { /* Case jump */
+            break;
+        case PSOP_XJP: { /* Case jump */
             int addr, b, e;
             bool flip = seg_needs_endian_flip(s, s->curseg);
             arg0 = fetch_V(s);
@@ -1057,14 +1118,14 @@ do_nop: /* No operation */
             {
                 s->ipc += psys_ldsw_flip(s, W(addr, 2 + tos0 - b), flip);
             }
-            } DISPATCH();
-        do_ixa: /* Index array */
+            } break;
+        case PSOP_IXA: /* Index array */
             arg0 = fetch_V(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, W(tos1, arg0*tos0));
-            DISPATCH();
-        do_ixp: /* Index packed array */
+            break;
+        case PSOP_IXP: /* Index packed array */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             tos0 = psys_pop(s);
@@ -1072,8 +1133,8 @@ do_nop: /* No operation */
             psys_push(s, W(tos1, tos0 / arg0)); /* Address of the word */
             psys_push(s, arg1);                 /* Number of bits in field */
             psys_push(s, (tos0 % arg0) * arg1); /* Number of rightmost bit of the field */
-            DISPATCH();
-        do_ste: { /* Store extended */
+            break;
+        case PSOP_STE: { /* Store extended */
             psys_fulladdr addr;
             arg0 = fetch_UB(s);
             arg1 = fetch_V(s);
@@ -1082,8 +1143,8 @@ do_nop: /* No operation */
             if (addr) { /* continue only if segment could be found */
                 psys_stw(s, addr, tos0);
             }
-            } DISPATCH();
-        do_inn: { /* Set membership */
+            } break;
+        case PSOP_INN: { /* Set membership */
             /* Note: arguments order is reversed compared to p-system reference:
              * set is on the top of the stack, the element to check membership of is below that.
              */
@@ -1092,8 +1153,8 @@ do_nop: /* No operation */
             /* overwrite input word on stack */
             psys_stw(s, W(s->sp, ofs), psys_set_in(data, psys_ldw(s, W(s->sp, ofs))));
             psys_pop_n(s, ofs); /* drop set size and set */
-            } DISPATCH();
-        do_uni: { /* Set union (bitwise OR) */
+            } break;
+        case PSOP_UNI: { /* Set union (bitwise OR) */
             psys_set result;
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
@@ -1103,8 +1164,8 @@ do_nop: /* No operation */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } DISPATCH();
-        do_int: { /* Set intersection (bitwise AND) */
+            } break;
+        case PSOP_INT: { /* Set intersection (bitwise AND) */
             psys_set result;
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
@@ -1114,8 +1175,8 @@ do_nop: /* No operation */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } DISPATCH();
-        do_dif: { /* Set difference (TOS-1 AND NOT TOS) */
+            } break;
+        case PSOP_DIF: { /* Set difference (TOS-1 AND NOT TOS) */
             psys_set result;
             psys_word *stos0 = psys_stack_words(s, 0);
             psys_word *stos1 = psys_stack_words(s, psys_set_words(stos0));
@@ -1125,64 +1186,64 @@ do_nop: /* No operation */
             } else {
                 psys_execerror(s, PSYS_ERR_SET2LG);
             }
-            } DISPATCH();
-        do_signal: /* Signal */ /* segf */
+            } break;
+        case PSOP_SIGNAL: /* Signal */ /* segf */
             tos0 = psys_pop(s);
             psys_signal(s, tos0, true);
-            DISPATCH();
-        do_wait: /* Wait */ /* segf */
+            break;
+        case PSOP_WAIT: /* Wait */ /* segf */
             tos0 = psys_pop(s);
             psys_wait(s, tos0);
-            DISPATCH();
-        do_abi: /* Absolute value integer */
+            break;
+        case PSOP_ABI: /* Absolute value integer */
             tos0 = psys_spop(s);
             psys_push(s, abs(tos0));
-            DISPATCH();
-        do_ngi: /* Negate integer */
+            break;
+        case PSOP_NGI: /* Negate integer */
             tos0 = psys_spop(s);
             psys_push(s, -tos0);
-            DISPATCH();
-        do_dup1: /* Duplicate one word */
+            break;
+        case PSOP_DUP1: /* Duplicate one word */
             tos0 = psys_pop(s);
             psys_push(s, tos0);
             psys_push(s, tos0);
-            DISPATCH();
-        do_lnot: /* Logical NOT */
+            break;
+        case PSOP_LNOT: /* Logical NOT */
             tos0 = psys_pop(s);
             psys_push(s, ~tos0);
-            DISPATCH();
-        do_ind: /* Index */
+            break;
+        case PSOP_IND: /* Index */
             arg0 = fetch_V(s);
             tos0 = psys_pop(s);
             psys_push(s, psys_ldw(s, W(tos0, arg0)));
-            DISPATCH();
-        do_inc: /* Increment */
+            break;
+        case PSOP_INC: /* Increment */
             arg0 = fetch_V(s);
             tos0 = psys_pop(s);
             psys_push(s, W(tos0, arg0));
-            DISPATCH();
-        do_eqstr: /* Equal string */
+            break;
+        case PSOP_EQSTR: /* Equal string */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, compare_strings(s, arg1, tos1, arg0, tos0) == 0);
-            DISPATCH();
-        do_lestr: /* Less or equal string */
+            break;
+        case PSOP_LESTR: /* Less or equal string */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, compare_strings(s, arg1, tos1, arg0, tos0) <= 0);
-            DISPATCH();
-        do_gestr: /* Greater or equal string */
+            break;
+        case PSOP_GESTR: /* Greater or equal string */
             arg0 = fetch_UB(s);
             arg1 = fetch_UB(s);
             tos0 = psys_pop(s);
             tos1 = psys_pop(s);
             psys_push(s, compare_strings(s, arg1, tos1, arg0, tos0) >= 0);
-            DISPATCH();
-        do_astr: { /* Assign string */
+            break;
+        case PSOP_ASTR: { /* Assign string */
             const psys_byte *src;
             psys_byte *dst;
             arg0 = fetch_UB(s); /* flag: src from memory or segment */
@@ -1196,8 +1257,8 @@ do_nop: /* No operation */
             } else { /* copy string and length byte */
                 memcpy(dst, src, src[0]+1);
             }
-            } DISPATCH();
-        do_cstr: /* Check string index */
+            } break;
+        case PSOP_CSTR: /* Check string index */
             tos0 = psys_pop(s); /* index into variable */
             tos1 = psys_pop(s); /* address of string variable */
             if (tos0 < 1 || tos0 > psys_ldb(s, tos1, 0)) {
@@ -1206,44 +1267,47 @@ do_nop: /* No operation */
                 psys_push(s, tos1);
                 psys_push(s, tos0);
             }
-            DISPATCH();
-        do_inci: /* Increase integer */
+            break;
+        case PSOP_INCI: /* Increase integer */
             tos0 = psys_pop(s);
             psys_push(s, tos0 + 1);
-            DISPATCH();
-        do_deci: /* Decrease integer */
+            break;
+        case PSOP_DECI: /* Decrease integer */
             tos0 = psys_pop(s);
             psys_push(s, tos0 - 1);
-            DISPATCH();
-        do_scip: /* Short call intermediate procedure */
+            break;
+        case PSOP_SCIP1: /* Short call intermediate procedure */
+        case PSOP_SCIP2:
             arg0 = fetch_UB(s);
             handle_call(s, CALL_CURSEG, op - PSOP_SCIP1 + 1, arg0);
-            DISPATCH();
-        do_tjp: /* True jump */
+            break;
+        case PSOP_TJP: /* True jump */
             arg0 = fetch_SB(s);
             tos0 = psys_pop(s);
             if (BOOL(tos0)) {
                 s->ipc += arg0;
             }
-            DISPATCH();
+            break;
         /* Floating point ops - not implemented */
-        do_flt: /* Float */
-        do_eqreal: /* Equal Real */
-        do_lereal: /* Less Than or Equal Real */
-        do_gereal: /* Greater Than or Equal Real */
-        do_dup2: /* Duplicate Real */
-        do_abr: /* Absolute Real */
-        do_ngr: /* Negate Real */
-        do_ldcrl: /* Load Constant Real */
-        do_ldrl: /* Load Real */
-        do_strl: /* Store Real */
+        case PSOP_FLT: /* Float */
+        case PSOP_EQREAL: /* Equal Real */
+        case PSOP_LEREAL: /* Less Than or Equal Real */
+        case PSOP_GEREAL: /* Greater Than or Equal Real */
+        case PSOP_DUP2: /* Duplicate Real */
+        case PSOP_ABR: /* Absolute Real */
+        case PSOP_NGR: /* Negate Real */
+        case PSOP_LDCRL: /* Load Constant Real */
+        case PSOP_LDRL: /* Load Real */
+        case PSOP_STRL: /* Store Real */
             psys_execerror(s, PSYS_ERR_FPIERR);
-            DISPATCH();
-        do_invalid:
+            break;
+        case PSOP_NOP: /* No operation */
+            break;
+        default:
             psys_execerror(s, PSYS_ERR_NOTIMP);
-            DISPATCH();
+            break;
+        }
     }
-    // clang-format on
 }
 
 void psys_execerror(struct psys_state *s, psys_word err)

@@ -118,7 +118,7 @@ Overall flow:
 #
 #  - xjp: jump tables
 #  - lco: strings in-place?
-#  - sind: indexing
+#  - sind, ixa: indexing
 
 ####### Top level ########
 
