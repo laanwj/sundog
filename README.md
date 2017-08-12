@@ -1,7 +1,7 @@
 Sundog: Frozen Legacy
 ========================
 
-This is a port in progress of the Atari ST game SunDog: Frozen Legacy (1984) by
+This is a port of the Atari ST game SunDog: Frozen Legacy (1984) by
 FTL software to modern platforms, using SDL2 for input and OpenGL ES 2 for
 graphics. A good overview of the gameplay can be found on [wikipedia](https://en.wikipedia.org/wiki/SunDog:_Frozen_Legacy).
 
@@ -107,8 +107,10 @@ Status
 - Ground combat.
 - Space combat.
 
-Is it fully playable? Probably: all the critical things have been implemented,
-but not everything has been tested so there may be remaining bugs.
+Is it fully playable? Yes, I played it for quite a bit. All the critical things
+have been implemented, Though I cannot guarantee that there aren't any bugs
+left. If so, please report them through the issue tracker, along with a saved
+state if possible.
 
 ### To be done
 
