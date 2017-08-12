@@ -119,6 +119,9 @@ Overall flow:
 #  - xjp: jump tables
 #  - lco: strings in-place?
 #  - sind, ixa: indexing
+#  - use labels for jump instruction, for better consistency
+#     bb0029:
+#     004a: ujp(0x29)
 
 ####### Top level ########
 
