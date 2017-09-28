@@ -68,6 +68,8 @@ struct sdl_screen {
 
     game_screen_vblank_func *vblank_cb;
     void *vblank_cb_arg;
+    /** If set, bypass/ignore SDL input */
+    bool input_bypass;
 };
 
 static inline struct sdl_screen *sdl_screen(struct game_screen *base)
@@ -414,13 +416,15 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
     unsigned *buttons, int *x, int *y)
 {
     struct sdl_screen *screen = sdl_screen(screen_);
-    (void)screen;
-#if 0
-    /* dummyscreen for psys_compare_trace */
-    *buttons = 0;
-    *x = 0;
-    *y = 0;
-#else
+
+    if (screen->input_bypass) {
+        /* dummyscreen for psys_compare_trace */
+        *buttons = 0;
+        *x = 0;
+        *y = 0;
+        return;
+    }
+
     /* TODO: Not allowed to do this from a thread?
      * This seems to work but as these values are updated from the main
      * event loop without synchronization, they may be stale or even corrupted.
@@ -437,7 +441,6 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
     *x       = sx / 2; /* XXX depend on scaling factor */
     *y       = sy / 2;
     *buttons = bout;
-#endif
 }
 
 static void sdlscreen_set_color(struct game_screen *screen_,
@@ -768,4 +771,10 @@ int game_sdlscreen_load_state(struct game_screen *screen_, int fd)
     screen->palette_dirty = true;
     screen->cursor_dirty  = true;
     return 0;
+}
+
+void game_sdlscreen_set_input_bypass(struct game_screen *screen_, bool input_bypass)
+{
+    struct sdl_screen *screen = sdl_screen(screen_);
+    screen->input_bypass = input_bypass;
 }

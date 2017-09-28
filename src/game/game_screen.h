@@ -114,4 +114,7 @@ extern int game_sdlscreen_save_state(struct game_screen *b, int fd);
 /** Load screen state from fd (return 0 on success) */
 extern int game_sdlscreen_load_state(struct game_screen *b, int fd);
 
+/** Set whether to bypass SDL input */
+extern void game_sdlscreen_set_input_bypass(struct game_screen *b, bool input_bypass);
+
 #endif
