@@ -201,7 +201,7 @@ Author
 
 Special thanks to:
 
-- [Bitsavers](bitsavers.trailing-edge.com)
+- [Bitsavers](http://bitsavers.trailing-edge.com)
 - The UCSD pascal group on Yahoo
 
 License
