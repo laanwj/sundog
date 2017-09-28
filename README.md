@@ -1,6 +1,8 @@
 Sundog: Frozen Legacy
 ========================
 
+<img alt="Sundog box logo" src="screenshots/sundog_logo.jpg">
+
 This is a port of the Atari ST game SunDog: Frozen Legacy (1984) by
 FTL software to modern platforms, using SDL2 for input and OpenGL ES 2 for
 graphics. A good overview of the gameplay can be found on [wikipedia](https://en.wikipedia.org/wiki/SunDog:_Frozen_Legacy).
