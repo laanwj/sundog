@@ -83,6 +83,9 @@ static void debugui_list_segments(struct psys_state *s)
         psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
         psys_word data_base = psys_ldw(s, erec + PSYS_EREC_Env_Data); /* globals start */
         psys_word data_size = psys_ldw(s, sib + PSYS_SIB_Data_Size) * 2; /* globals size in bytes */
+        if (data_size) { /* Add size of MSCW/activation record */
+            data_size += 0x0a;
+        }
 
         /* Print main segment */
         char buf[16];
