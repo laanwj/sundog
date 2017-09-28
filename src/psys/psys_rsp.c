@@ -136,7 +136,8 @@ static psys_word unitrw(struct psys_state *state, struct psys_rsp_state *rsp, bo
         /* Reading or writing to SYS stops the machine */
         psys_panic("Halted\n");
         break;
-    case PSYS_UNIT_CONSOLE: {
+    case PSYS_UNIT_CONSOLE:
+    case PSYS_UNIT_SYSTERM: {
         if (wr) {
             int ret = write(STDOUT_FILENO, buf, len);
             (void)ret;
