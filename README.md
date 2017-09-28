@@ -194,15 +194,20 @@ The best overview of the internals of the p-system version IV is the
 "p-System Software Reference Library: Internal Architecture", which can be
 found [on bitsavers](http://bitsavers.informatik.uni-stuttgart.de/pdf/sage/sageandstride/Internal_Architecture-1.140.41.A.pdf).
 
-Author
----------
+Credits
+--------
+
+Authors:
 
 - Wladimir J. van der Laan
+
+Contributions in the form of github pull requests are very welcome.
 
 Special thanks to:
 
 - [Bitsavers](http://bitsavers.trailing-edge.com)
-- The UCSD pascal group on Yahoo
+- [The UCSD pascal group](https://groups.yahoo.com/neo/groups/UCSDPascal/info) on Yahoo
+- [ocornut](https://github.com/ocornut) for imgui GUI system used for debug GUI
 
 License
 ---------
