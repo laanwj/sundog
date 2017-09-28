@@ -58,6 +58,12 @@ static void debugui_list_segments(struct psys_state *s)
     psys_word erec = first_erec_ptr(s);
     static psys_word selected;
     ImGui::Columns(6, NULL, false);
+    ImGui::SetColumnWidth(0, 40);
+    ImGui::SetColumnWidth(1, 40);
+    ImGui::SetColumnWidth(2, 40);
+    ImGui::SetColumnWidth(3, 100);
+    ImGui::SetColumnWidth(4, 40);
+    ImGui::SetColumnWidth(5, 40);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
     ImGui::TextUnformatted("erec");
     ImGui::NextColumn();
@@ -71,20 +77,17 @@ static void debugui_list_segments(struct psys_state *s)
     ImGui::NextColumn();
     ImGui::TextUnformatted("size");
     ImGui::NextColumn();
+    ImGui::Separator();
     ImGui::PopStyleColor();
     while (erec) {
         psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
         psys_word data_base = psys_ldw(s, erec + PSYS_EREC_Env_Data); /* globals start */
         psys_word data_size = psys_ldw(s, sib + PSYS_SIB_Data_Size) * 2; /* globals size in bytes */
-        psys_word evec = psys_ldw(s, erec + PSYS_EREC_Env_Vect);
-        psys_word num_evec = psys_ldw(s, W(evec, 0));
 
-        unsigned i;
         /* Print main segment */
         char buf[16];
         sprintf(buf, "%04x", erec);
         if (ImGui::Selectable(buf, selected == erec, ImGuiSelectableFlags_SpanAllColumns)) {
-            printf("selected: %04x\n", erec);
             selected = erec;
             // jump and highlight segment's data in hex editor
             mem_edit.GotoAddrAndHighlight(data_base, data_base + data_size);
@@ -100,7 +103,10 @@ static void debugui_list_segments(struct psys_state *s)
         ImGui::NextColumn();
         ImGui::Text("%04x", data_size);
         ImGui::NextColumn();
-#if 0
+#if 0 // Skip for now, these don't have their own data segment but share it with the parent anyway
+        psys_word num_evec = psys_ldw(s, W(evec, 0));
+        unsigned i;
+        psys_word evec = psys_ldw(s, erec + PSYS_EREC_Env_Vect);
         /* Subsidiary segments. These will be referenced in the segment's evec
          * and have the same evec pointer (and the same BASE, but that's less reliable
          * as some segments have no globals).
@@ -160,7 +166,7 @@ void debugui_newframe(SDL_Window *window)
     {
         ImGui::Begin("Palette", &show_palette_window);
         for (int x=0; x<16; ++x) {
-            ImGui::Image((ImTextureID)gamestate->pal_tex, ImVec2(5,5), ImVec2(x/256.0,0.0), ImVec2((x+1)/256.0,1.0));
+            ImGui::Image((ImTextureID)(intptr_t)gamestate->pal_tex, ImVec2(5,5), ImVec2(x/256.0,0.0), ImVec2((x+1)/256.0,1.0));
             if (x != 15) {
                 ImGui::SameLine(0, 2);
             }
@@ -180,11 +186,16 @@ void debugui_newframe(SDL_Window *window)
 
     if (show_segments_window)
     {
+        ImGui::SetNextWindowSize(ImVec2(320,280), ImGuiCond_FirstUseEver);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f,0.0f,0.0f,0.90f)); // Less transparent
         ImGui::Begin("Segments", &show_segments_window);
         assert(gamestate->psys);
         debugui_list_segments(gamestate->psys);
         ImGui::End();
+        ImGui::PopStyleColor();
     }
+
+    // TODO: instruction view/single step, when VM is stopped
 
     if (show_test_window)
     {

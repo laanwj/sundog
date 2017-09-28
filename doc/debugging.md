@@ -1,6 +1,23 @@
 Debugging
 ===================
 
+Debug UI
+--------------
+
+When compiled with `ENABLE_DEBUGUI` compiler flag, a imgui-based debug UI is
+compiled in. This is currently experimental and in development, but it allows
+editing memory as well as checking the current FPS rate and the palette.
+
+It can be shown/hidden with `\``/`~` (as in, the console key in Quake).
+Different windows can be opened from there: segments, memory and palette.
+"test window" is the imgui test window and only useful to look at imgui's
+capabilities.
+
+Although the additional utility windows will stay open, key/mouse events will only
+reach the debug UI when the main debug window is visible. This might seem
+sub-optimal, but it allows e.g. for watching memory in real time while playing
+the game.
+
 Tracing
 ---------------
 

@@ -194,6 +194,13 @@ The best overview of the internals of the p-system version IV is the
 "p-System Software Reference Library: Internal Architecture", which can be
 found [on bitsavers](http://bitsavers.informatik.uni-stuttgart.de/pdf/sage/sageandstride/Internal_Architecture-1.140.41.A.pdf).
 
+Debug UI
+---------
+
+<img alt="Debug UI" src="screenshots/debugui.png">
+
+A debug UI can be compiled in to aid with debugging and reverse engineering. For more information, see [debugging.md](doc/debugging.md).
+
 Credits
 --------
 
@@ -207,7 +214,7 @@ Special thanks to:
 
 - [Bitsavers](http://bitsavers.trailing-edge.com)
 - [The UCSD pascal group](https://groups.yahoo.com/neo/groups/UCSDPascal/info) on Yahoo
-- [ocornut](https://github.com/ocornut) for imgui GUI system used for debug GUI
+- [ocornut](https://github.com/ocornut) for the "dear imgui" GUI system used for debug GUI
 
 License
 ---------
