@@ -3,6 +3,8 @@
  * Distributed under the MIT software license, see the accompanying
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
+#include "sundog.h"
+
 #include "game/game_gembind.h"
 #include "game/game_screen.h"
 #include "game/game_shiplib.h"
@@ -20,8 +22,11 @@
 #endif
 #include "util/memutil.h"
 #include "util/util_save_state.h"
+#ifdef ENABLE_DEBUGUI
+#include "debugui/debugui.h"
+#endif
 
-#include "SDL.h"
+#include <SDL.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
@@ -34,34 +39,6 @@
 
 /* Time between vblanks in ms */
 #define VBLANK_TIME (1000 / 50)
-
-struct game_state {
-    bool running;
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Thread *thread;
-    struct game_screen *screen;
-    SDL_Cursor *cursor;
-    SDL_TimerID timer;
-
-    struct psys_state *psys;
-    struct psys_binding *rspb;
-#ifdef PSYS_DEBUGGER
-    struct psys_debugger *debugger;
-#endif
-
-    SDL_atomic_t timer_queued;
-    SDL_atomic_t stop_trigger;
-    SDL_atomic_t vblank_trigger;
-    unsigned vblank_count;
-    unsigned time_offset;
-    uint32_t saved_time;
-
-    GLuint scr_program;
-    GLuint scr_tex;
-    GLuint pal_tex;
-    GLuint vtx_buf;
-};
 
 /** User-defined event types */
 enum {
@@ -511,6 +488,11 @@ static void event_loop(struct game_state *gs)
 #endif
     gs->running = true;
     while (gs->running && SDL_WaitEvent(&event)) {
+#ifdef ENABLE_DEBUGUI
+        if (debugui_processevent(&event)) {
+            continue;
+        }
+#endif
         switch (event.type) {
         case SDL_QUIT:
             gs->running = false;
@@ -593,12 +575,18 @@ static void event_loop(struct game_state *gs)
         case SDL_USEREVENT:
             switch (event.user.code) {
             case EVC_TIMER: /* Timer event */
+#ifdef ENABLE_DEBUGUI
+                debugui_newframe(gs->window);
+#endif
                 /* Update textures from VM state/thread */
                 game_sdlscreen_update_textures(gs->screen, gs->scr_tex, gs->pal_tex);
                 /* Trigger vblank interrupt in interpreter thread */
                 SDL_AtomicSet(&gs->vblank_trigger, 1);
                 /* Draw a frame */
                 draw(gs);
+#ifdef ENABLE_DEBUGUI
+                debugui_render();
+#endif
                 SDL_GL_SwapWindow(gs->window);
                 game_sdlscreen_update_cursor(gs->screen, (void **)&gs->cursor);
                 /* Congestion control */
@@ -669,6 +657,9 @@ int main(int argc, char **argv)
     /* Set up debugger */
     gs->debugger = psys_debugger_new(state);
 #endif
+#ifdef ENABLE_DEBUGUI
+    debugui_init(gs->window, gs);
+#endif
 
     start_interpreter_thread(gs);
 
@@ -677,6 +668,9 @@ int main(int argc, char **argv)
     stop_interpreter_thread(gs);
 
     /* Destroy everything */
+#ifdef ENABLE_DEBUGUI
+    debugui_shutdown();
+#endif
     SDL_GL_DeleteContext(gs->context);
     gs->screen->destroy(gs->screen);
     /* TODO these leak:

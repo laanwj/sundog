@@ -10,6 +10,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 200
 #define SCREEN_COLORS 16
@@ -116,5 +120,9 @@ extern int game_sdlscreen_load_state(struct game_screen *b, int fd);
 
 /** Set whether to bypass SDL input */
 extern void game_sdlscreen_set_input_bypass(struct game_screen *b, bool input_bypass);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

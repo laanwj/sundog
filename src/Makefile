@@ -10,9 +10,13 @@ READLINE_LIBS=-lreadline
 CFLAGS=-Werror=implicit-function-declaration -Wmissing-prototypes -Wmissing-declarations -Wall \
        -Wextra -Wno-unused-parameter \
        -Og -Wall -ggdb3 -g3 -I. \
-       -DFLIP_ENDIAN_HACK -DPSYS_DEBUGGER -DGAME_CHEATS \
+       -DFLIP_ENDIAN_HACK -DPSYS_DEBUGGER -DGAME_CHEATS -DENABLE_DEBUGUI \
        $(SDL_CFLAGS) $(GLES2_CFLAGS)
+CXXFLAGS=$(CFLAGS) -Iimgui
 LDFLAGS=$(SDL_LIBS) $(GLES2_LIBS) $(READLINE_LIBS) -lm
+
+# CXX is only used for debug gui
+LINK=$(CXX)
 
 PSYS_OBJS= \
 	psys/psys_bootstrap.o \
@@ -38,6 +42,13 @@ TEST_OBJS= \
 
 TOOL_OBJS= \
 	util/write_bmp.o
+
+DEBUGUI_OBJS= \
+	debugui/debugui.o \
+	imgui/imgui.o \
+	imgui/imgui_demo.o \
+	imgui/imgui_draw.o \
+	imgui/imgui_impl_sdl_gles2.o
 
 HEADERS= \
 	psys/psys_bootstrap.h \
@@ -83,8 +94,8 @@ EXES= \
 
 all: $(EXES)
 
-sundog: sundog.o $(PSYS_OBJS) $(GAME_OBJS)
-	$(CC) $^ $(LDFLAGS) -o $@
+sundog: sundog.o $(PSYS_OBJS) $(GAME_OBJS) $(DEBUGUI_OBJS)
+	$(LINK) $^ $(LDFLAGS) -o $@
 
 sundog_compare_trace: sundog_compare_trace.o $(PSYS_OBJS) $(GAME_OBJS)
 	$(CC) $^ $(LDFLAGS) -o $@
