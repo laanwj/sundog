@@ -319,6 +319,7 @@ static void stop_interpreter_thread(struct game_state *gs)
     SDL_AtomicSet(&gs->stop_trigger, 1);
     SDL_WaitThread(gs->thread, NULL);
     gs->saved_time = get_60hz_time() - gs->time_offset; /* Write current time */
+    gs->thread     = NULL;
 #if 0
     psys_debug("[%d] Interpreter thread stopped\n", gs->saved_time);
 #endif
