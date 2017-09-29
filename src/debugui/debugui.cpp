@@ -215,23 +215,27 @@ void debugui_newframe(SDL_Window *window)
         ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
         ImGui::ShowTestWindow(&show_test_window);
     }
+
+    // If ImGui wants to capture mouse, block game from processing mouse position/buttons
+    ImGuiIO& io = ImGui::GetIO();
+    game_sdlscreen_set_input_bypass(gamestate->screen, io.WantCaptureMouse);
 }
 
 bool debugui_processevent(SDL_Event *event)
 {
+    ImGuiIO& io = ImGui::GetIO();
     switch (event->type) {
     case SDL_KEYDOWN:
         switch (event->key.keysym.sym) {
         case SDLK_BACKQUOTE: /* Debug window */
             show_window = !show_window;
-            game_sdlscreen_set_input_bypass(gamestate->screen, show_window);
             return true;
         }
         break;
     default:
         break;
     }
-    if (show_window) { /* Send events to debug window if it's visible */
+    if (io.WantCaptureKeyboard || io.WantCaptureMouse) { /* Send events to debug window? */
         return ImGui_ImplSdlGLES2_ProcessEvent(event);
     } else {
         return false;

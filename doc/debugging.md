@@ -13,11 +13,6 @@ Different windows can be opened from there: segments, memory and palette.
 "test window" is the imgui test window and only useful to look at imgui's
 capabilities.
 
-Although the additional utility windows will stay open, key/mouse events will only
-reach the debug UI when the main debug window is visible. This might seem
-sub-optimal, but it allows e.g. for watching memory in real time while playing
-the game.
-
 Tracing
 ---------------
 
