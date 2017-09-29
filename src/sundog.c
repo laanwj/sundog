@@ -404,11 +404,12 @@ static void init_gl(struct game_state *gs)
         "varying mediump vec2 texcoord;\n"
         "uniform sampler2D scr_tex;\n"
         "uniform sampler2D pal_tex;\n"
+        "uniform mediump vec4 tint;\n"
         "\n"
         "void main()\n"
         "{\n"
         "    mediump vec2 idx = vec2(texture2D(scr_tex, texcoord).x, 0.0);\n"
-        "    gl_FragColor = texture2D(pal_tex, idx);\n"
+        "    gl_FragColor = texture2D(pal_tex, idx) * tint;\n"
         "}\n");
     compile_shader(s3, "fragment");
     glAttachShader(p1, s3);
@@ -420,6 +421,7 @@ static void init_gl(struct game_state *gs)
     glUniform1i(u_scr_tex, 0);
     GLint u_pal_tex = glGetUniformLocation(p1, "pal_tex");
     glUniform1i(u_pal_tex, 1);
+    gs->scr_program_tint = glGetUniformLocation(p1, "tint");
     assert(glGetError() == GL_NONE);
     gs->scr_program = p1;
 
@@ -437,6 +439,12 @@ static void draw(struct game_state *gs)
     glDisable(GL_CULL_FACE);
 
     glUseProgram(gs->scr_program);
+
+    if (gs->thread) {
+        glUniform4f(gs->scr_program_tint, 1.0f, 1.0f, 1.0f, 1.0f);
+    } else { /* Darken if paused */
+        glUniform4f(gs->scr_program_tint, 0.5f, 0.5f, 0.5f, 0.5f);
+    }
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gs->scr_tex);
@@ -572,6 +580,13 @@ static void event_loop(struct game_state *gs)
                 }
                 close(fd);
             } break;
+            case SDLK_SPACE: /* Pause */
+                if (!gs->thread) {
+                    start_interpreter_thread(gs);
+                } else {
+                    stop_interpreter_thread(gs);
+                }
+                break;
             }
         case SDL_USEREVENT:
             switch (event.user.code) {

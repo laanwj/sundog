@@ -88,6 +88,7 @@ on the excellent [Sundog information page](http://www.lukin.com/sundog/).
 The game is controlled with the mouse only. There are however some key
 shortcuts for the interpreter:
 
+- ` ` Pause/unpause game
 - `s` Save state to `sundog.sav` in current directory.
 - `l` Load state from `sundog.sav` in current directory.
 

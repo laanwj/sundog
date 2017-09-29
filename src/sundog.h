@@ -33,6 +33,7 @@ struct game_state {
     uint32_t saved_time;
 
     GLuint scr_program;
+    GLint scr_program_tint;
     GLuint scr_tex;
     GLuint pal_tex;
     GLuint vtx_buf;
