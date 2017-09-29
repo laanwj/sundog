@@ -215,6 +215,7 @@ Special thanks to:
 - [Bitsavers](http://bitsavers.trailing-edge.com)
 - [The UCSD pascal group](https://groups.yahoo.com/neo/groups/UCSDPascal/info) on Yahoo
 - [ocornut](https://github.com/ocornut) for the "dear imgui" GUI system used for debug GUI
+- Of course late FTL software: Bruce Webster, Doug Bell, Wayne Holder, Mike Newton, Andy Jaros for making SunDog in the first place.
 
 License
 ---------
