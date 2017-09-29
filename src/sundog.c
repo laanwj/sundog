@@ -555,17 +555,18 @@ static void event_loop(struct game_state *gs)
                 break;
             case SDLK_s: {                   /* Save state */
                 stop_interpreter_thread(gs); /* stop interpreter thread while saving */
-                int fd = open("sundog.sav", O_WRONLY | O_CREAT, 0666);
+                int fd = open("sundog.sav", O_WRONLY | O_CREAT | O_TRUNC, 0666);
                 if (fd < 0) {
                     psys_debug("Error opening game state file for writing\n");
                     break;
                 }
                 if (game_save_state(gs, fd) < 0) {
                     psys_debug("Error during save of game state\n");
+                } else {
+                    psys_debug("Game state succesfully saved\n");
                 }
-                close(fd);
-                psys_debug("Game state succesfully saved\n");
                 start_interpreter_thread(gs);
+                close(fd);
             } break;
             case SDLK_l: {                   /* Load state */
                 stop_interpreter_thread(gs); /* stop interpreter thread while loading */
