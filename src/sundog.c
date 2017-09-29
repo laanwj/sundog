@@ -174,7 +174,7 @@ static struct psys_state *setup_state(struct game_screen *screen, const char *im
     psys_byte *disk_data;
     size_t disk_size, track_size;
     struct psys_bootstrap_info boot;
-    psys_word ext_memsize     = 200; /* Memory size in kB */
+    psys_word ext_memsize     = 786; /* Memory size in kB */
     psys_fulladdr ext_membase = 0x000337ac;
     struct psys_binding *rspb;
 
