@@ -24,11 +24,20 @@
 #ifndef BMP_DUMP_H
 #define BMP_DUMP_H 1
 #include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* write 32-bit image (y axis upwards) */
 void bmp_dump32(char *buffer, unsigned width, unsigned height, bool bgra, const char *filename);
 /* write 32-bit image (y axis downwards) */
 void bmp_dump32_noflip(char *buffer, unsigned width, unsigned height, bool bgra, const char *filename);
 /* write 32-bit image */
 void bmp_dump32_ex(char *buffer, unsigned width, unsigned height, bool flip, bool bgra, bool alpha, const char *filename);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* BMP_DUMP_H */

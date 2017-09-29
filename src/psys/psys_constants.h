@@ -6,6 +6,10 @@
 #ifndef H_PSYS_CONSTANTS
 #define H_PSYS_CONSTANTS
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Endian determinator */
 enum psys_endian {
     PSYS_ENDIAN_NATIVE  = 0x0001,
@@ -209,5 +213,9 @@ enum psys_fault {
     PSYS_FAULT_HEAP = 0x82, /* Heap fault */
     PSYS_FAULT_POOL = 0x83, /* Pool fault */
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -8,6 +8,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct game_screen;
 struct psys_state;
 
@@ -16,5 +20,9 @@ extern struct psys_binding *new_gembind(struct psys_state *state, struct game_sc
 
 /** Destruction */
 extern void destroy_gembind(struct psys_binding *b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

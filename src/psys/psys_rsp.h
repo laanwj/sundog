@@ -8,6 +8,10 @@
 
 #include "psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** RSP (Runtime Support Package) call numbers */
 enum {
     PSYS_RSP_RELOCSEG      = 0x04,
@@ -107,5 +111,9 @@ extern void psys_rsp_event(struct psys_binding *b, psys_word event, bool taskswi
 
 /* Set time returned by rsp */
 extern void psys_rsp_settime(struct psys_binding *b, psys_word time);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

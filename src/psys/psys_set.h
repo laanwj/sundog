@@ -8,6 +8,10 @@
 
 #include "psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Used for declaration only */
 typedef psys_word psys_set[PSYS_MAX_SET_SIZE + 1];
 
@@ -55,5 +59,9 @@ extern bool psys_set_in(const psys_word *in, unsigned x);
 
 /* Create set from subrange */
 extern bool psys_set_from_subrange(psys_word *out, unsigned a, unsigned b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

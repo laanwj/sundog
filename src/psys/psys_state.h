@@ -8,6 +8,10 @@
 
 #include "psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Binding for calling native functions from the p-system.
  * This can overrides procedures in a given segment with a native function
  * call.
@@ -77,5 +81,9 @@ struct psys_state {
     psys_word local_init_base;
     psys_word local_init_count;
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

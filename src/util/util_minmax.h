@@ -1,6 +1,10 @@
 #ifndef H_UTIL_MINMAX
 #define H_UTIL_MINMAX
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Straightforward minimum and maximum functions */
 static inline unsigned umin(unsigned a, unsigned b)
 {
@@ -21,5 +25,9 @@ static inline int imax(int a, int b)
 {
     return (a > b) ? a : b;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

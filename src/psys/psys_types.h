@@ -10,6 +10,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct psys_state;
 
 /** Standard types */
@@ -54,5 +58,9 @@ struct psys_function_id {
  * accordingly.
  */
 static const psys_fulladdr PSYS_ADDR_ERROR = 0xffffffffUL;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -8,6 +8,10 @@
 
 #include "psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct psys_bootstrap_info {
     psys_word boot_unit_id;      /* Boot disk unit number */
     psys_word isp;               /* Initial stack pointer */
@@ -26,5 +30,9 @@ struct psys_bootstrap_info {
  * Memory must already have been allocated, the rest of the registers are initialized as necessary.
  */
 extern void psys_bootstrap(struct psys_state *s, const struct psys_bootstrap_info *boot, const psys_byte *disk);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

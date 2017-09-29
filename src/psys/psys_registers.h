@@ -8,6 +8,10 @@
 
 #include "psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** p-system special "processor" registers.
  * See TIB in psys_constants.h for the positive values, as those registers are
  * treated as word offsets into the current TIB. */
@@ -22,5 +26,9 @@ extern psys_word psys_lpr(struct psys_state *state, psys_sword reg);
 
 /* store "processor" register */
 extern void psys_spr(struct psys_state *state, psys_sword reg, psys_word value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -10,6 +10,10 @@
 #include "psys_interpreter.h"
 #include "psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef BIT
 #define BIT(x) (1 << (x))
 #endif
@@ -142,5 +146,9 @@ static inline psys_word *psys_stack_words(struct psys_state *state, psys_fulladd
 {
     return psys_words(state, state->sp + offset * 2);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

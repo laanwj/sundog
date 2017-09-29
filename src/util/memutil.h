@@ -8,8 +8,16 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define CALLOC_STRUCT(T)   (struct T *) calloc(1, sizeof(struct T))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

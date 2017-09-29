@@ -8,6 +8,10 @@
 
 #include "psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Implementation of SIGNAL op.
  * This signals a semaphore.
  * *taskswitch* determines whether to switch tasks immediately if the signal
@@ -30,5 +34,9 @@ extern void psys_store_state_to_tib(struct psys_state *s);
  * No-op if that task is already running.
  */
 extern void psys_task_switch(struct psys_state *s);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -8,6 +8,10 @@
 
 #include "psys_state.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Interpreter loop, runs until a binding (or the trace function)
  * sets running=false by calling psys_stop.
  */
@@ -50,5 +54,9 @@ psys_fulladdr lookup_procedure(struct psys_state *s, psys_fulladdr erec, psys_wo
  * *fault* set) if segment not found.
  */
 psys_fulladdr psys_lookup_ref_segment(struct psys_state *s, psys_word segid, bool fault);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

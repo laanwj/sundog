@@ -7,6 +7,10 @@
 #ifndef H_PSYS_OPCODES
 #define H_PSYS_OPCODES
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PSYS_OP_MAX_ARGS 3
 enum psys_opcode_argtype {
     PSYS_OPARG_VAR      = 0, /* "big" encoding */
@@ -286,5 +290,9 @@ enum psys_opcode {
     PSOP_UNDFE    = 0xfe,
     PSOP_UNDFF    = 0xff
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

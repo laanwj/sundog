@@ -10,6 +10,10 @@
 
 #include <assert.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct psys_state;
 #define psys_assert assert
 
@@ -76,5 +80,9 @@ int psys_debug_stack_depth(struct psys_state *s);
  * -1 if unknown.
  */
 int psys_debug_proc_num_arguments(struct psys_state *s, psys_fulladdr erec, psys_word procedure);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

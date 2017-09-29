@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Flip 4 bits to the opposite bit order */
 static inline unsigned flip4(unsigned x)
 {
@@ -32,5 +36,9 @@ extern void util_img_unplanarize(uint8_t *destdata, unsigned bytes_per_line, con
 
 /** Convert 1-byte-per-pixel grid image to planar */
 extern void util_img_planarize(uint8_t *planar, unsigned dst_wdwidth, const uint8_t *srcdata, unsigned width, unsigned height, unsigned bytes_per_line);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

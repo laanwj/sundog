@@ -8,6 +8,10 @@
 
 #include "psys/psys_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct psys_debugger;
 
 extern struct psys_debugger *psys_debugger_new(struct psys_state *s);
@@ -26,5 +30,8 @@ extern bool psys_debugger_trace(struct psys_debugger *dbg);
 
 extern void psys_debugger_destroy(struct psys_debugger *dbg);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
