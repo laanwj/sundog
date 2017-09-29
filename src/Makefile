@@ -7,12 +7,13 @@ GLES2_CFLAGS=
 GLES2_LIBS=-lGLESv2
 READLINE_LIBS=-lreadline
 
-CFLAGS=-Werror=implicit-function-declaration -Wmissing-prototypes -Wmissing-declarations -Wall \
+SHAREDFLAGS=-Werror=implicit-function-declaration -Wmissing-declarations -Wall \
        -Wextra -Wno-unused-parameter \
        -Og -Wall -ggdb3 -g3 -I. \
        -DFLIP_ENDIAN_HACK -DPSYS_DEBUGGER -DGAME_CHEATS -DENABLE_DEBUGUI \
        $(SDL_CFLAGS) $(GLES2_CFLAGS)
-CXXFLAGS=$(CFLAGS) -Iimgui
+CFLAGS=$(SHAREDFLAGS) -Wmissing-prototypes
+CXXFLAGS=$(SHAREDFLAGS) -Iimgui
 LDFLAGS=$(SDL_LIBS) $(GLES2_LIBS) $(READLINE_LIBS) -lm
 
 # CXX is only used for debug gui
