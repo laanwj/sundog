@@ -439,7 +439,9 @@ static void draw(struct game_state *gs)
     SDL_GetWindowSize(gs->window, &width, &height);
     glViewport(0, 0, width, height);
     glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
+    /* No need to glClear, we'll render a full screen quad */
 
     glUseProgram(gs->scr_program);
 
