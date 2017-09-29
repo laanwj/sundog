@@ -106,29 +106,39 @@ static void debugui_list_segments(struct psys_state *s)
         ImGui::NextColumn();
         ImGui::Text("%04x", data_size);
         ImGui::NextColumn();
-#if 0 // Skip for now, these don't have their own data segment but share it with the parent anyway
-        psys_word num_evec = psys_ldw(s, W(evec, 0));
-        unsigned i;
+
         psys_word evec = psys_ldw(s, erec + PSYS_EREC_Env_Vect);
+        psys_word num_evec = psys_ldw(s, W(evec, 0));
         /* Subsidiary segments. These will be referenced in the segment's evec
          * and have the same evec pointer (and the same BASE, but that's less reliable
          * as some segments have no globals).
          */
-        for (i=1; i<num_evec; ++i) {
+        for (int i=1; i<num_evec; ++i) {
             psys_word serec = psys_ldw(s, W(evec,i));
             if (serec) {
+                /* Print subsidiary segment */
                 psys_word ssib = psys_ldw(s, serec + PSYS_EREC_Env_SIB);
                 psys_word sevec = psys_ldw(s, serec + PSYS_EREC_Env_Vect);
                 if (serec != erec && sevec == evec) {
-                    printf("  %04x %04x %c %-8.8s\n",
-                            serec, ssib,
-                            is_segment_resident(s, serec) ? 'R':'-',
-                            psys_bytes(s, ssib + PSYS_SIB_Seg_Name)
-                            );
+                    char buf2[16];
+                    sprintf(buf2, "%04x", serec);
+                    if (ImGui::Selectable(buf2, selected == serec, ImGuiSelectableFlags_SpanAllColumns)) {
+                        selected = serec;
+                        // jump and highlight segment's data in hex editor
+                        mem_edit.GotoAddrAndHighlight(data_base, data_base + data_size);
+                    }
+                    ImGui::NextColumn();
+                    ImGui::Text("%04x", ssib);
+                    ImGui::NextColumn();
+                    ImGui::Text("%c", is_segment_resident(s, serec) ? 'R':'-');
+                    ImGui::NextColumn();
+                    ImGui::Text(" %-8.8s", psys_bytes(s, ssib + PSYS_SIB_Seg_Name));
+                    ImGui::NextColumn();
+                    ImGui::NextColumn();
+                    ImGui::NextColumn();
                 }
             }
         }
-#endif
         erec = psys_ldw(s, erec + PSYS_EREC_Next_Rec);
     }
     ImGui::Columns(1);
