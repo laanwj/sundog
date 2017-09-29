@@ -54,13 +54,13 @@ enum {
  * In any case it trips up while running in this interpreter, and until someone finds
  * a more elegant way around it, we persistently turn it off by resetting its state.
  */
-#define INTEGRITY_CHECK_ADDR (0x348e + 8 + 2 * 0x238) /* Gglobal EMBIND_238 */
+#define INTEGRITY_CHECK_ADDR(gs) (W((gs)->gembind_ofs + 8, 0x238)) /* global GEMBIND_238 */
 #ifdef DEBUG_INTEGRITY_CHECK
 /** Watch ??? state */
-static void watch_integrity_check(struct psys_state *s)
+static void watch_integrity_check(struct game_state *gs)
 {
     static psys_word last_state = 0;
-    psys_word new_state         = psys_ldw(s, INTEGRITY_CHECK_ADDR);
+    psys_word new_state         = psys_ldw(gs->psys, INTEGRITY_CHECK_ADDR(gs));
     if (new_state != last_state) {
         psys_debug("\x1b[38;5;196;48;5;235m??? state changed to 0x%04x\x1b[0m\n", new_state);
         psys_print_traceback(s);
@@ -69,9 +69,9 @@ static void watch_integrity_check(struct psys_state *s)
 }
 #else
 /** Neuter ??? state */
-static void watch_integrity_check(struct psys_state *s)
+static void watch_integrity_check(struct game_state *gs)
 {
-    psys_stw(s, INTEGRITY_CHECK_ADDR, 0);
+    psys_stw(gs->psys, INTEGRITY_CHECK_ADDR(gs), 0);
 }
 #endif
 
@@ -153,7 +153,7 @@ static void psys_trace(struct psys_state *s, void *gs_)
         /* 60hz timer */
         psys_rsp_settime(gs->rspb, get_60hz_time() - gs->time_offset);
     }
-    watch_integrity_check(s);
+    watch_integrity_check(gs);
 #ifdef PSYS_DEBUGGER
     if (psys_debugger_trace(gs->debugger)) {
         SDL_Event event;
@@ -514,21 +514,21 @@ static void event_loop(struct game_state *gs)
 #ifdef GAME_CHEATS
             case SDLK_x: { /* Cheat */
                 int x;
-                psys_stw(gs->psys, W(0x1f66 + 8, 0x33), 999);
-                psys_stw(gs->psys, W(0x1f66 + 8, 0x34), 999);
+                psys_stw(gs->psys, W(gs->mainlib_ofs + 8, 0x33), 999);
+                psys_stw(gs->psys, W(gs->mainlib_ofs + 8, 0x34), 999);
                 /* Ship's stores */
                 for (x = 0; x < 20; ++x) {
-                    psys_stb(gs->psys, W(0x1f66 + 8, 0xbd), x, x + 8);
+                    psys_stb(gs->psys, W(gs->mainlib_ofs + 8, 0xbd), x, x + 8);
                 }
                 /* Ship's locker */
                 for (x = 0; x < 20; ++x) {
-                    psys_stb(gs->psys, W(0x1f66 + 8, 0xaf), x, x + 12);
+                    psys_stb(gs->psys, W(gs->mainlib_ofs + 8, 0xaf), x, x + 12);
                 }
                 psys_debug("\x1b[104;31mCHEATER\x1b[0m\n");
             } break;
             case SDLK_y: { /* Dump gamestate as hex */
                 unsigned i;
-                psys_byte *curstate = psys_bytes(gs->psys, 0x1f66 + 8 + 0x1f * 2);
+                psys_byte *curstate = psys_bytes(gs->psys, W(gs->mainlib_ofs + 8, 0x1f));
                 for (i = 0; i < 512; ++i) {
                     if (curstate[i] != gamestate[i]) {
                         hl[i]        = 0x02; /* Highlight changed bytes since last time in green */
@@ -681,6 +681,13 @@ int main(int argc, char **argv)
 #endif
 #ifdef ENABLE_DEBUGUI
     debugui_init(gs->window, gs);
+#endif
+    /* Game segment globals offsets.
+     * TODO: look up get_globals("MAINLIB") i.s.o. hardcoding
+     */
+    gs->gembind_ofs = 0x348e;
+#ifdef GAME_CHEATS
+    gs->mainlib_ofs = 0x1f66;
 #endif
 
     start_interpreter_thread(gs);

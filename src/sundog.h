@@ -24,6 +24,10 @@ struct game_state {
 #ifdef PSYS_DEBUGGER
     struct psys_debugger *debugger;
 #endif
+    uint32_t gembind_ofs;
+#ifdef GAME_CHEATS
+    uint32_t mainlib_ofs;
+#endif
 
     SDL_atomic_t timer_queued;
     SDL_atomic_t stop_trigger;
