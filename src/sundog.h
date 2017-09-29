@@ -1,8 +1,8 @@
 #ifndef H_SUNDOG
 #define H_SUNDOG
 
-#include <SDL.h>
 #include <GLES2/gl2.h>
+#include <SDL.h>
 
 #include <stdbool.h>
 

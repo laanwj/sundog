@@ -420,8 +420,8 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
     if (screen->input_bypass) {
         /* dummyscreen for psys_compare_trace */
         *buttons = 0;
-        *x = 0;
-        *y = 0;
+        *x       = 0;
+        *y       = 0;
         return;
     }
 
@@ -776,5 +776,5 @@ int game_sdlscreen_load_state(struct game_screen *screen_, int fd)
 void game_sdlscreen_set_input_bypass(struct game_screen *screen_, bool input_bypass)
 {
     struct sdl_screen *screen = sdl_screen(screen_);
-    screen->input_bypass = input_bypass;
+    screen->input_bypass      = input_bypass;
 }

@@ -26,9 +26,9 @@
 #include "debugui/debugui.h"
 #endif
 
-#include <SDL.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <SDL.h>
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -668,7 +668,7 @@ int main(int argc, char **argv)
 
     stop_interpreter_thread(gs);
 
-    /* Destroy everything */
+/* Destroy everything */
 #ifdef ENABLE_DEBUGUI
     debugui_shutdown();
 #endif

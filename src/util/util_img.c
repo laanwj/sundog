@@ -112,4 +112,3 @@ void util_img_planarize(uint8_t *planar, unsigned dst_wdwidth, const uint8_t *sr
         }
     }
 }
-

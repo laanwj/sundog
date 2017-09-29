@@ -6,16 +6,16 @@
 #include "debugger.h"
 
 #include "psys/psys_constants.h"
-#include "psys/psys_state.h"
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
 #include "psys/psys_registers.h"
+#include "psys/psys_state.h"
 #include "util/memutil.h"
 
 #include <fcntl.h>
-#include <unistd.h>
-#include <readline/readline.h>
 #include <readline/history.h>
+#include <readline/readline.h>
+#include <unistd.h>
 
 /** Rudimentary p-system debugger. The following functionality would be nice:
  * - Load / set VM register (lpr/spr)
@@ -51,7 +51,7 @@ struct dbg_breakpoint {
      * by segment:offset code address.
      */
     struct psys_segment_id seg; /* Segment name */
-    psys_word addr; /* Address relative to segment */
+    psys_word addr;             /* Address relative to segment */
 };
 
 /** Description of one stack frame, with forward
@@ -75,9 +75,9 @@ struct dbg_stackframe {
 /** Global debugger mode */
 enum debugger_mode {
     DM_NONE,
-    DM_SINGLE_STEP,  /* Single-stepping */
-    DM_STEP_OUT,     /* Stepping out of function */
-    DM_STEP_OVER,    /* Stepping over (next instruction in function or parent) */
+    DM_SINGLE_STEP, /* Single-stepping */
+    DM_STEP_OUT,    /* Stepping out of function */
+    DM_STEP_OVER,   /* Stepping over (next instruction in function or parent) */
 };
 
 /** Global debugger state */
@@ -106,7 +106,7 @@ struct psys_debugger {
  */
 static unsigned parse_args(char **args, unsigned max, char *line)
 {
-    char *arg = line;
+    char *arg    = line;
     unsigned num = 0;
     if (!line)
         return 0;
@@ -115,9 +115,9 @@ static unsigned parse_args(char **args, unsigned max, char *line)
         ++arg;
     }
     /* split arguments */
-    while(arg && *arg && num < max) {
+    while (arg && *arg && num < max) {
         char *nextarg = strchr(arg, ' ');
-        args[num++] = arg;
+        args[num++]   = arg;
         if (nextarg) { /* if separator found, move past spaces to argument */
             *nextarg = '\0';
             ++nextarg;
@@ -145,10 +145,10 @@ static void assign_segment_id(struct psys_segment_id *id, const char *name)
 {
     unsigned i;
     /* Make truncated, uppercased, space-padded version of name to compare to */
-    for (i=0; i<8 && name[i]; ++i) {
+    for (i = 0; i < 8 && name[i]; ++i) {
         id->name[i] = toupper(name[i]);
     }
-    for (; i<8; ++i) {
+    for (; i < 8; ++i) {
         id->name[i] = ' ';
     }
 }
@@ -183,7 +183,7 @@ static psys_fulladdr get_globals(struct psys_state *s, char *name, psys_word *da
     }
     if (data_size) {
         psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
-        *data_size = psys_ldw(s, sib + PSYS_SIB_Data_Size);
+        *data_size    = psys_ldw(s, sib + PSYS_SIB_Data_Size);
     }
     return psys_ldw(s, erec + PSYS_EREC_Env_Data);
 }
@@ -201,7 +201,7 @@ static bool is_segment_resident(struct psys_state *s, psys_word erec)
 static struct dbg_breakpoint *new_breakpoint(struct psys_debugger *dbg)
 {
     int i;
-    for (i=0; i<MAX_BREAKPOINTS; ++i) {
+    for (i = 0; i < MAX_BREAKPOINTS; ++i) {
         struct dbg_breakpoint *brk = &dbg->breakpoints[i];
         if (!brk->used) {
             /* Adjust num_breakpoints to include the newly allocated slot */
@@ -209,7 +209,7 @@ static struct dbg_breakpoint *new_breakpoint(struct psys_debugger *dbg)
                 dbg->num_breakpoints = i + 1;
             }
             brk->used = true;
-            brk->num = i;
+            brk->num  = i;
             return brk;
         }
     }
@@ -242,19 +242,19 @@ static struct dbg_stackframe *get_stack_frames(struct psys_state *s)
     while (true) {
         struct dbg_stackframe *frame_down;
         /** Fill in sib, segment name and static link for current frame */
-        frame->sib     = psys_ldw(s, frame->erec + PSYS_EREC_Env_SIB);
+        frame->sib = psys_ldw(s, frame->erec + PSYS_EREC_Env_SIB);
         memcpy(&frame->seg, psys_bytes(s, frame->sib + PSYS_SIB_Seg_Name), 8);
-        frame->msstat  = psys_ldw(s, frame->mp + PSYS_MSCW_MSSTAT);
+        frame->msstat = psys_ldw(s, frame->mp + PSYS_MSCW_MSSTAT);
 
         /* Advance to caller frame, if there are any */
-        mp_up   = psys_ldw(s, frame->mp + PSYS_MSCW_MSDYN);
+        mp_up = psys_ldw(s, frame->mp + PSYS_MSCW_MSDYN);
         if (mp_up == 0 || frame->mp == mp_up) {
             break; /* At the top, nothing more to do */
         }
         /* Create and attach frame */
-        frame_down = frame;
-        frame = CALLOC_STRUCT(dbg_stackframe);
-        frame->down = frame_down;
+        frame_down     = frame;
+        frame          = CALLOC_STRUCT(dbg_stackframe);
+        frame->down    = frame_down;
         frame_down->up = frame;
 
         /* As these are stored at procedure call time, take them from caller
@@ -336,7 +336,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
             HIST_ENTRY *h = previous_history();
             if (h) {
                 free(line);
-                line = strdup(h->line);
+                line     = strdup(h->line);
                 isrepeat = true;
             }
         } else {
@@ -345,7 +345,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
         }
         /* num is number of tokens, including command */
         num = parse_args(args, MAX_ARGS, line);
-        (void) isrepeat; /* unused for now */
+        (void)isrepeat; /* unused for now */
 
         if (num) {
             cmd = args[0];
@@ -356,13 +356,13 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 if (num >= 3) {
                     struct dbg_breakpoint *brk = new_breakpoint(dbg);
                     assign_segment_id(&brk->seg, args[1]);
-                    brk->addr = strtol(args[2], NULL, 0);
+                    brk->addr   = strtol(args[2], NULL, 0);
                     brk->active = true;
                     printf("Set breakpoint %d at %.8s:0x%x\n", brk->num, brk->seg.name, brk->addr);
                 } else {
                     int i;
                     printf(ATITLE ">   Breakpoints   >" ARESET "\n");
-                    for (i=0; i<dbg->num_breakpoints; ++i) {
+                    for (i = 0; i < dbg->num_breakpoints; ++i) {
                         struct dbg_breakpoint *brk = &dbg->breakpoints[i];
                         if (brk->used) {
                             printf("%2d %d at %.8s:0x%x\n", i, brk->active, brk->seg.name, brk->addr);
@@ -371,12 +371,12 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 }
             } else if (!strcmp(cmd, "db") || !strcmp(cmd, "eb")) { /* Disable or enable breakpoint */
                 if (num >= 2) {
-                    int i = strtol(args[1], NULL, 0);
+                    int i       = strtol(args[1], NULL, 0);
                     bool enable = !strcmp(cmd, "eb");
-                    if (i>=0 && i<dbg->num_breakpoints) {
+                    if (i >= 0 && i < dbg->num_breakpoints) {
                         struct dbg_breakpoint *brk = &dbg->breakpoints[i];
-                        brk->active = enable;
-                        printf("%s breakpoint %d\n", enable?"Enabled":"Disabled", brk->num);
+                        brk->active                = enable;
+                        printf("%s breakpoint %d\n", enable ? "Enabled" : "Disabled", brk->num);
                     } else {
                         printf("Breakpoint %i out of range\n", i);
                     }
@@ -387,35 +387,33 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 psys_word erec = first_erec_ptr(s);
                 printf(ATITLE "erec sib  flg segname  base size " ARESET "\n");
                 while (erec) {
-                    psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
-                    psys_word data_base = psys_ldw(s, erec + PSYS_EREC_Env_Data); /* globals start */
+                    psys_word sib       = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
+                    psys_word data_base = psys_ldw(s, erec + PSYS_EREC_Env_Data);    /* globals start */
                     psys_word data_size = psys_ldw(s, sib + PSYS_SIB_Data_Size) * 2; /* globals size in bytes */
-                    psys_word evec = psys_ldw(s, erec + PSYS_EREC_Env_Vect);
-                    psys_word num_evec = psys_ldw(s, W(evec, 0));
+                    psys_word evec      = psys_ldw(s, erec + PSYS_EREC_Env_Vect);
+                    psys_word num_evec  = psys_ldw(s, W(evec, 0));
 
                     unsigned i;
                     /* Print main segment */
                     printf("%04x   %04x %c %-8.8s %04x %04x\n",
-                            erec, sib,
-                            is_segment_resident(s, erec) ? 'R':'-',
-                            psys_bytes(s, sib + PSYS_SIB_Seg_Name),
-                            data_base, data_size
-                            );
+                        erec, sib,
+                        is_segment_resident(s, erec) ? 'R' : '-',
+                        psys_bytes(s, sib + PSYS_SIB_Seg_Name),
+                        data_base, data_size);
                     /* Subsidiary segments. These will be referenced in the segment's evec
                      * and have the same evec pointer (and the same BASE, but that's less reliable
                      * as some segments have no globals).
                      */
-                    for (i=1; i<num_evec; ++i) {
-                        psys_word serec = psys_ldw(s, W(evec,i));
+                    for (i = 1; i < num_evec; ++i) {
+                        psys_word serec = psys_ldw(s, W(evec, i));
                         if (serec) {
-                            psys_word ssib = psys_ldw(s, serec + PSYS_EREC_Env_SIB);
+                            psys_word ssib  = psys_ldw(s, serec + PSYS_EREC_Env_SIB);
                             psys_word sevec = psys_ldw(s, serec + PSYS_EREC_Env_Vect);
                             if (serec != erec && sevec == evec) {
                                 printf("  %04x %04x %c %-8.8s\n",
-                                        serec, ssib,
-                                        is_segment_resident(s, serec) ? 'R':'-',
-                                        psys_bytes(s, ssib + PSYS_SIB_Seg_Name)
-                                        );
+                                    serec, ssib,
+                                    is_segment_resident(s, serec) ? 'R' : '-',
+                                    psys_bytes(s, ssib + PSYS_SIB_Seg_Name));
                             }
                         }
                     }
@@ -426,21 +424,21 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
             } else if (!strcmp(cmd, "s") || !strcmp(cmd, "c") || !strcmp(cmd, "so") || !strcmp(cmd, "n")) { /* Single-step or continue or step out */
                 dbg->curtask = s->curtask;
                 dbg->curerec = s->erec;
-                dbg->curipc = s->ipc - s->curseg;
+                dbg->curipc  = s->ipc - s->curseg;
                 if (!strcmp(cmd, "s")) {
                     dbg->mode = DM_SINGLE_STEP;
                 } else if (!strcmp(cmd, "so") && frame->up) {
-                    dbg->mode = DM_STEP_OUT;
+                    dbg->mode       = DM_STEP_OUT;
                     dbg->target_mp1 = frame->up->mp;
                 } else if (!strcmp(cmd, "n") && frames->up) {
-                    dbg->mode = DM_STEP_OVER;
+                    dbg->mode       = DM_STEP_OVER;
                     dbg->target_mp1 = frames->mp;
                     dbg->target_mp2 = frames->up->mp;
                 }
                 goto cleanup;
             } else if (!strcmp(cmd, "dm")) { /* Dump memory */
                 if (num >= 2) {
-                    int fd = open(args[1], O_CREAT|O_WRONLY, 0666);
+                    int fd = open(args[1], O_CREAT | O_WRONLY, 0666);
                     int rv = write(fd, s->memory, s->mem_size);
                     (void)rv;
                     close(fd);
@@ -462,8 +460,8 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 if (num >= 3) {
                     unsigned addr = strtol(args[1], NULL, 0);
                     unsigned i;
-                    for (i=2; i<num; ++i) {
-                        psys_stw(s, addr + (i-2)*2, strtol(args[i], NULL, 0));
+                    for (i = 2; i < num; ++i) {
+                        psys_stw(s, addr + (i - 2) * 2, strtol(args[i], NULL, 0));
                     }
                 } else {
                     printf("At least two arguments required\n");
@@ -472,8 +470,8 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 if (num >= 3) {
                     unsigned addr = strtol(args[1], NULL, 0);
                     unsigned i;
-                    for (i=2; i<num; ++i) {
-                        psys_stb(s, addr, i-2, strtol(args[i], NULL, 0));
+                    for (i = 2; i < num; ++i) {
+                        psys_stb(s, addr, i - 2, strtol(args[i], NULL, 0));
                     }
                 } else {
                     printf("At least two arguments required\n");
@@ -482,10 +480,10 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 if (num >= 4) {
                     psys_word data_size;
                     psys_fulladdr data_base = get_globals(s, args[1], &data_size);
-                    unsigned addr = strtol(args[2], NULL, 0);
+                    unsigned addr           = strtol(args[2], NULL, 0);
                     if (addr < data_size) {
                         psys_stw(s, W(data_base + PSYS_MSCW_VAROFS, addr),
-                                strtol(args[3], NULL, 0));
+                            strtol(args[3], NULL, 0));
                     } else {
                         if (data_base == PSYS_NIL) {
                             printf("No such segment known\n");
@@ -500,7 +498,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 if (num == 3) {
                     psys_word data_size;
                     psys_fulladdr data_base = get_globals(s, args[1], &data_size);
-                    unsigned addr = strtol(args[2], NULL, 0);
+                    unsigned addr           = strtol(args[2], NULL, 0);
                     if (addr < data_size) {
                         if (!strcmp(cmd, "lao")) {
                             psys_word address = W(data_base + PSYS_MSCW_VAROFS, addr);
@@ -523,7 +521,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 if (num >= 3) {
                     unsigned addr = strtol(args[1], NULL, 0);
                     psys_stw(s, W(frame->mp + PSYS_MSCW_VAROFS, addr),
-                            strtol(args[2], NULL, 0));
+                        strtol(args[2], NULL, 0));
                 } else {
                     printf("At least two arguments required\n");
                 }
@@ -575,7 +573,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 }
             } else if (!strcmp(cmd, "spr")) { /* Store procedure register */
                 if (num == 3) {
-                    int reg = strtol(args[1], NULL, 0);
+                    int reg         = strtol(args[1], NULL, 0);
                     psys_word value = strtol(args[2], NULL, 0);
                     psys_spr(s, reg, value);
                 } else {
@@ -583,7 +581,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 }
             } else if (!strcmp(cmd, "lpr")) { /* Load procedure register */
                 if (num == 2) {
-                    int reg = strtol(args[1], NULL, 0);
+                    int reg         = strtol(args[1], NULL, 0);
                     psys_word value = psys_lpr(s, reg);
                     printf("0x%04x\n", value);
                 } else {
@@ -645,10 +643,10 @@ cleanup:
 /** Called for every instruction - this should break on breakpoints */
 bool psys_debugger_trace(struct psys_debugger *dbg)
 {
-    struct psys_state *s = dbg->state;
-    psys_word sib = psys_ldw(s, s->erec + PSYS_EREC_Env_SIB);
+    struct psys_state *s     = dbg->state;
+    psys_word sib            = psys_ldw(s, s->erec + PSYS_EREC_Env_SIB);
     const psys_byte *segname = psys_bytes(s, sib + PSYS_SIB_Seg_Name);
-    psys_word pc = s->ipc - s->curseg; /* PC relative to current segment */
+    psys_word pc             = s->ipc - s->curseg; /* PC relative to current segment */
     int i;
     if (!(s->erec == dbg->curerec && pc == dbg->curipc)) {
         /* Make sure at least one instruction has been executed after the command was set.
@@ -664,12 +662,12 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
                 return true;
             }
             if (dbg->mode == DM_STEP_OVER
-                    && (s->mp == dbg->target_mp1 || s->mp == dbg->target_mp2)) {
+                && (s->mp == dbg->target_mp1 || s->mp == dbg->target_mp2)) {
                 return true;
             }
         }
 
-        for (i=0; i<dbg->num_breakpoints; ++i) {
+        for (i = 0; i < dbg->num_breakpoints; ++i) {
             struct dbg_breakpoint *brk = &dbg->breakpoints[i];
             if (brk->used && brk->active && pc == brk->addr && !memcmp(segname, &brk->seg, 8)) {
                 printf("Hit breakpoint %d at %.8s:0x%x\n", i, brk->seg.name, brk->addr);
@@ -679,7 +677,7 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
     } else {
         /* Clear these, so that the breakpoint will hit here next time */
         dbg->curerec = 0;
-        dbg->curipc = 0;
+        dbg->curipc  = 0;
     }
     return false;
 }
@@ -687,7 +685,7 @@ bool psys_debugger_trace(struct psys_debugger *dbg)
 struct psys_debugger *psys_debugger_new(struct psys_state *s)
 {
     struct psys_debugger *dbg = CALLOC_STRUCT(psys_debugger);
-    dbg->state = s;
+    dbg->state                = s;
     return dbg;
 }
 
