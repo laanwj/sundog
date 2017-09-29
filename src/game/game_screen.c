@@ -106,25 +106,26 @@ static inline void draw_pixel(unsigned vr_mode, uint8_t *drow, unsigned dx, unsi
 /* Naive fixed-bit line drawing implementation: ignore line width for now,
  * I'm not sure what non-width-1 lines are used for in Sundog if anything.
  */
+#define FIXP16(x, y) ((x) * (1 << 16) + (y))
 static void draw_line(uint8_t **rows, int x0, int y0, int x1, int y1, unsigned vr_mode, uint8_t color, unsigned line_width,
     struct rect *clip)
 {
     int dx = abs(x1 - x0);
     int dy = abs(y1 - y0);
-    int cx = (x0 << 16) + 0x8000;
-    int cy = (y0 << 16) + 0x8000;
+    int cx = FIXP16(x0, 0x8000);
+    int cy = FIXP16(y0, 0x8000);
     int slopex, slopey;
     int i, n;
 #if 0
     psys_debug("  line %d %d %d %d vr_mode %d color %d width %d\n", x0, y0, x1, y1, vr_mode, color, line_width);
 #endif
     if (dx < dy) {
-        slopex = ((x1 - x0) << 16) / dy;
-        slopey = (y0 < y1) ? (1 << 16) : (-1 << 16);
+        slopex = FIXP16(x1 - x0, 0) / dy;
+        slopey = (y0 < y1) ? FIXP16(1, 0) : FIXP16(-1, 0);
         n      = dy;
     } else {
-        slopex = (x0 < x1) ? (1 << 16) : (-1 << 16);
-        slopey = ((y1 - y0) << 16) / dx;
+        slopex = (x0 < x1) ? FIXP16(1, 0) : FIXP16(-1, 0);
+        slopey = FIXP16(y1 - y0, 0) / dx;
         n      = dx;
     }
     for (i = 0; i <= n; ++i) {
@@ -136,6 +137,7 @@ static void draw_line(uint8_t **rows, int x0, int y0, int x1, int y1, unsigned v
         cy += slopey;
     }
 }
+#undef FIXP16
 
 /** Draw an arc segment.
  */
