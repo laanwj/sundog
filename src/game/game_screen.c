@@ -8,6 +8,7 @@
 #include "psys/psys_debug.h"
 #include "util/memutil.h"
 #include "util/util_img.h"
+#include "util/util_minmax.h"
 #include "util/util_save_state.h"
 
 #include "SDL.h"
@@ -432,6 +433,7 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
      * event loop without synchronization, they may be stale or even corrupted.
      */
     int sx, sy;
+    int x_max = 0, y_max = 0;
     uint32_t sb   = SDL_GetMouseState(&sx, &sy);
     uint32_t bout = 0;
     if (sb & SDL_BUTTON(SDL_BUTTON_LEFT)) {
@@ -440,8 +442,12 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
     if (sb & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
         bout |= 2;
     }
-    *x       = sx / 2; /* XXX depend on scaling factor */
-    *y       = sy / 2;
+    SDL_Window *window = SDL_GetMouseFocus();
+    if (window) {
+        SDL_GetWindowSize(window, &x_max, &y_max);
+    }
+    *x       = sx * 320 / imax(x_max, 1);
+    *y       = sy * 200 / imax(y_max, 1);
     *buttons = bout;
 }
 
