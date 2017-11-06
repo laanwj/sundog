@@ -435,6 +435,9 @@ static void init_gl(struct game_state *gs)
 /** Draw a frame */
 static void draw(struct game_state *gs)
 {
+    int width, height;
+    SDL_GetWindowSize(gs->window, &width, &height);
+    glViewport(0, 0, width, height);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
@@ -646,7 +649,9 @@ int main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    gs->window = SDL_CreateWindow("SunDog: Frozen Legacy", 100, 100, 640, 400, SDL_WINDOW_OPENGL);
+    gs->window = SDL_CreateWindow("SunDog: Frozen Legacy",
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,640, 400,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!gs->window) {
         psys_panic("Unable to create window: %s\n", SDL_GetError());
     }
