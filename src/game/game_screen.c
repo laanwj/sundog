@@ -415,6 +415,9 @@ static void sdlscreen_vsc_form(struct game_screen *screen_,
     (void)screen;
 }
 
+#define CANCEL_AREA_W 24
+#define CANCEL_AREA_H 16
+
 static void sdlscreen_vq_mouse(struct game_screen *screen_,
     unsigned *buttons, int *x, int *y)
 {
@@ -449,6 +452,13 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
     *x       = sx * 320 / imax(x_max, 1);
     *y       = sy * 200 / imax(y_max, 1);
     *buttons = bout;
+
+    /* Emulate right click action when clicking (or touching) in top right,
+       to accomodate single mouse button devices.
+      */
+    if ((*buttons == 1) && *x >= (320 - CANCEL_AREA_W) && *y < CANCEL_AREA_H) {
+        *buttons = 2;
+    }
 }
 
 static void sdlscreen_set_color(struct game_screen *screen_,

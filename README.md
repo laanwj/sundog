@@ -109,6 +109,8 @@ Status
 - Loading / reading save states (`l` and `s` respectively).
 - Ground combat.
 - Space combat.
+- Touch screen support: a small area in the top-right of the screen has been
+  designated as "cancel area" and will emulate a right-mouse click when touched.
 
 Is it fully playable? Yes, I played it for quite a bit. All the critical things
 have been implemented, Though I cannot guarantee that there aren't any bugs
