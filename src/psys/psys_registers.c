@@ -42,10 +42,12 @@ void psys_spr(struct psys_state *state, psys_sword reg, psys_word value)
         switch (reg) {
         case PSYS_REG_CURTASK:
             state->curtask = value;
+            break;
         case PSYS_REG_EVEC:
             return psys_stw(state, state->erec + PSYS_EREC_Env_Vect, value);
         case PSYS_REG_READYQ:
             state->readyq = value;
+            break;
         default:
             psys_panic("Read from unknown processor register %d\n", reg);
         }
