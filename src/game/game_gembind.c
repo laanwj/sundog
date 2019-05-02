@@ -194,7 +194,7 @@ static void gembind_VDI(struct psys_state *s, struct gembind_priv *priv, psys_fu
      * 0x007a   v_show_c    http://toshyp.atari.org/en/007007.html#v_show_c
      * 0x007b   v_hide_c    http://toshyp.atari.org/en/007007.html#v_hide_c
      * 0x007c   vq_mouse    http://toshyp.atari.org/en/007007.html#vq_mouse
-     * 0x0081   vs_clip     http://toshyp.at[ri.org/en/00700a.html#vs_clip
+     * 0x0081   vs_clip     http://toshyp.atari.org/en/00700a.html#vs_clip
      */
     /* TOO noisy.
     psys_debug("gembind_VDI 0x%04x 0x%04x 0x%04x 0x%04x [0x%05x 0x%05x 0x%05x 0x%05x 0x%05x]\n",
