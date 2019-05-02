@@ -14,6 +14,7 @@ SHAREDFLAGS=-Werror=implicit-function-declaration -Wmissing-declarations -Wall \
        $(SDL_CFLAGS) $(GLES2_CFLAGS)
 CFLAGS=$(SHAREDFLAGS) -Wmissing-prototypes
 CFLAGS += -std=c99
+CFLAGS += -D_GNU_SOURCE
 CXXFLAGS=$(SHAREDFLAGS) -Iimgui
 LDFLAGS=$(SDL_LIBS) $(GLES2_LIBS) $(READLINE_LIBS) -lm
 
