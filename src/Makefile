@@ -13,6 +13,7 @@ SHAREDFLAGS=-Werror=implicit-function-declaration -Wmissing-declarations -Wall \
        -DFLIP_ENDIAN_HACK -DPSYS_DEBUGGER -DGAME_CHEATS -DENABLE_DEBUGUI \
        $(SDL_CFLAGS) $(GLES2_CFLAGS)
 CFLAGS=$(SHAREDFLAGS) -Wmissing-prototypes
+CFLAGS += -std=c99
 CXXFLAGS=$(SHAREDFLAGS) -Iimgui
 LDFLAGS=$(SDL_LIBS) $(GLES2_LIBS) $(READLINE_LIBS) -lm
 
