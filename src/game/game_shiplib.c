@@ -11,6 +11,7 @@
 #include "psys/psys_helpers.h"
 #include "psys/psys_state.h"
 #include "util/util_save_state.h"
+#include "util/util_time.h"
 
 #include "util/memutil.h"
 
@@ -175,7 +176,7 @@ static void shiplib_19(struct psys_state *s, struct shiplib_priv *priv, psys_ful
         }
 
         /* Wait two frames */
-        usleep(2000000 / 50);
+        msleep(2000 / 50);
     }
 }
 

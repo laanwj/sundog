@@ -641,7 +641,9 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+#ifdef SDL_HINT_NO_SIGNAL_HANDLERS
     SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1"); /* Allow ctrl-c to quit */
+#endif
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
     if (SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
         psys_panic("Unable to initialize SDL: %s\n", SDL_GetError());

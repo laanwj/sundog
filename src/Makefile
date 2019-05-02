@@ -13,6 +13,8 @@ SHAREDFLAGS=-Werror=implicit-function-declaration -Wmissing-declarations -Wall \
        -DFLIP_ENDIAN_HACK -DPSYS_DEBUGGER -DGAME_CHEATS -DENABLE_DEBUGUI \
        $(SDL_CFLAGS) $(GLES2_CFLAGS)
 CFLAGS=$(SHAREDFLAGS) -Wmissing-prototypes
+CFLAGS += -std=c99
+CFLAGS += -D_GNU_SOURCE
 CXXFLAGS=$(SHAREDFLAGS) -Iimgui
 LDFLAGS=$(SDL_LIBS) $(GLES2_LIBS) $(READLINE_LIBS) -lm
 
@@ -36,7 +38,8 @@ GAME_OBJS= \
 	game/game_shiplib.o \
 	game/game_debug.o \
 	util/debugger.o \
-	util/util_img.o
+	util/util_img.o \
+	util/util_time.o
 
 TEST_OBJS= \
 	test/test_util.o

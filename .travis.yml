@@ -1,0 +1,17 @@
+language: c
+
+os:
+  - linux
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - libreadline-dev
+      - libsdl2-dev
+      - libgles2-mesa-dev
+
+script:
+  - 'cd $TRAVIS_BUILD_DIR && cd src'
+  - 'make'
