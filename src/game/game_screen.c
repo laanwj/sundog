@@ -15,6 +15,12 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+/* make sure M_PI is defined */
+#include <math.h>
+#ifndef M_PI
+#define     M_PI            3.14159265358979323846
+#endif
+
 /* Header for savestates */
 #define GAME_SDLSCREEN_STATE_ID 0x53444c53
 
