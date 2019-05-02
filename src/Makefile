@@ -37,7 +37,8 @@ GAME_OBJS= \
 	game/game_shiplib.o \
 	game/game_debug.o \
 	util/debugger.o \
-	util/util_img.o
+	util/util_img.o \
+	util/util_time.o
 
 TEST_OBJS= \
 	test/test_util.o
