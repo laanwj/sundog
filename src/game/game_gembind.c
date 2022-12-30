@@ -517,7 +517,7 @@ static void gembind_DecompressImage(struct psys_state *s, struct gembind_priv *p
 /** DoSound(ptr0).
  * Play sound. This does not block for the sound to complete.
  * Only one sound can be playing at a time, a new sound will replace the old one.
- * Sound is in XBIOS DoSound format: http://toshyp.atari.org/en/004010.html#Dosound
+ * Sound is in XBIOS DoSound format: http://toshyp.atari.org/en/004011.html#Dosound
  * Details of the routine can be found here: http://st-news.com/issues/st-news-volume-2-issue-3/education/the-xbios-dosound-function/
  * Emulating this would involve
  * emulating the YM2149F PSG sound chip.

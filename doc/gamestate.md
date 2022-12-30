@@ -129,7 +129,7 @@ MAINLIB
 0x227  2  Array of cities (0x6 per element)
 0x3b2  4  Copied from unitstatus(0x80) = start of gfx stash area? used in MAINLIB:0x41
 0x3b4  2  Disk I/O count?
-0x435  10 WeirdScan state: set (packed array)
+0x435  10 track_checked WeirdScan state: set (packed array)
 0x43a  2  Flag: skip disk i/o status check
 0x43d  4  crc/checksum something, first four bytes from block 0x45
 0x43f  176  ?

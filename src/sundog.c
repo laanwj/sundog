@@ -594,6 +594,7 @@ static void event_loop(struct game_state *gs)
                 }
                 break;
             }
+            break;
         case SDL_USEREVENT:
             switch (event.user.code) {
             case EVC_TIMER: /* Timer event */

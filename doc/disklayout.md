@@ -26,7 +26,7 @@ ofs     blk   sz   desc
   USERPROGc+0x1ab2  end of USERPROG:0x02
   KERNELc+0x1ab8
   KERNELc+0x1ab8    USERPROG:0x01  (loop, root activation record at a6+0x008a)
-0x04400 -0x01 1    Sound table (0x48 bytes offsets then actual DoSound data)
+0x04400 -0x01 1    Sound table (2*36 = 0x48 bytes offsets then actual DoSound data)
 0x04800 0x00       P-system "logical addressing" base block
         0x06  1    XSTARTUP:0x0f LoadData
 0x05600 0x07  1    Check for writeability at startup in SUNDOG.PRG

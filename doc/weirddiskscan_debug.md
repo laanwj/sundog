@@ -214,3 +214,23 @@ Traceback [tib=6348 sp=72da]
           :0x02:1ab2 mp=0xfde2 base=0x08be erec=0xd5d0
   KERNEL  :0x01:1ab8 mp=0x008a base=0x008a erec=0x055e
 ```
+
+Communication with FTL
+----------------------
+
+In a mail, Wayne Holder writes:
+
+> I've done some reverse engineering to figure out a bit more about the copy
+> protection mechanism used by Atart ST Sundog.  Part of the trick is that
+> track 3 of the floppy disk has 10 sectors rather than the standard 9 sectors.
+> The additional sector is a duplicate of sector 5 (that is, there are two
+> sectors that both identify as sector 5.)  The contents of these two sectors
+> is identical except that the byte at offset 0x113 (275) is set to 0xBC in one
+> sector and to 0xA2 in the other.  In addition, the sectors on track 3 are
+> written in this order (1, 4, 7, 5, 2, 5, 8, 3, 6, 9).  This means that the
+> code can control which version of sector 5 it reads by varying which sector
+> it reads before it tries to read sector 5.
+
+So I was right that it is the copy protection. This quite closely describes
+what is going on so it should be possible to emulate this and forego the wild
+goose chase.

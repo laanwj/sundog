@@ -214,6 +214,8 @@ void psys_print_info(struct psys_state *s)
             val = psys_ldb(s, ptr++, 0);
             val = val | (psys_ldb(s, ptr++, 0) << 8);
             break;
+        default:
+            assert(false);
         }
         printf("0x%x", val);
     }

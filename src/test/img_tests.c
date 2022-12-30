@@ -26,7 +26,7 @@ int main()
     unsigned ptr;
     unsigned size_consumed;
 
-    if (sourcedata == NULL || destdata == NULL) {
+    if (sourcedata == NULL) {
         printf("Cannot load test data\n");
         return 1;
     }
