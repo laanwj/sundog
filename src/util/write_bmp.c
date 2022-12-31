@@ -63,8 +63,7 @@ struct dib_header {
     unsigned int unused[12];
 } __attribute__((__packed__));
 
-static int
-bmp_header_write(int fd, int width, int height, int bgra, int noflip, int alpha)
+static bool bmp_header_write(int fd, int width, int height, int bgra, int noflip, int alpha)
 {
     struct bmp_header bmp_header = {
         .magic = 0x4d42,
@@ -95,10 +94,14 @@ bmp_header_write(int fd, int width, int height, int bgra, int noflip, int alpha)
         dib_header.blue_mask = 0x000000FF;
     }
 
-    write(fd, &bmp_header, sizeof(struct bmp_header));
-    write(fd, &dib_header, sizeof(struct dib_header));
+    if (write(fd, &bmp_header, sizeof(struct bmp_header)) != sizeof(struct bmp_header)) {
+        return false;
+    }
+    if (write(fd, &dib_header, sizeof(struct dib_header)) != sizeof(struct dib_header)) {
+        return false;
+    }
 
-    return 0;
+    return true;
 }
 
 void bmp_dump32(char *buffer, unsigned width, unsigned height, bool bgra, const char *filename)
@@ -111,9 +114,17 @@ void bmp_dump32(char *buffer, unsigned width, unsigned height, bool bgra, const 
         return;
     }
 
-    bmp_header_write(fd, width, height, bgra, false, true);
+    if (!bmp_header_write(fd, width, height, bgra, false, true)) {
+        printf("Failed to write BMP header\n");
+        goto error;
+    }
 
-    write(fd, buffer, width * height * 4);
+    if (write(fd, buffer, width * height * 4) != (width * height * 4)) {
+        printf("Failed to write BMP image data\n");
+        goto error;
+    }
+error:
+    close(fd);
 }
 
 void bmp_dump32_noflip(char *buffer, unsigned width, unsigned height, bool bgra, const char *filename)
@@ -126,9 +137,17 @@ void bmp_dump32_noflip(char *buffer, unsigned width, unsigned height, bool bgra,
         return;
     }
 
-    bmp_header_write(fd, width, height, bgra, true, true);
+    if (!bmp_header_write(fd, width, height, bgra, true, true)) {
+        printf("Failed to write BMP header\n");
+        goto error;
+    }
 
-    write(fd, buffer, width * height * 4);
+    if (write(fd, buffer, width * height * 4) != (width * height * 4)) {
+        printf("Failed to write BMP image data\n");
+        goto error;
+    }
+error:
+    close(fd);
 }
 
 void bmp_dump32_ex(char *buffer, unsigned width, unsigned height, bool flip, bool bgra, bool alpha, const char *filename)
@@ -141,7 +160,15 @@ void bmp_dump32_ex(char *buffer, unsigned width, unsigned height, bool flip, boo
         return;
     }
 
-    bmp_header_write(fd, width, height, bgra, flip, alpha);
+    if (!bmp_header_write(fd, width, height, bgra, flip, alpha)) {
+        printf("Failed to write BMP header\n");
+        goto error;
+    }
 
-    write(fd, buffer, width * height * 4);
+    if (write(fd, buffer, width * height * 4) != (width * height * 4)) {
+        printf("Failed to write BMP image data\n");
+        goto error;
+    }
+error:
+    close(fd);
 }
