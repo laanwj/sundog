@@ -6,6 +6,7 @@
 #include "game_shiplib.h"
 
 #include "game/game_screen.h"
+#include "game/wowzo.h"
 #include "psys/psys_constants.h"
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
@@ -183,12 +184,13 @@ static void shiplib_19(struct psys_state *s, struct shiplib_priv *priv, psys_ful
 /** shiplib_1A(a,b,c,d) */
 static void shiplib_1A(struct psys_state *s, struct shiplib_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
-    psys_word d = psys_pop(s);
-    psys_word c = psys_pop(s);
-    psys_word b = psys_pop(s);
-    psys_word a = psys_pop(s);
-    psys_debug("shiplib_1A 0x%04x 0x%04x 0x%04x 0x%04x (stub)\n", a, b, c, d);
-    /* Warp animation, no clue what the parameters mean */
+    psys_word d = psys_pop(s); /* VDI handle (control[6]) */
+    psys_word c = psys_pop(s); /* Universe seed */
+    psys_word b = psys_pop(s); /* Distance */
+    psys_word a = psys_pop(s); /* Warp-failed flag */
+    psys_debug("shiplib_1A 0x%04x 0x%04x 0x%04x 0x%04x\n", a, b, c, d);
+    (void)d;
+    wowzo(priv->screen, priv->sound, a, b, c);
 }
 
 static int shiplib_save_state(struct psys_binding *b, int fd)

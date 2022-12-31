@@ -38,6 +38,7 @@ GAME_OBJS= \
 	game/game_shiplib.o \
 	game/game_sound.o \
 	game/game_debug.o \
+	game/wowzo.o \
 	util/debugger.o \
 	util/util_img.o \
 	util/util_time.o
@@ -84,6 +85,7 @@ HEADERS= \
 	game/game_shiplib.h \
 	game/game_sound.h \
 	game/sundog_soundfx.h \
+	game/wowzo.h \
 	test/test_util.h
 
 MAIN_OBJS= \

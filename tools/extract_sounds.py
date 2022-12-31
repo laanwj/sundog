@@ -14,7 +14,10 @@ import sys
 DOSOUND = os.getenv('DOSOUND', '')
 OGGENC = os.getenv('OGGENC', 'oggenc')
 
-URL = os.getenv('URL', '')
+if not DOSOUND:
+    # Default to built-in dosound, if built.
+    if os.path.isfile("dosound/dosound"):
+        DOSOUND = "dosound/dosound"
 
 with open(sys.argv[1], 'rb') as f:
     f.seek(0x4400)
@@ -54,21 +57,36 @@ sounds_names = [
   'disk_warn', # 27
 ]
 
-print(f'|id  | name | data|')
-print(f'|--- |------| ---- |')
+# warp sounds from shiplib_1A
+# for warp1, one-to-last byte is changed to 2,4,8 based on "warp speed"
+warp1_speed2 = bytes([7,56,8,16,9,16,10,16,0,100,1,5,2,110,3,5,4,103,5,5,12,5,128,0,129,13,2,1])
+warp1_speed4 = bytes([7,56,8,16,9,16,10,16,0,100,1,5,2,110,3,5,4,103,5,5,12,5,128,0,129,13,4,1])
+warp1_speed8 = bytes([7,56,8,16,9,16,10,16,0,100,1,5,2,110,3,5,4,103,5,5,12,5,128,0,129,13,8,1])
+warp2 = bytes([12,255,7,7,8,16,9,16,10,16,128,0,13,9,129,6,1,90,8,12,9,12,10,11,255,0])
+warp3 = bytes([12,4,6,0,7,8,0,100,1,0,2,103,3,0,4,95,5,0,8,16,9,16,10,16,13,15,255,0])
 
 sound_mapping = []
-
 for i in range(0x24):
     if not sounds[i + 1]:
         break
     data = snd_bytes[sounds[i]:sounds[i + 1]]
-    data_hex = binascii.hexlify(data).decode()
     name = sounds_names[i]
+    sound_mapping.append((i, name, data))
+
+sound_mapping.append((28, "warp1_speed2", warp1_speed2))
+sound_mapping.append((29, "warp1_speed4", warp1_speed4))
+sound_mapping.append((30, "warp1_speed8", warp1_speed8))
+sound_mapping.append((31, "warp2", warp2))
+sound_mapping.append((32, "warp3", warp3))
+
+print(f'|id  | name | data|')
+print(f'|--- |------| ---- |')
+
+for (i, name, data) in sound_mapping:
+    data_hex = binascii.hexlify(data).decode()
 
     print(f'| [{i}](sounds/{name}.ogg) | {name} | `{data_hex}` |')
 
-    sound_mapping.append((i, name, data))
     if DOSOUND:
         outfile = f'{name}.wav'
         oggfile = f'{name}.ogg'
