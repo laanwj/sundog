@@ -63,8 +63,10 @@ struct gembind_priv {
 
 /* VDI to hardware palette entry mapping.
  * Atari ST Application Programming, figure 6-8 page 130.
+ * Index 14 is 11, not a repeat of 4.
+ * {black, white, dblue, dgreen, dred, brown, dcyan, orange, grey, dgrey, blue, green, red, yellow, cyan, magenta}
  */
-unsigned vdi_color_map[16] = { 0, 15, 1, 2, 4, 6, 3, 5, 7, 8, 9, 10, 12, 14, 4, 13 };
+unsigned vdi_color_map[16] = { 0, 15, 1, 2, 4, 6, 3, 5, 7, 8, 9, 10, 12, 14, 11, 13 };
 
 /* Sprite color map. Subtly different to the VDI color map.
  */
