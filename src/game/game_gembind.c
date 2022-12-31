@@ -16,6 +16,7 @@
 #include "util/write_bmp.h"
 
 #include "game_screen.h"
+#include "game_sound.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,7 @@
 
 struct gembind_priv {
     struct game_screen *screen;
+    struct game_sound *sound;
     /* Pointer to p-system for vblank handler */
     struct psys_state *psys;
     /* Debug message level, 0 is no debugger output */
@@ -525,73 +527,13 @@ static void gembind_DecompressImage(struct psys_state *s, struct gembind_priv *p
 static void gembind_DoSound(struct psys_state *s, struct gembind_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
     psys_word a     = psys_pop(s);
-    uint8_t tempreg = 0;
-    unsigned len    = 0;
-    (void)a;
-#if 0 /* too "noisy" */
-    psys_debug("gembind_DoSound 0x%04x\n", a);
-#endif
-    /* Determine length of sound data */
-    while (1) {
-        uint8_t cmd = psys_ldb(s, a, len);
-        len += 1;
-        if ((cmd & 0xf0) == 0 || cmd == 0x80) { /* one-byte argument */
-#if 0
-            psys_debug("r%02x=%02x\n", cmd, psys_ldb(s, a, len));
-#endif
-            len += 1;
-        } else if (cmd == 0x80) { /* set temp register */
-            tempreg = psys_ldb(s, a, len);
-#if 0
-            psys_debug("tmp=%02x\n", cmd, tempreg);
-#endif
-            len += 1;
-        } else if (cmd == 0x81) {                   /* Loop */
-            uint8_t arg0 = psys_ldb(s, a, len);     /* Register */
-            uint8_t arg1 = psys_ldb(s, a, len + 1); /* Value to add every tick */
-            uint8_t arg2 = psys_ldb(s, a, len + 2); /* Value to match at end */
-            unsigned gcd;
-            (void)arg0;
-#if 0
-            psys_debug("loop r%02x %02x -> %02x\n", arg0, arg1, arg2);
-#endif
-            len += 3;
-            /* Does it ever terminate?
-             * Solve linear congruence:
-             *   tempreg + arg1*x == arg2 (mod 256)
-             *   arg1*x == arg2 - tempreg (mod 256)
-             *   gcd(arg1,256) divides (arg2 - tempreg)
-             */
-            /* gcd(x,256) is simply least significant bit set */
-            for (gcd = 1; gcd < 256; gcd *= 2) {
-                if (arg1 & gcd) {
-                    break;
-                }
-            }
-            /* Check divides */
-            if (((arg2 - tempreg) & (gcd - 1)) != 0) {
-                /* This never terminates, so this is the end */
-                break;
-            }
-            /* Tempreg will have value arg2 when this terminates */
-            tempreg = arg2;
-        } else if (cmd >= 0x82) { /* Delay */
-            uint8_t arg = psys_ldb(s, a, len);
-#if 0
-            psys_debug("delay %02x %02x\n", cmd, arg);
-#endif
-            len += 1;
-            if (arg == 0) { /* Zero delay terminates sequence */
-                break;
-            }
-        } else { /* Unknown opcode */
-            psys_debug("gembind_DoSound unknown opcode 0x%02x at offset 0x%04x\n", cmd, len);
-            return;
-        }
+    const uint8_t *data = psys_bytes(s, a);
+    if (priv->sound) {
+        /* XXX this should be safe as we're always passed a buffer of 128 bytes,
+         * but it would be better to do some kind of bounds checking.
+         */
+        priv->sound->play_sound(priv->sound, data, 128);
     }
-#if 0
-    psys_debug_hexdump(s, a, len);
-#endif
 }
 
 /* Unused, so not implemented */
@@ -988,12 +930,13 @@ static int gembind_load_state(struct psys_binding *b, int fd)
     return 0;
 }
 
-struct psys_binding *new_gembind(struct psys_state *state, struct game_screen *screen)
+struct psys_binding *new_gembind(struct psys_state *state, struct game_screen *screen, struct game_sound *sound)
 {
     struct psys_binding *b    = CALLOC_STRUCT(psys_binding);
     struct gembind_priv *priv = CALLOC_STRUCT(gembind_priv);
 
     priv->screen = screen;
+    priv->sound  = sound;
     priv->psys   = state;
     /* Have screen call us for every vblank */
     screen->add_vblank_cb(screen, &gembind_vblank_cb, priv);

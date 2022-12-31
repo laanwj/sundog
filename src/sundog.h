@@ -16,6 +16,7 @@ struct game_state {
     SDL_GLContext context;
     SDL_Thread *thread;
     struct game_screen *screen;
+    struct game_sound *sound;
     SDL_Cursor *cursor;
     SDL_TimerID timer;
 

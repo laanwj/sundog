@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 SDL_CFLAGS=$(shell sdl2-config --cflags)
-SDL_LIBS=$(shell sdl2-config --libs)
+SDL_LIBS=$(shell sdl2-config --libs) -lSDL2_mixer
 GLES2_CFLAGS=
 GLES2_LIBS=-lGLESv2
 READLINE_LIBS=-lreadline
@@ -36,6 +36,7 @@ GAME_OBJS= \
 	game/game_gembind.o \
 	game/game_screen.o \
 	game/game_shiplib.o \
+	game/game_sound.o \
 	game/game_debug.o \
 	util/debugger.o \
 	util/util_img.o \
@@ -78,6 +79,8 @@ HEADERS= \
 	game/game_gembind.h \
 	game/game_screen.h \
 	game/game_shiplib.h \
+	game/game_sound.h \
+	game/sundog_soundfx.h \
 	test/test_util.h
 
 MAIN_OBJS= \

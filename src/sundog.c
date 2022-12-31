@@ -7,6 +7,7 @@
 
 #include "game/game_gembind.h"
 #include "game/game_screen.h"
+#include "game/game_sound.h"
 #include "game/game_shiplib.h"
 #include "psys/psys_bootstrap.h"
 #include "psys/psys_debug.h"
@@ -29,6 +30,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <SDL.h>
+#include <SDL_mixer.h>
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -167,7 +169,7 @@ static void psys_trace(struct psys_state *s, void *gs_)
 #endif
 }
 
-static struct psys_state *setup_state(struct game_screen *screen, const char *imagename, struct psys_binding **rspb_out)
+static struct psys_state *setup_state(struct game_screen *screen, struct game_sound *sound, const char *imagename, struct psys_binding **rspb_out)
 {
     struct psys_state *state = CALLOC_STRUCT(psys_state);
     int fd;
@@ -240,7 +242,7 @@ static struct psys_state *setup_state(struct game_screen *screen, const char *im
     state->bindings     = calloc(state->num_bindings, sizeof(struct binding *));
     state->bindings[0]  = rspb;
     state->bindings[1]  = new_shiplib(state, screen);
-    state->bindings[2]  = new_gembind(state, screen);
+    state->bindings[2]  = new_gembind(state, screen, sound);
 
     /* Debugging */
     state->trace = psys_trace;
@@ -675,9 +677,22 @@ int main(int argc, char **argv)
     gs->saved_time   = 0;
     gs->timer        = SDL_AddTimer(VBLANK_TIME, &timer_callback, gs);
 
+    /* Create object to manage sound */
+    if (Mix_Init(MIX_INIT_OGG) < 0 ||
+            Mix_OpenAudio(44100, AUDIO_S16SYS, 1, 512) < 0 ||
+            Mix_AllocateChannels(1) < 0) {
+        printf("Warning: unable to initialize SDLMixer (%s) for mono ogg playback at 44100Hz, there will be no sound.\n", SDL_GetError());
+        gs->sound = 0;
+    } else {
+        gs->sound = new_sdl_sound("sounds/"); /* XXX unhardcode path */
+        if (!gs->sound) {
+            printf("Warning: could not load samples, there will be no sound.\n");
+        }
+    }
+
     /* Create object to manage rendering from interpreter */
     gs->screen = new_game_screen();
-    gs->psys = state      = setup_state(gs->screen, imagename, &gs->rspb);
+    gs->psys = state      = setup_state(gs->screen, gs->sound, imagename, &gs->rspb);
     state->trace_userdata = gs;
 
 #ifdef PSYS_DEBUGGER
@@ -707,11 +722,15 @@ int main(int argc, char **argv)
 #endif
     SDL_GL_DeleteContext(gs->context);
     gs->screen->destroy(gs->screen);
+    gs->sound->destroy(gs->sound);
     /* TODO these leak:
      * rsp
      * bindings
      */
     free(state);
     free(gs);
+
+    Mix_CloseAudio();
+    Mix_Quit();
     return 0;
 }

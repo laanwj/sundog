@@ -45,12 +45,12 @@ implementation never writes to the disk image.
 Building from source
 ----------------------
 
-To build from source make sure the SDL2 development package for your
-distribution is installed, the OpenGL ES 2 headers, as well as GNU readline
-(only necessary for the debugger). On Ubuntu this is:
+To build from source make sure the SDL2 development package (and SDL\_mixer
+with ogg support) for your distribution is installed, the OpenGL ES 2 headers,
+as well as GNU readline (only necessary for the debugger). On Ubuntu this is:
 
 ```bash
-apt-get install libreadline-dev libsdl2-dev libgles2-mesa-dev
+apt-get install libreadline-dev libsdl2-dev libsdl2-mixer-dev libgles2-mesa-dev
 ```
 
 Then:
@@ -111,6 +111,7 @@ Status
 - Space combat.
 - Touch screen support: a small area in the top-right of the screen has been
   designated as "cancel area" and will emulate a right-mouse click when touched.
+- Sound effects.
 
 Is it fully playable? Yes, I played it for quite a bit. All the critical things
 have been implemented, Though I cannot guarantee that there aren't any bugs
@@ -121,23 +122,12 @@ state if possible.
 
 Non-critical:
 
-- *Sound*: as the game uses XBIOS DoSound call for sound, this would involve
-  emulating the YM2149F PSG sound chip, at least up to a point (or as there
-  seems to be a fixed number of 36 sound effects: substituting
-  sampled sounds).
 - *Initial FTL animation is missing*: this is an assembly routine that triggers
   *before* the bootstrapping of the p-machine.
-- SHIPLIB function 0x1a (warp animation) is not implemented, another assembly routine.
+- SHIPLIB function 0x1a (warp animation) is not implemented, an assembly routine.
 - The copy protection (integrity check) is mitigated in an ugly and brittle
   way. It would be better to emulate the underlying mechanism (which is known)
   in the simulated disk controller.
-
-### Future ideas
-
-The input for this game is mouse-only, it takes mouse position and two-buttons
-state. The screen resolution is only 320×200 (doubled to 640×400). This makes
-it ideally suited for touch screen. An Android port of this would be would be
-fantastic.
 
 P-system
 -----------
