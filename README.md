@@ -122,8 +122,6 @@ state if possible.
 
 Non-critical:
 
-- *Initial FTL animation is missing*: this is an assembly routine that triggers
-  *before* the bootstrapping of the p-machine.
 - SHIPLIB function 0x1a (warp animation) is not implemented, an assembly routine.
 - The copy protection (integrity check) is mitigated in an ugly and brittle
   way. It would be better to emulate the underlying mechanism (which is known)

@@ -56,6 +56,9 @@ DEBUGUI_OBJS= \
 	imgui/imgui_impl_sdl_gles2.o
 
 HEADERS= \
+	sundog.h \
+	swoosh.h \
+	glutil.h \
 	psys/psys_bootstrap.h \
 	psys/psys_constants.h \
 	psys/psys_debug.h \
@@ -86,6 +89,7 @@ HEADERS= \
 MAIN_OBJS= \
 	sundog_compare_trace.o \
 	sundog.o \
+	swoosh.o \
         test/img_tests.o \
 	test/inst_tests.o \
 	test/set_tests.o \
@@ -101,7 +105,7 @@ EXES= \
 
 all: $(EXES)
 
-sundog: sundog.o $(PSYS_OBJS) $(GAME_OBJS) $(DEBUGUI_OBJS)
+sundog: sundog.o swoosh.o glutil.o $(PSYS_OBJS) $(GAME_OBJS) $(DEBUGUI_OBJS)
 	$(LINK) $^ $(LDFLAGS) -o $@
 
 sundog_compare_trace: sundog_compare_trace.o $(PSYS_OBJS) $(GAME_OBJS)

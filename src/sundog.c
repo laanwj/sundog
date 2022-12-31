@@ -9,6 +9,7 @@
 #include "game/game_screen.h"
 #include "game/game_sound.h"
 #include "game/game_shiplib.h"
+#include "glutil.h"
 #include "psys/psys_bootstrap.h"
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
@@ -26,6 +27,7 @@
 #ifdef ENABLE_DEBUGUI
 #include "debugui/debugui.h"
 #endif
+#include "swoosh.h"
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -327,31 +329,6 @@ static void stop_interpreter_thread(struct game_state *gs)
 #endif
 }
 
-static void shader_source(GLuint shader, const char *shader_str)
-{
-    GLint size = strlen(shader_str);
-    glShaderSource(shader, 1, &shader_str, &size);
-}
-
-static void compile_shader(GLuint shader, const char *name)
-{
-    GLint ret;
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &ret);
-    if (!ret) {
-        char *log;
-        printf("Error: shader %s compilation failed!:\n", name);
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &ret);
-
-        if (ret > 1) {
-            log = malloc(ret);
-            glGetShaderInfoLog(shader, ret, NULL, log);
-            printf("%s", log);
-        }
-        exit(1);
-    }
-}
-
 /** Initialize GL state:
  * textures, shaders, and buffers.
  */
@@ -389,7 +366,7 @@ static void init_gl(struct game_state *gs)
     /* Create shaders */
     GLuint p1 = glCreateProgram();
     GLuint s2 = glCreateShader(GL_VERTEX_SHADER);
-    shader_source(s2,
+    shader_source(s2, "vertex",
         "attribute mediump vec4 vertexCoord;\n"
         "attribute mediump vec2 vertexTexCoord;\n"
         "varying mediump vec2 texcoord;\n"
@@ -399,10 +376,10 @@ static void init_gl(struct game_state *gs)
         "    gl_Position = vertexCoord;\n"
         "    texcoord = vertexTexCoord;\n"
         "}\n");
-    compile_shader(s2, "vertex");
     glAttachShader(p1, s2);
+    glDeleteShader(s2);
     GLuint s3 = glCreateShader(GL_FRAGMENT_SHADER);
-    shader_source(s3,
+    shader_source(s3, "fragment",
         "varying mediump vec2 texcoord;\n"
         "uniform sampler2D scr_tex;\n"
         "uniform sampler2D pal_tex;\n"
@@ -413,8 +390,8 @@ static void init_gl(struct game_state *gs)
         "    mediump vec2 idx = vec2(texture2D(scr_tex, texcoord).x, 0.0);\n"
         "    gl_FragColor = texture2D(pal_tex, idx) * tint;\n"
         "}\n");
-    compile_shader(s3, "fragment");
     glAttachShader(p1, s3);
+    glDeleteShader(s3);
     glBindAttribLocation(p1, 0, "vertexCoord");
     glBindAttribLocation(p1, 1, "vertexTexCoord");
     glLinkProgram(p1);
@@ -669,6 +646,9 @@ int main(int argc, char **argv)
     }
 
     printf("GL version: %s\n", glGetString(GL_VERSION));
+
+    swoosh(gs->window, "swoosh/"); /* XXX unhardcode path */
+
     init_gl(gs);
 
     /* Set up "vblank" timer */
