@@ -1,8 +1,8 @@
 #include "glutil.h"
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void shader_source(GLuint shader, const char *name, const char *shader_str)
 {

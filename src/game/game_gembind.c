@@ -526,7 +526,7 @@ static void gembind_DecompressImage(struct psys_state *s, struct gembind_priv *p
  */
 static void gembind_DoSound(struct psys_state *s, struct gembind_priv *priv, psys_fulladdr segment, psys_fulladdr env_priv)
 {
-    psys_word a     = psys_pop(s);
+    psys_word a         = psys_pop(s);
     const uint8_t *data = psys_bytes(s, a);
     if (priv->sound) {
         /* XXX this should be safe as we're always passed a buffer of 128 bytes,

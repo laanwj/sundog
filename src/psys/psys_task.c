@@ -106,7 +106,7 @@ void psys_signal(struct psys_state *s, psys_word semaphore, bool taskswitch)
      * semaphore's wait queue is put on the ready queue, and its Hang ptr is
      * set to NIL.  If the new task has a higher priority than the current
      * task, a task switch occurs.
-    */
+     */
     if (qhead == PSYS_NIL || count < 0) {
         psys_stw(s, semaphore + PSYS_SEM_COUNT, count + 1);
         if (PDBG(s, TASK)) {

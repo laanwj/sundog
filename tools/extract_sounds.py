@@ -77,6 +77,7 @@ for i in range(0x24):
 
 # snd_off (sound 0) is always concatenated to stop the sound effect afterwards
 with open('../src/game/sundog_soundfx.h', 'w') as f:
+    f.write('// clang-format off\n')
     for (i, name, data) in sound_mapping:
         f.write('static const uint8_t sound_%s[] = {%s};\n' % (name, ','.join('0x%02x' % x for x in data)))
     f.write('''
@@ -89,5 +90,6 @@ static struct {
     for (i, name, data) in sound_mapping:
         f.write('/* %2i */ {"%s", %d, sound_%s},\n' % (i, name, len(data), name))
     f.write('''};
-    static const size_t sundog_sound_fx_count = %d;
-    ''' % (len(sound_mapping)))
+static const size_t sundog_sound_fx_count = %d;
+''' % (len(sound_mapping)))
+    f.write('// clang-format on\n')

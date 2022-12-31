@@ -81,7 +81,7 @@ static void sdlsound_load_samples(struct sdl_sound *sound, const char *samples_p
         size_t slen;
         /* Please, lecture me again how safe and completely normal C string handling is... */
         strncpy(temp_path, samples_path, BUFLEN);
-        if (temp_path[BUFLEN-1]) {
+        if (temp_path[BUFLEN - 1]) {
             psys_panic("sdlsound_load_samples: string buffer overrun\n");
         }
         slen = strnlen(temp_path, BUFLEN);
@@ -90,7 +90,7 @@ static void sdlsound_load_samples(struct sdl_sound *sound, const char *samples_p
         }
         strncat(temp_path, sundog_sound_fx[idx].name, BUFLEN - 1);
         strncat(temp_path, ".ogg", BUFLEN - 1);
-        if (temp_path[BUFLEN-2]) {
+        if (temp_path[BUFLEN - 2]) {
             psys_panic("sdlsound_load_samples: string buffer overrun\n");
         }
         sound->samples[idx] = Mix_LoadWAV(temp_path);
@@ -103,8 +103,8 @@ static void sdlsound_load_samples(struct sdl_sound *sound, const char *samples_p
 struct game_sound *new_sdl_sound(const char *samples_path)
 {
     struct sdl_sound *sound = CALLOC_STRUCT(sdl_sound);
-    sound->base.play_sound       = &sdlsound_play_sound;
-    sound->base.destroy          = &sdlsound_destroy;
+    sound->base.play_sound  = &sdlsound_play_sound;
+    sound->base.destroy     = &sdlsound_destroy;
 
     sdlsound_load_samples(sound, samples_path);
 

@@ -12,10 +12,10 @@
 #include "psys/psys_state.h"
 #include "util/memutil.h"
 
-#include <stdio.h>
 #include <fcntl.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <stdio.h>
 #include <unistd.h>
 
 /** Rudimentary p-system debugger. The following functionality would be nice:

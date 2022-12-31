@@ -82,11 +82,14 @@ int main()
     { /* Multiply and divide */
         static const psys_byte testcode[] = {
             PSOP_SLDC2,
-            PSOP_LDCB, 0x80,
+            PSOP_LDCB,
+            0x80,
             PSOP_MPI,
-            PSOP_LDCB, 0x12,
+            PSOP_LDCB,
+            0x12,
             PSOP_SBI,
-            PSOP_LDCB, 0x3,
+            PSOP_LDCB,
+            0x3,
             PSOP_DVI,
             PSOP_SSTL1,
             PSOP_RPU,
@@ -99,8 +102,12 @@ int main()
 
     {
         static const psys_byte testcode[] = {
-            PSOP_LDCI, 0x12, 0xff,
-            PSOP_LDCI, 0x13, 0xff,
+            PSOP_LDCI,
+            0x12,
+            0xff,
+            PSOP_LDCI,
+            0x13,
+            0xff,
             PSOP_MPI,
             PSOP_SSTL1,
             PSOP_RPU,
@@ -113,8 +120,12 @@ int main()
 
     {
         static const psys_byte testcode[] = {
-            PSOP_LDCI, 0x12, 0xff,
-            PSOP_LDCI, 0x02, 0x00,
+            PSOP_LDCI,
+            0x12,
+            0xff,
+            PSOP_LDCI,
+            0x02,
+            0x00,
             PSOP_DVI,
             PSOP_SSTL1,
             PSOP_RPU,
@@ -127,7 +138,9 @@ int main()
 
     { /* sets */
         static const psys_byte testcode[] = {
-            PSOP_LDCI, 0x12, 0x00,
+            PSOP_LDCI,
+            0x12,
+            0x00,
             PSOP_DUP1,
             PSOP_DUP1,
             PSOP_SRS,
@@ -143,8 +156,12 @@ int main()
 
     { /* sets */
         static const psys_byte testcode[] = {
-            PSOP_LDCI, 0xff, 0xff,
-            PSOP_LDCI, 0x12, 0x00,
+            PSOP_LDCI,
+            0xff,
+            0xff,
+            PSOP_LDCI,
+            0x12,
+            0x00,
             PSOP_DUP1,
             PSOP_SRS,
             PSOP_INN,
@@ -161,23 +178,33 @@ int main()
     { /* sets */
         static const psys_byte testcode[] = {
             PSOP_SLLA1,
-            PSOP_LDCB, 0x00,
-            PSOP_LDCB, 0x0f,
+            PSOP_LDCB,
+            0x00,
+            PSOP_LDCB,
+            0x0f,
             PSOP_SRS,
-            PSOP_LDCB, 0x20,
-            PSOP_LDCB, 0x2f,
-            PSOP_SRS,
-            PSOP_UNI,
-            PSOP_LDCB, 0x40,
-            PSOP_LDCB, 0x4f,
-            PSOP_SRS,
-            PSOP_UNI,
-            PSOP_LDCB, 0x60,
-            PSOP_LDCB, 0x6f,
+            PSOP_LDCB,
+            0x20,
+            PSOP_LDCB,
+            0x2f,
             PSOP_SRS,
             PSOP_UNI,
-            PSOP_ADJ, 0x8,
-            PSOP_STM, 0x8,
+            PSOP_LDCB,
+            0x40,
+            PSOP_LDCB,
+            0x4f,
+            PSOP_SRS,
+            PSOP_UNI,
+            PSOP_LDCB,
+            0x60,
+            PSOP_LDCB,
+            0x6f,
+            PSOP_SRS,
+            PSOP_UNI,
+            PSOP_ADJ,
+            0x8,
+            PSOP_STM,
+            0x8,
             PSOP_RPU,
         };
         reset_state(state);
@@ -230,7 +257,7 @@ int main()
         for (int x = 0; x < 8; ++x) {
             CHECK_EQUAL(w[x], 0x7777);
         }
-        //CHECK_EQUAL(psys_ldw(state, W(state->mp + PSYS_MSCW_VAROFS, 1)), 0x0);
+        // CHECK_EQUAL(psys_ldw(state, W(state->mp + PSYS_MSCW_VAROFS, 1)), 0x0);
     }
     return 0;
 }

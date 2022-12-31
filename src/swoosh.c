@@ -10,8 +10,8 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 200
 
-static const size_t swoosh_nframes = 11;
-static const int swoosh_frame_durations[11] = {10, 1, 1, 2, 2, 3, 3, 3, 3, 12, 40};
+static const size_t swoosh_nframes          = 11;
+static const int swoosh_frame_durations[11] = { 10, 1, 1, 2, 2, 3, 3, 3, 3, 12, 40 };
 
 /** Load and show FTL swoosh animation. */
 void swoosh(SDL_Window *window, const char *frames_path)
@@ -102,7 +102,7 @@ void swoosh(SDL_Window *window, const char *frames_path)
         istr[3] = 0;
 
         strncpy(temp_path, frames_path, BUFLEN);
-        if (temp_path[BUFLEN-1]) {
+        if (temp_path[BUFLEN - 1]) {
             goto error;
         }
         slen = strnlen(temp_path, BUFLEN);
@@ -112,7 +112,7 @@ void swoosh(SDL_Window *window, const char *frames_path)
         strncat(temp_path, "frame", BUFLEN - 1);
         strncat(temp_path, istr, BUFLEN - 1);
         strncat(temp_path, ".bmp", BUFLEN - 1);
-        if (temp_path[BUFLEN-2]) {
+        if (temp_path[BUFLEN - 2]) {
             goto error;
         }
 
@@ -150,4 +150,3 @@ error:
     glDeleteTextures(1, &scr_tex);
     SDL_FreeFormat(target);
 }
-

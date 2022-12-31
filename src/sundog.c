@@ -7,8 +7,8 @@
 
 #include "game/game_gembind.h"
 #include "game/game_screen.h"
-#include "game/game_sound.h"
 #include "game/game_shiplib.h"
+#include "game/game_sound.h"
 #include "glutil.h"
 #include "psys/psys_bootstrap.h"
 #include "psys/psys_debug.h"
@@ -635,8 +635,8 @@ int main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     gs->window = SDL_CreateWindow("SunDog: Frozen Legacy",
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,640, 400,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!gs->window) {
         psys_panic("Unable to create window: %s\n", SDL_GetError());
     }
@@ -658,9 +658,7 @@ int main(int argc, char **argv)
     gs->timer        = SDL_AddTimer(VBLANK_TIME, &timer_callback, gs);
 
     /* Create object to manage sound */
-    if (Mix_Init(MIX_INIT_OGG) < 0 ||
-            Mix_OpenAudio(44100, AUDIO_S16SYS, 1, 512) < 0 ||
-            Mix_AllocateChannels(1) < 0) {
+    if (Mix_Init(MIX_INIT_OGG) < 0 || Mix_OpenAudio(44100, AUDIO_S16SYS, 1, 512) < 0 || Mix_AllocateChannels(1) < 0) {
         printf("Warning: unable to initialize SDLMixer (%s) for mono ogg playback at 44100Hz, there will be no sound.\n", SDL_GetError());
         gs->sound = 0;
     } else {
