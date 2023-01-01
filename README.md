@@ -105,13 +105,13 @@ Status
 - Walking around the ship and in buildings.
 - Liftoff / Landing.
 - Sublight flight.
-- Warp (albeit without fancy effects).
+- Warp (with fancy effects).
 - Loading / reading save states (`l` and `s` respectively).
 - Ground combat.
 - Space combat.
+- Sound effects.
 - Touch screen support: a small area in the top-right of the screen has been
   designated as "cancel area" and will emulate a right-mouse click when touched.
-- Sound effects.
 
 Is it fully playable? Yes, I played it for quite a bit. All the critical things
 have been implemented, Though I cannot guarantee that there aren't any bugs
@@ -122,7 +122,6 @@ state if possible.
 
 Non-critical:
 
-- SHIPLIB function 0x1a (warp animation) is not implemented, an assembly routine.
 - The copy protection (integrity check) is mitigated in an ugly and brittle
   way. It would be better to emulate the underlying mechanism (which is known)
   in the simulated disk controller.
