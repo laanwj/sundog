@@ -10,10 +10,9 @@
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
 #include "psys/psys_state.h"
+#include "util/memutil.h"
 #include "util/util_save_state.h"
 #include "util/util_time.h"
-
-#include "util/memutil.h"
 
 #include <string.h>
 
@@ -24,6 +23,7 @@
 
 struct shiplib_priv {
     struct game_screen *screen;
+    struct game_sound *sound;
 };
 
 /* VDI 1,2,6,4 */
@@ -215,12 +215,13 @@ static int shiplib_load_state(struct psys_binding *b, int fd)
     return 0;
 }
 
-struct psys_binding *new_shiplib(struct psys_state *state, struct game_screen *screen)
+struct psys_binding *new_shiplib(struct psys_state *state, struct game_screen *screen, struct game_sound *sound)
 {
     struct psys_binding *b    = CALLOC_STRUCT(psys_binding);
     struct shiplib_priv *priv = CALLOC_STRUCT(shiplib_priv);
 
     priv->screen = screen;
+    priv->sound  = sound;
     (void)state;
     b->userdata     = priv;
     b->num_handlers = SHIPLIB_NUM_PROC;

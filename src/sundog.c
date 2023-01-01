@@ -243,7 +243,7 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
     state->num_bindings = 3;
     state->bindings     = calloc(state->num_bindings, sizeof(struct binding *));
     state->bindings[0]  = rspb;
-    state->bindings[1]  = new_shiplib(state, screen);
+    state->bindings[1]  = new_shiplib(state, screen, sound);
     state->bindings[2]  = new_gembind(state, screen, sound);
 
     /* Debugging */

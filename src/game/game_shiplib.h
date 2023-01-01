@@ -13,10 +13,11 @@ extern "C" {
 #endif
 
 struct game_screen;
+struct game_sound;
 struct psys_state;
 
 /** Construction */
-extern struct psys_binding *new_shiplib(struct psys_state *state, struct game_screen *screen);
+extern struct psys_binding *new_shiplib(struct psys_state *state, struct game_screen *screen, struct game_sound *sound);
 
 /** Destruction */
 extern void destroy_shiplib(struct psys_binding *b);
