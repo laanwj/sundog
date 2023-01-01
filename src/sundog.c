@@ -11,6 +11,7 @@
 #include "game/game_sound.h"
 #include "glutil.h"
 #include "psys/psys_bootstrap.h"
+#include "psys/psys_constants.h"
 #include "psys/psys_debug.h"
 #include "psys/psys_helpers.h"
 #include "psys/psys_interpreter.h"
@@ -84,7 +85,9 @@ static unsigned get_60hz_time()
     return SDL_GetTicks() / 17;
 }
 
-/** Procedures to ignore in tracing */
+/** Procedures to ignore in tracing.
+ * Make sure this is sorted by (name, func_id).
+ */
 static const struct psys_function_id trace_ignore_procs[] = {
     { { { "GEMBIND " } }, 0xff },
     { { { "KERNEL  " } }, 0x0f }, /* moveleft */
@@ -101,6 +104,7 @@ static const struct psys_function_id trace_ignore_procs[] = {
     { { { "MAINLIB " } }, 0x29 }, /* */
     { { { "MAINLIB " } }, 0x2a }, /* */
     { { { "MAINLIB " } }, 0x32 }, /* PaletteChange */
+    { { { "MAINLIB " } }, 0x33 }, /* Nop */
     { { { "MAINLIB " } }, 0x35 }, /* */
     { { { "MAINLIB " } }, 0x36 }, /* */
     { { { "MAINLIB " } }, 0x3c }, /* */
@@ -118,6 +122,17 @@ static const struct psys_function_id trace_ignore_procs[] = {
     { { { "XMOVEINB" } }, 0x02 }, /* */
     { { { "XMOVEINB" } }, 0x1b }, /* */
     { { { "XMOVEINB" } }, 0x1c }, /* */
+};
+
+/** Locations to insert artificial delays, to compensate for emulation speed.
+ * Make sure this is sorted by (name, address).
+ */
+static const struct {
+    const char *seg_name;
+    uint16_t address;
+    uint32_t delay_us;
+} artificial_delays[] = {
+    { "WINDOWLI", 0x070e, 100000 }, /* WINDOWLI:0x12 entry point on creating a dialog (see issue #18) */
 };
 
 /* Called before every instruction executed.
@@ -139,6 +154,20 @@ static void psys_trace(struct psys_state *s, void *gs_)
         psys_debug("Interpreter thread stopped\n");
         psys_stop(s);
     }
+
+    /* Insert artificial delays at set points. The reason for this is that the emulation speed
+     * is so much higher than an Atari ST. The way the user interaction code is written,
+     * this sometimes can give problems.
+     * XXX if there's more entries switch to a bsearch like in psys_print_call_info.
+     */
+    const char *curseg_name = (const char *)psys_bytes(s, s->curseg + PSYS_SEG_NAME);
+    size_t curaddr          = s->ipc - s->curseg;
+    for (size_t idx = 0; idx < ARRAY_SIZE(artificial_delays); ++idx) {
+        if (strncmp(curseg_name, artificial_delays[idx].seg_name, 8) == 0 && curaddr == artificial_delays[idx].address) {
+            usleep(artificial_delays[idx].delay_us);
+        }
+    }
+
     /* Ideally this would be triggered some other way instead of polling
      * every instruction. The event should be triggered every 4 vsyncs, which
      * is 15 times a second on NTSC and 12.5 on PAL on the original Atari ST
