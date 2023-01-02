@@ -90,8 +90,10 @@ HEADERS= \
 	test/test_util.h
 
 MAIN_OBJS= \
+	glutil.o \
 	sundog_compare_trace.o \
 	sundog.o \
+	sundog_resources.o \
 	swoosh.o \
         test/img_tests.o \
 	test/inst_tests.o \
@@ -154,4 +156,4 @@ check: $(EXES)
 	test/img_tests
 
 clean:
-	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS) $(TOOL_OBJS) $(GENERATED)
+	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS) $(TOOL_OBJS) $(DEBUGUI_OBJS) $(GENERATED)

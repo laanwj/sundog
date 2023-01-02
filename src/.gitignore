@@ -1,4 +1,5 @@
 sundog_resource_data.h
+game/game_debuginfo.h
 *.o
 test/set_tests
 test/inst_tests
