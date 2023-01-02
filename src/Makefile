@@ -112,6 +112,10 @@ RESOURCES = \
 	../shaders/*.vert \
 	../shaders/*.frag
 
+GENERATED = \
+	game/game_debuginfo.h \
+	sundog_resource_data.h
+
 all: $(EXES)
 
 sundog_resource_data.h: $(RESOURCES)
@@ -150,4 +154,4 @@ check: $(EXES)
 	test/img_tests
 
 clean:
-	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS) $(TOOL_OBJS)
+	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS) $(TOOL_OBJS) $(GENERATED)

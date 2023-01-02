@@ -204,7 +204,6 @@ static void psys_trace(struct psys_state *s, void *gs_)
 static struct psys_state *setup_state(struct game_screen *screen, struct game_sound *sound, const char *imagename, struct psys_binding **rspb_out)
 {
     struct psys_state *state = CALLOC_STRUCT(psys_state);
-    int fd;
     psys_byte *disk_data;
     size_t disk_size, track_size;
     struct psys_bootstrap_info boot;
@@ -217,8 +216,21 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
     state->memory   = malloc(state->mem_size);
     memset(state->memory, 0, state->mem_size);
 
-    /* load disk image */
     track_size = 9 * 512;
+#ifdef DISK_IMAGE_AS_RESOURCE
+    const void *disk_data_ro  = load_resource("game/sundog.st", &disk_size);
+    if (!disk_data_ro || disk_size != 80 * track_size) {
+        fprintf(stderr, "Could not read disk image from resource /game/sundog.st\n");
+        exit(1);
+    }
+    /* Make a swizzled read-write copy. */
+    disk_data = malloc(disk_size);
+    memcpy(disk_data +  0 * track_size, disk_data_ro + 3 * track_size, 77 * track_size);
+    memcpy(disk_data + 77 * track_size, disk_data_ro + 0 * track_size,  3 * track_size);
+    unload_resource(disk_data_ro);
+#else
+    int fd;
+    /* load disk image */
     disk_size  = 80 * track_size;
     disk_data  = malloc(disk_size);
     fd         = open(imagename, O_RDONLY);
@@ -234,6 +246,7 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
         exit(1);
     }
     close(fd);
+#endif
 
     /* override memory size and offset in SYSTEM.MISCINFO */
     /* This is sneaky: at boot, SUNDOG writes amount of memory and memory
@@ -621,6 +634,7 @@ int main(int argc, char **argv)
     struct game_state *gs = CALLOC_STRUCT(game_state);
     const char *imagename;
 
+#ifndef DISK_IMAGE_AS_RESOURCE
     if (argc == 2) {
         imagename = argv[1];
     } else {
@@ -629,6 +643,9 @@ int main(int argc, char **argv)
         fprintf(stderr, "It requires the user to provide the 360K `.st` raw disk image of the game to run.\n");
         exit(1);
     }
+#else
+    imagename = NULL;
+#endif
 
 #ifdef SDL_HINT_NO_SIGNAL_HANDLERS
     SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1"); /* Allow ctrl-c to quit */
