@@ -131,64 +131,6 @@ static unsigned parse_args(char **args, unsigned max, char *line)
     return num;
 }
 
-/* Get initial erec pointer from KERNEL. From there the list of erecs can be
- * traversed.
- */
-static psys_fulladdr first_erec_ptr(struct psys_state *s)
-{
-    return psys_ldw(s, 0x14e);
-}
-
-/** Assign a segment name. Names are case-insensitive, like Pascal.
- * Names longer than 8 characters will be truncated.
- */
-static void assign_segment_id(struct psys_segment_id *id, const char *name)
-{
-    unsigned i;
-    /* Make truncated, uppercased, space-padded version of name to compare to */
-    for (i = 0; i < 8 && name[i]; ++i) {
-        id->name[i] = toupper(name[i]);
-    }
-    for (; i < 8; ++i) {
-        id->name[i] = ' ';
-    }
-}
-
-/** Get erec for segment by name. Names are case-insensitive, like Pascal.
- */
-static psys_fulladdr get_erec_for_segment(struct psys_state *s, const char *name)
-{
-    psys_word erec = first_erec_ptr(s);
-    struct psys_segment_id id;
-    assign_segment_id(&id, name);
-    /* Traverse linked list of erecs */
-    while (erec) {
-        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
-        if (!memcmp(id.name, psys_bytes(s, sib + PSYS_SIB_Seg_Name), 8)) {
-            return erec;
-        }
-        erec = psys_ldw(s, erec + PSYS_EREC_Next_Rec);
-    }
-    return PSYS_NIL;
-}
-
-/** Get globals base and size for segment by name */
-static psys_fulladdr get_globals(struct psys_state *s, char *name, psys_word *data_size)
-{
-    psys_fulladdr erec = get_erec_for_segment(s, name);
-    if (erec == PSYS_NIL) {
-        if (data_size) {
-            *data_size = 0;
-        }
-        return erec;
-    }
-    if (data_size) {
-        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
-        *data_size    = psys_ldw(s, sib + PSYS_SIB_Data_Size);
-    }
-    return psys_ldw(s, erec + PSYS_EREC_Env_Data);
-}
-
 /** Get segment residency status for an erec */
 static bool is_segment_resident(struct psys_state *s, psys_word erec)
 {
@@ -356,7 +298,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
             } else if (!strcmp(cmd, "b")) { /* Set breakpoint or list breakpoints */
                 if (num >= 3) {
                     struct dbg_breakpoint *brk = new_breakpoint(dbg);
-                    assign_segment_id(&brk->seg, args[1]);
+                    psys_debug_assign_segment_id(&brk->seg, args[1]);
                     brk->addr   = strtol(args[2], NULL, 0);
                     brk->active = true;
                     printf("Set breakpoint %d at %.8s:0x%x\n", brk->num, brk->seg.name, brk->addr);
@@ -385,7 +327,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                     printf("One argument required\n");
                 }
             } else if (!strcmp(cmd, "l")) { /* List segments */
-                psys_word erec = first_erec_ptr(s);
+                psys_word erec = psys_debug_first_erec_ptr(s);
                 printf(ATITLE "erec sib  flg segname  base size " ARESET "\n");
                 while (erec) {
                     psys_word sib       = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
@@ -480,7 +422,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
             } else if (!strcmp(cmd, "sro")) { /* Store global */
                 if (num >= 4) {
                     psys_word data_size;
-                    psys_fulladdr data_base = get_globals(s, args[1], &data_size);
+                    psys_fulladdr data_base = psys_debug_get_globals(s, args[1], &data_size);
                     unsigned addr           = strtol(args[2], NULL, 0);
                     if (addr < data_size) {
                         psys_stw(s, W(data_base + PSYS_MSCW_VAROFS, addr),
@@ -498,7 +440,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
             } else if (!strcmp(cmd, "ldo") || !strcmp(cmd, "lao")) { /* Load global */
                 if (num == 3) {
                     psys_word data_size;
-                    psys_fulladdr data_base = get_globals(s, args[1], &data_size);
+                    psys_fulladdr data_base = psys_debug_get_globals(s, args[1], &data_size);
                     unsigned addr           = strtol(args[2], NULL, 0);
                     if (addr < data_size) {
                         if (!strcmp(cmd, "lao")) {

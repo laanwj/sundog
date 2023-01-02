@@ -11,6 +11,7 @@
 #include "psys_state.h"
 #include "util/util_minmax.h"
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -407,4 +408,53 @@ void psys_debug_hexdump_ofs(const psys_byte *data, psys_fulladdr offset, unsigne
 void psys_debug_hexdump(struct psys_state *s, psys_fulladdr offset, unsigned size)
 {
     psys_debug_hexdump_ofs(psys_bytes(s, offset), offset, size);
+}
+
+psys_fulladdr psys_debug_first_erec_ptr(struct psys_state *s)
+{
+    return psys_ldw(s, 0x14e);
+}
+
+void psys_debug_assign_segment_id(struct psys_segment_id *id, const char *name)
+{
+    unsigned i;
+    /* Make truncated, uppercased, space-padded version of name to compare to */
+    for (i = 0; i < 8 && name[i]; ++i) {
+        id->name[i] = toupper(name[i]);
+    }
+    for (; i < 8; ++i) {
+        id->name[i] = ' ';
+    }
+}
+
+psys_fulladdr psys_debug_get_erec_for_segment(struct psys_state *s, const char *name)
+{
+    psys_word erec = psys_debug_first_erec_ptr(s);
+    struct psys_segment_id id;
+    psys_debug_assign_segment_id(&id, name);
+    /* Traverse linked list of erecs */
+    while (erec) {
+        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
+        if (!memcmp(id.name, psys_bytes(s, sib + PSYS_SIB_Seg_Name), 8)) {
+            return erec;
+        }
+        erec = psys_ldw(s, erec + PSYS_EREC_Next_Rec);
+    }
+    return PSYS_NIL;
+}
+
+psys_fulladdr psys_debug_get_globals(struct psys_state *s, char *name, psys_word *data_size)
+{
+    psys_fulladdr erec = psys_debug_get_erec_for_segment(s, name);
+    if (erec == PSYS_NIL) {
+        if (data_size) {
+            *data_size = 0;
+        }
+        return erec;
+    }
+    if (data_size) {
+        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
+        *data_size    = psys_ldw(s, sib + PSYS_SIB_Data_Size);
+    }
+    return psys_ldw(s, erec + PSYS_EREC_Env_Data);
 }

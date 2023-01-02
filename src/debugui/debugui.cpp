@@ -41,11 +41,6 @@ void debugui_init(SDL_Window *window, struct game_state *gs)
     gamestate = gs;
 }
 
-/* XXX share this code with cli debugger */
-static psys_fulladdr first_erec_ptr(struct psys_state *s)
-{
-    return psys_ldw(s, 0x14e);
-}
 static bool is_segment_resident(struct psys_state *s, psys_word erec)
 {
     psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
@@ -55,7 +50,7 @@ static bool is_segment_resident(struct psys_state *s, psys_word erec)
 }
 static void debugui_list_segments(struct psys_state *s)
 {
-    psys_word erec = first_erec_ptr(s);
+    psys_word erec = psys_debug_first_erec_ptr(s);
     static psys_word selected;
     ImGui::Columns(6, NULL, false);
     ImGui::SetColumnWidth(0, 40);

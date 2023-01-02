@@ -81,6 +81,23 @@ int psys_debug_stack_depth(struct psys_state *s);
  */
 int psys_debug_proc_num_arguments(struct psys_state *s, psys_fulladdr erec, psys_word procedure);
 
+/* Get initial erec pointer from KERNEL. From there the list of erecs can be
+ * traversed.
+ */
+psys_fulladdr psys_debug_first_erec_ptr(struct psys_state *s);
+
+/** Assign a segment name. Names are case-insensitive, like Pascal.
+ * Names longer than 8 characters will be truncated.
+ */
+void psys_debug_assign_segment_id(struct psys_segment_id *id, const char *name);
+
+/** Get erec for segment by name. Names are case-insensitive, like Pascal.
+ */
+psys_fulladdr psys_debug_get_erec_for_segment(struct psys_state *s, const char *name);
+
+/** Get globals base and size for segment by name */
+psys_fulladdr psys_debug_get_globals(struct psys_state *s, char *name, psys_word *data_size);
+
 #ifdef __cplusplus
 }
 #endif

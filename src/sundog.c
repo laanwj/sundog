@@ -65,6 +65,9 @@ enum {
 /** Watch ??? state */
 static void watch_integrity_check(struct game_state *gs)
 {
+    if (!gs->gembind_ofs) {
+        return;
+    }
     static psys_word last_state = 0;
     psys_word new_state         = psys_ldw(gs->psys, INTEGRITY_CHECK_ADDR(gs));
     if (new_state != last_state) {
@@ -77,6 +80,9 @@ static void watch_integrity_check(struct game_state *gs)
 /** Neuter ??? state */
 static void watch_integrity_check(struct game_state *gs)
 {
+    if (!gs->gembind_ofs) {
+        return;
+    }
     psys_stw(gs->psys, INTEGRITY_CHECK_ADDR(gs), 0);
 }
 #endif
@@ -168,6 +174,18 @@ static void psys_trace(struct psys_state *s, void *gs_)
             usleep(artificial_delays[idx].delay_us);
         }
     }
+
+    /* Look up globals for important game segments once they become available. */
+    if (!gs->gembind_ofs && !strncmp(curseg_name, "GEMBIND ", 8)) {
+        gs->gembind_ofs = s->base;
+        printf("GEMBIND globals at 0x%08x\n", gs->gembind_ofs);
+    }
+#ifdef GAME_CHEATS
+    if (!gs->mainlib_ofs && !strncmp(curseg_name, "MAINLIB ", 8)) {
+        gs->mainlib_ofs = s->base;
+        printf("MAINLIB globals at 0x%08x\n", gs->mainlib_ofs);
+    }
+#endif
 
     /* Ideally this would be triggered some other way instead of polling
      * every instruction. The event should be triggered every 4 vsyncs, which
@@ -706,14 +724,6 @@ int main(int argc, char **argv)
 #ifdef ENABLE_DEBUGUI
     debugui_init(gs->window, gs);
 #endif
-    /* Game segment globals offsets.
-     * TODO: look up get_globals("MAINLIB") i.s.o. hardcoding
-     */
-    gs->gembind_ofs = 0x348e;
-#ifdef GAME_CHEATS
-    gs->mainlib_ofs = 0x1f66;
-#endif
-
     start_interpreter_thread(gs);
 
     event_loop(gs);
