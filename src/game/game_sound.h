@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-typedef void* (game_sound_loader_func)(const char *name);
+typedef void *(game_sound_loader_func)(const char *name);
 
 struct game_sound {
     /** Play sound. The input is in XBIOS DoSound format: http://toshyp.atari.org/en/004011.html#Dosound

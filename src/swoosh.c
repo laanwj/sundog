@@ -5,8 +5,8 @@
  */
 #include "swoosh.h"
 
-#include "sundog_resources.h"
 #include "glutil.h"
+#include "sundog_resources.h"
 
 #include <GLES2/gl2.h>
 #include <SDL.h>

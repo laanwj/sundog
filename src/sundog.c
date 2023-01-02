@@ -218,22 +218,22 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
 
     track_size = 9 * 512;
 #ifdef DISK_IMAGE_AS_RESOURCE
-    const void *disk_data_ro  = load_resource("game/sundog.st", &disk_size);
+    const void *disk_data_ro = load_resource("game/sundog.st", &disk_size);
     if (!disk_data_ro || disk_size != 80 * track_size) {
         fprintf(stderr, "Could not read disk image from resource /game/sundog.st\n");
         exit(1);
     }
     /* Make a swizzled read-write copy. */
     disk_data = malloc(disk_size);
-    memcpy(disk_data +  0 * track_size, disk_data_ro + 3 * track_size, 77 * track_size);
-    memcpy(disk_data + 77 * track_size, disk_data_ro + 0 * track_size,  3 * track_size);
+    memcpy(disk_data + 0 * track_size, disk_data_ro + 3 * track_size, 77 * track_size);
+    memcpy(disk_data + 77 * track_size, disk_data_ro + 0 * track_size, 3 * track_size);
     unload_resource(disk_data_ro);
 #else
     int fd;
     /* load disk image */
-    disk_size  = 80 * track_size;
-    disk_data  = malloc(disk_size);
-    fd         = open(imagename, O_RDONLY);
+    disk_size = 80 * track_size;
+    disk_data = malloc(disk_size);
+    fd        = open(imagename, O_RDONLY);
     if (fd < 0) {
         perror("open");
         fprintf(stderr, "Could not open disk image %s\n", imagename);
@@ -688,7 +688,7 @@ int main(int argc, char **argv)
         printf("Warning: unable to initialize SDLMixer (%s) for mono ogg playback at 44100Hz, there will be no sound.\n", SDL_GetError());
         gs->sound = 0;
     } else {
-        gs->sound = new_sdl_sound((game_sound_loader_func*)&load_resource_sdl, "sounds/");
+        gs->sound = new_sdl_sound((game_sound_loader_func *)&load_resource_sdl, "sounds/");
         if (!gs->sound) {
             printf("Warning: could not load samples, there will be no sound.\n");
         }
