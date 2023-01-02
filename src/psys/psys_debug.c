@@ -312,7 +312,7 @@ void psys_print_call_info(struct psys_state *s, const struct psys_function_id *i
     if (segname) {
         const struct util_debuginfo_entry *entry;
 
-        psys_debug("%-8.8s:0x%x ", key.seg.name, key.proc_num);
+        psys_debug("%-8.8s:0x%02x ", key.seg.name, key.proc_num);
 
         /* If there is an associated debug info entry for this procedure, print
          * the name. */
