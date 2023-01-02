@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 Wladimir J. van der Laan
+ * Distributed under the MIT software license, see the accompanying
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.
+ */
 #include "swoosh.h"
 
 #include "sundog_resources.h"
@@ -35,28 +40,10 @@ void swoosh(SDL_Window *window, const char *frames_path)
 
     /* Create shader */
     GLuint p1 = glCreateProgram();
-    GLuint s2 = glCreateShader(GL_VERTEX_SHADER);
-    shader_source(s2, "vertex",
-        "attribute mediump vec4 vertexCoord;\n"
-        "attribute mediump vec2 vertexTexCoord;\n"
-        "varying mediump vec2 texcoord;\n"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "    gl_Position = vertexCoord;\n"
-        "    texcoord = vertexTexCoord;\n"
-        "}\n");
+    GLuint s2 = load_shader_resource("shaders/swoosh.vert", GL_VERTEX_SHADER);
+    GLuint s3 = load_shader_resource("shaders/swoosh.frag", GL_FRAGMENT_SHADER);
     glAttachShader(p1, s2);
     glDeleteShader(s2);
-    GLuint s3 = glCreateShader(GL_FRAGMENT_SHADER);
-    shader_source(s3, "fragment",
-        "varying mediump vec2 texcoord;\n"
-        "uniform sampler2D scr_tex;\n"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "    gl_FragColor = texture2D(scr_tex, texcoord);\n"
-        "}\n");
     glAttachShader(p1, s3);
     glDeleteShader(s3);
     glBindAttribLocation(p1, 0, "vertexCoord");

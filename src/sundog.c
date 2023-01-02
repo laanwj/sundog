@@ -395,31 +395,10 @@ static void init_gl(struct game_state *gs)
 
     /* Create shaders */
     GLuint p1 = glCreateProgram();
-    GLuint s2 = glCreateShader(GL_VERTEX_SHADER);
-    shader_source(s2, "vertex",
-        "attribute mediump vec4 vertexCoord;\n"
-        "attribute mediump vec2 vertexTexCoord;\n"
-        "varying mediump vec2 texcoord;\n"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "    gl_Position = vertexCoord;\n"
-        "    texcoord = vertexTexCoord;\n"
-        "}\n");
+    GLuint s2 = load_shader_resource("shaders/screen.vert", GL_VERTEX_SHADER);
+    GLuint s3 = load_shader_resource("shaders/screen.frag", GL_FRAGMENT_SHADER);
     glAttachShader(p1, s2);
     glDeleteShader(s2);
-    GLuint s3 = glCreateShader(GL_FRAGMENT_SHADER);
-    shader_source(s3, "fragment",
-        "varying mediump vec2 texcoord;\n"
-        "uniform sampler2D scr_tex;\n"
-        "uniform sampler2D pal_tex;\n"
-        "uniform mediump vec4 tint;\n"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "    mediump vec2 idx = vec2(texture2D(scr_tex, texcoord).x, 0.0);\n"
-        "    gl_FragColor = texture2D(pal_tex, idx) * tint;\n"
-        "}\n");
     glAttachShader(p1, s3);
     glDeleteShader(s3);
     glBindAttribLocation(p1, 0, "vertexCoord");

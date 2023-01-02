@@ -108,7 +108,9 @@ EXES= \
 
 RESOURCES = \
 	../swoosh/*.bmp \
-	../sounds/*.ogg
+	../sounds/*.ogg \
+	../shaders/*.vert \
+	../shaders/*.frag
 
 all: $(EXES)
 
