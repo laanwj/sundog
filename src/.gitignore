@@ -1,3 +1,4 @@
+sundog_resource_data.h
 *.o
 test/set_tests
 test/inst_tests

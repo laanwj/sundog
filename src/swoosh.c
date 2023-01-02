@@ -1,5 +1,6 @@
 #include "swoosh.h"
 
+#include "sundog_resources.h"
 #include "glutil.h"
 
 #include <GLES2/gl2.h>
@@ -116,9 +117,14 @@ void swoosh(SDL_Window *window, const char *frames_path)
             goto error;
         }
 
-        SDL_Surface *load = SDL_LoadBMP(temp_path);
-        if (!load) {
+        SDL_RWops *resource = load_resource_sdl(temp_path);
+        if (!resource) {
             printf("Could not load swoosh animation frame %s\n", temp_path);
+            goto error;
+        }
+        SDL_Surface *load = SDL_LoadBMP_RW(resource, 1);
+        if (!load) {
+            printf("Could not decode swoosh animation frame %s\n", temp_path);
             goto error;
         }
         SDL_Surface *convert = SDL_ConvertSurface(load, target, 0);

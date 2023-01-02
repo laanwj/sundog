@@ -58,6 +58,7 @@ DEBUGUI_OBJS= \
 
 HEADERS= \
 	sundog.h \
+	sundog_resources.h \
 	swoosh.h \
 	glutil.h \
 	psys/psys_bootstrap.h \
@@ -105,9 +106,18 @@ EXES= \
 	test/set_tests \
 	rip_images
 
+RESOURCES = \
+	../swoosh/*.bmp \
+	../sounds/*.ogg
+
 all: $(EXES)
 
-sundog: sundog.o swoosh.o glutil.o $(PSYS_OBJS) $(GAME_OBJS) $(DEBUGUI_OBJS)
+sundog_resource_data.h: $(RESOURCES)
+	../tools/resource_compiler.py -o $@ -b $(abspath ..) $(RESOURCES)
+
+sundog_resources.o: sundog_resource_data.h
+
+sundog: sundog.o sundog_resources.o swoosh.o glutil.o $(PSYS_OBJS) $(GAME_OBJS) $(DEBUGUI_OBJS)
 	$(LINK) $^ $(LDFLAGS) -o $@
 
 sundog_compare_trace: sundog_compare_trace.o $(PSYS_OBJS) $(GAME_OBJS)

@@ -28,6 +28,7 @@
 #ifdef ENABLE_DEBUGUI
 #include "debugui/debugui.h"
 #endif
+#include "sundog_resources.h"
 #include "swoosh.h"
 
 #include <GLES2/gl2.h>
@@ -676,7 +677,7 @@ int main(int argc, char **argv)
 
     printf("GL version: %s\n", glGetString(GL_VERSION));
 
-    swoosh(gs->window, "swoosh/"); /* XXX unhardcode path */
+    swoosh(gs->window, "swoosh/");
 
     init_gl(gs);
 
@@ -691,7 +692,7 @@ int main(int argc, char **argv)
         printf("Warning: unable to initialize SDLMixer (%s) for mono ogg playback at 44100Hz, there will be no sound.\n", SDL_GetError());
         gs->sound = 0;
     } else {
-        gs->sound = new_sdl_sound("sounds/"); /* XXX unhardcode path */
+        gs->sound = new_sdl_sound((game_sound_loader_func*)&load_resource_sdl, "sounds/");
         if (!gs->sound) {
             printf("Warning: could not load samples, there will be no sound.\n");
         }

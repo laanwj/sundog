@@ -72,7 +72,7 @@ static void sdlsound_destroy(struct game_sound *sound_)
 }
 
 #define BUFLEN (200)
-static void sdlsound_load_samples(struct sdl_sound *sound, const char *samples_path)
+static void sdlsound_load_samples(struct sdl_sound *sound, game_sound_loader_func *loader, const char *samples_path)
 {
     char temp_path[BUFLEN];
     size_t idx;
@@ -93,20 +93,25 @@ static void sdlsound_load_samples(struct sdl_sound *sound, const char *samples_p
         if (temp_path[BUFLEN - 2]) {
             psys_panic("sdlsound_load_samples: string buffer overrun\n");
         }
-        sound->samples[idx] = Mix_LoadWAV(temp_path);
-        if (!sound->samples[idx]) {
+        SDL_RWops *resource = (SDL_RWops *)loader(temp_path);
+        if (!resource) {
             psys_debug("sdlsound: Could not load \"%s\", sample will not be played\n", temp_path);
+            continue;
+        }
+        sound->samples[idx] = Mix_LoadWAV_RW(resource, 1);
+        if (!sound->samples[idx]) {
+            psys_debug("sdlsound: Could not decode \"%s\", sample will not be played\n", temp_path);
         }
     }
 }
 
-struct game_sound *new_sdl_sound(const char *samples_path)
+struct game_sound *new_sdl_sound(game_sound_loader_func *loader, const char *samples_path)
 {
     struct sdl_sound *sound = CALLOC_STRUCT(sdl_sound);
     sound->base.play_sound  = &sdlsound_play_sound;
     sound->base.destroy     = &sdlsound_destroy;
 
-    sdlsound_load_samples(sound, samples_path);
+    sdlsound_load_samples(sound, loader, samples_path);
 
     return &sound->base;
 }

@@ -15,6 +15,8 @@
 extern "C" {
 #endif
 
+typedef void* (game_sound_loader_func)(const char *name);
+
 struct game_sound {
     /** Play sound. The input is in XBIOS DoSound format: http://toshyp.atari.org/en/004011.html#Dosound
      */
@@ -28,7 +30,7 @@ struct game_sound {
 
 /** Create a new game_sound instance using SDL.
  */
-struct game_sound *new_sdl_sound(const char *samples_path);
+struct game_sound *new_sdl_sound(game_sound_loader_func *loader, const char *samples_path);
 
 #ifdef __cplusplus
 }
