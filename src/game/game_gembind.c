@@ -25,6 +25,8 @@
 /* Header for savestates */
 #define GAME_GEMBIND_STATE_ID 0x47454d42
 
+/* GEMBIND memory ("data pool"): needs to be 0xac00 bytes at least, see
+ * psys_rsp_unitstatus. */
 #define GEMBIND_MEMSIZE 0x10000
 #define GEMBIND_MEMBASE (0x100000000 - GEMBIND_MEMSIZE)
 
@@ -125,6 +127,7 @@ enum {
 static inline psys_fulladdr psys_lda(struct psys_state *s, psys_fulladdr addr)
 {
     psys_fulladdr value = (psys_ldw(s, W(addr, 0)) << 16) | psys_ldw(s, W(addr, 1));
+    /* Wraps around to GEMBIND_MEMBASE, but 0 stays 0. */
     if (value != 0) {
         value -= s->mem_fake_base;
     }
@@ -133,6 +136,7 @@ static inline psys_fulladdr psys_lda(struct psys_state *s, psys_fulladdr addr)
 
 static inline void psys_sta(struct psys_state *s, psys_fulladdr addr, psys_fulladdr value)
 {
+    /* Wraps around from GEMBIND_MEMBASE, but 0 stays 0. */
     if (value != 0) {
         value += s->mem_fake_base;
     }

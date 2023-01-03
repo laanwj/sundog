@@ -225,7 +225,7 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
     psys_byte *disk_data;
     size_t disk_size, track_size;
     struct psys_bootstrap_info boot;
-    psys_word ext_memsize     = 786; /* Memory size in kB */
+    psys_word ext_memsize     = 786; /* Ext memory size in kB, note that this is way more than the game needs. */
     psys_fulladdr ext_membase = 0x000337ac;
     struct psys_binding *rspb;
 
@@ -277,11 +277,36 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
 
     /* Bootstrap */
     boot.boot_unit_id  = PSYS_UNIT_DISK0;
-    boot.isp           = 0xfdec;
+    boot.isp           = 0xfdec; /* initial stack pointer - top of p-system base memory */
     boot.real_size     = 0;
-    boot.mem_fake_base = 0x000237ac;
+    boot.mem_fake_base = ext_membase - 0x10000; /* this is where (virtually) 0x10000 bytes of p-system base memory start */
+    /* was: 0x000237ac in hatari emulation */
+    /* so we have:
+     *
+     * psys addr    "atari" addr    size     description
+     * -----------------------------------------------------------------------
+     * 0xffff0000                   64 kB    GEMBIND memory (game specific)
+     *   0xffff0000                  21 kB    (unused, contains OS/68000 code on atari)
+     *   0xffff5400
+     *     =-0xac00 data_pool        31 kB    "data pool" area used by game (offset queried using psys_rsp_unitstatus 128, size fixed)
+     *   0xffffd000                  12 kB    (unused, contains 68000 code on atari)
+     * 0x00000000   mem_fake_base   64 kB    p-system base memory (16-bit addressable: globals, heap)
+     * 0x00010000   ext_membase     768 kB   p-system ext memory (offset/size passed in SYSTEM.MISCINFO)
+     *                                         used for code segments storage
+     *
+     * where psys_addr is the address from the viewpoint of the p-system,
+     * and "atari" addr the address from more low-level kind of code (like GEM calls)
+     * we've made all these relative to ext_membase which is more or less an arbitrary number to match a certain run of hatari
+     *
+     * XXX theoretically the p-system can address 128kB of memory directly starting from mem_fake_base, because addresses are word-based,
+     * i'm not sure how this matches the 64kB here, but in any case maybe it's because a lot of internal bookkeeping (like the stack pointer)
+     * does use byte addresses?
+     */
+
+    /** These two are dummy (legacy?) values and not used on Atari ST: */
     boot.ext_mem_base  = boot.mem_fake_base + boot.isp;
     boot.ext_mem_size  = 0;
+
     psys_bootstrap(state, &boot, &disk_data[track_size]);
 
     /* Debug setting */

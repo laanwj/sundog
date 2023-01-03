@@ -520,9 +520,12 @@ static void psys_rsp_unitstatus(struct psys_state *state, struct psys_rsp_state 
         psys_debug("unitstatus(%d,0x%04x,0x%x)", unit, stat_rec, control);
     }
     switch (unit) {
-    case 0x80: { /* Sundog specific - what is this? */
-        uint32_t addr1 = 0x00018bac;
-        uint32_t addr2 = 0x00018876;
+    case 0x80: { /* Sundog specific - link_SBIOS call */
+        // data_pool  0xac00 before boot.mem_fake_base,
+        //            up to pool_blocks (62) 512-bytes blocks are allocated here, for disk sectors mainly
+        //            this is the part of GEMBIND's memory that the game will use
+        uint32_t addr1 = state->mem_fake_base - 0xac00; // 0x00018bac
+        uint32_t addr2 = addr1 - 0x336; // was: 0x00018876 SBIOS_jump "SBIOS BIOS jump table" (never used)
         psys_stw(state, W(stat_rec, 0), addr1 >> 16);
         psys_stw(state, W(stat_rec, 1), addr1 & 0xffff);
         psys_stw(state, W(stat_rec, 2), addr2 >> 16);
