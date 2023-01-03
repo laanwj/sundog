@@ -121,14 +121,17 @@ void do_generate(struct wave_header *hdr, FILE *out, PSG *psg, int nsamples)
 
 int main(int argc, char **argv)
 {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <out.wav> <hex>\n", argv[0]);
+    if (argc != 3 && argc != 4) {
+        fprintf(stderr, "Usage: %s <out.wav> <hex> [<trailing-ticks>]\n", argv[0]);
         exit(1);
     }
     const int RATE = 44100;
     const int MAX_CYCLES = 256;
     const char *filename_out = argv[1];
     const char *data_hex = argv[2];
+    int trailing_ticks = 0;
+    if (argc > 3)
+        trailing_ticks = atoi(argv[3]);
 
     FILE *out = fopen(filename_out, "wb");
     struct wave_header hdr = make_wave_header(RATE, 1, 16);
@@ -220,6 +223,8 @@ Command         Meaning
             exit(1);
         }
     }
+
+    do_generate(&hdr, out, psg, samples_per_tick * trailing_ticks);
 
     /* re-write header with final sizes. */
     (void)fseek(out, 0, SEEK_SET);

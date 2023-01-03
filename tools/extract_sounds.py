@@ -14,6 +14,9 @@ import sys
 DOSOUND = os.getenv('DOSOUND', '')
 OGGENC = os.getenv('OGGENC', 'oggenc')
 
+# Time in ticks to keep generating after end of 'dosound' loop.
+TRAILING_TICKS = 15
+
 if not DOSOUND:
     # Default to built-in dosound, if built.
     if os.path.isfile("dosound/dosound"):
@@ -90,7 +93,7 @@ for (i, name, data) in sound_mapping:
     if DOSOUND:
         outfile = f'{name}.wav'
         oggfile = f'{name}.ogg'
-        subprocess.run([DOSOUND, outfile, data_hex], check=True)
+        subprocess.run([DOSOUND, outfile, data_hex, str(TRAILING_TICKS)], check=True)
         subprocess.run([OGGENC, '-q', '3', '-o', oggfile, outfile])
 
 # snd_off (sound 0) is always concatenated to stop the sound effect afterwards
