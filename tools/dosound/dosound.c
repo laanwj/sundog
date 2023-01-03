@@ -111,7 +111,8 @@ void do_generate(struct wave_header *hdr, FILE *out, PSG *psg, int nsamples)
         int16_t sample = PSG_calc(psg);
 
         /* 16-bit samples are stored as 2's-complement signed integers, ranging from -32768 to 32767. */
-        char sdata[2] = {sample & 0xff, sample >> 8};
+        uint16_t sample_u = (uint16_t) sample;
+        uint8_t sdata[2] = {sample_u & 0xff, sample_u >> 8};
         fwrite(sdata, sizeof(sdata), 1, out);
         hdr->chunkSize += sizeof(sdata);
         hdr->subChunk2Size += sizeof(sdata);
@@ -136,6 +137,7 @@ int main(int argc, char **argv)
     PSG * psg = PSG_new(2000000, RATE);
     PSG_setVolumeMode(psg, EMU2149_VOL_YM2149);
     PSG_set_quality (psg, 1); // high quality (i guess)
+    PSG_reset(psg);
 
 /*
 Command         Meaning
@@ -199,8 +201,10 @@ Command         Meaning
                 do_generate(&hdr, out, psg, samples_per_tick);
                 cycles += 1;
             } while (tmp != endval && cycles < MAX_CYCLES);
-            if (cycles == MAX_CYCLES)
+            if (cycles == MAX_CYCLES) {
+                printf("warning: reached max cycles\n");
                 break;
+            }
         } else if (op >= 0x82) {
             if (ptr == len) {
                 fprintf(stderr, "Out of range while reading wait argument\n");

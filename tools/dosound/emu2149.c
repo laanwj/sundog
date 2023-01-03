@@ -327,10 +327,16 @@ PSG_writeReg (PSG * psg, uint32_t reg, uint32_t val)
   case 5:
     c = reg >> 1;
     psg->freq[c] = ((psg->reg[c * 2 + 1] & 15) << 8) + psg->reg[c * 2];
+#ifdef DEBUG
+    printf("set freq %d to %d\n", c, psg->freq[c]);
+#endif
     break;
 
   case 6:
     psg->noise_freq = (val & 31) << 1;
+#ifdef DEBUG
+    printf("set noise_freq to %d\n", psg->noise_freq);
+#endif
     break;
 
   case 7:
@@ -346,11 +352,17 @@ PSG_writeReg (PSG * psg, uint32_t reg, uint32_t val)
   case 9:
   case 10:
     psg->volume[reg - 8] = val << 1;
+#ifdef DEBUG
+    printf("set volume %d to %d\n", reg-8, psg->volume[reg - 8]);
+#endif
     break;
  
   case 11:
   case 12:
     psg->env_freq = (psg->reg[12] << 8) + psg->reg[11];
+#ifdef DEBUG
+    printf("set env freq to %d\n", psg->env_freq);
+#endif
     break;
 
   case 13:
@@ -362,6 +374,10 @@ PSG_writeReg (PSG * psg, uint32_t reg, uint32_t val)
     psg->env_pause = 0;
     psg->env_count = 0x10000 - psg->env_freq;
     psg->env_ptr = psg->env_face?0:0x1f;
+#ifdef DEBUG
+    printf("continue=%d attack=%d alternate=%d hold=%d face=%d pause=%d count=%d ptr=%d\n",
+        psg->env_continue, psg->env_attack, psg->env_alternate, psg->env_hold, psg->env_face, psg->env_pause, psg->env_count, psg->env_ptr);
+#endif
     break;
 
   case 14:
