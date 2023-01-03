@@ -9,6 +9,7 @@ sorted by name.
 import argparse
 import os
 import sys
+import gzip
 
 # We could have bothered with ld -b, which would be faster at build time,
 # but much more of a platform compatibility hassle. So we don't.
@@ -70,8 +71,13 @@ def main():
         fullpath = os.path.realpath(filename)
         file_id = os.path.relpath(fullpath, args.base_path).replace(os.pathsep, '/')
 
-        with open(filename, 'rb') as f:
-            data = f.read()
+        if file_id.endswith('.gz'): # strip .gz suffix and decompress (for now)
+            file_id = file_id[:-3]
+            with gzip.open(filename, 'rb') as f:
+                data = f.read()
+        else:
+            with open(filename, 'rb') as f:
+                data = f.read()
 
         resources[file_id] = (0, data)
 

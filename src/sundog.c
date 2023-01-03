@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Wladimir J. van der Laan
+ * Copyright (c) 2017-2023 Wladimir J. van der Laan
  * Distributed under the MIT software license, see the accompanying
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
@@ -9,6 +9,7 @@
 #include "game/game_screen.h"
 #include "game/game_shiplib.h"
 #include "game/game_sound.h"
+#include "game_renderer.h"
 #include "glutil.h"
 #include "psys/psys_bootstrap.h"
 #include "psys/psys_constants.h"
@@ -31,8 +32,6 @@
 #include "sundog_resources.h"
 #include "swoosh.h"
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -415,107 +414,28 @@ static void stop_interpreter_thread(struct game_state *gs)
 #endif
 }
 
-/** Initialize GL state:
- * textures, shaders, and buffers.
- */
-static void init_gl(struct game_state *gs)
-{
-    /* Simple textured quad, for use with triangle strip */
-    static float quad[] = {
-        -1.0f, -1.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, 0.0f, 0.0f,
-        +1.0f, +1.0f, 1.0f, 0.0f
-    };
-    /* Create textures */
-    /*  Screen texture is 320x200 8-bit luminance texture */
-    glGenTextures(1, &gs->scr_tex);
-    glBindTexture(GL_TEXTURE_2D, gs->scr_tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-
-    /*  Palette is 256x1 32-bit RGBA texture. The width is kept at
-     *  256 despite there being 16 colors to have direct byte value mapping without needing
-     *  scaling in the fragment shading. The other 240 colors will be left unused.
-     */
-    glGenTextures(1, &gs->pal_tex);
-    glBindTexture(GL_TEXTURE_2D, gs->pal_tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    /* Create shaders */
-    GLuint p1 = glCreateProgram();
-    GLuint s2 = load_shader_resource("shaders/screen.vert", GL_VERTEX_SHADER);
-    GLuint s3 = load_shader_resource("shaders/screen.frag", GL_FRAGMENT_SHADER);
-    glAttachShader(p1, s2);
-    glDeleteShader(s2);
-    glAttachShader(p1, s3);
-    glDeleteShader(s3);
-    glBindAttribLocation(p1, 0, "vertexCoord");
-    glBindAttribLocation(p1, 1, "vertexTexCoord");
-    glLinkProgram(p1);
-    glUseProgram(p1);
-    GLint u_scr_tex = glGetUniformLocation(p1, "scr_tex");
-    glUniform1i(u_scr_tex, 0);
-    GLint u_pal_tex = glGetUniformLocation(p1, "pal_tex");
-    glUniform1i(u_pal_tex, 1);
-    gs->scr_program_tint = glGetUniformLocation(p1, "tint");
-    assert(glGetError() == GL_NONE);
-    gs->scr_program = p1;
-
-    /* Build vertex buffer */
-    glGenBuffers(1, &gs->vtx_buf);
-    glBindBuffer(GL_ARRAY_BUFFER, gs->vtx_buf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 /** Draw a frame */
 static void draw(struct game_state *gs)
 {
     int width, height;
     SDL_GetWindowSize(gs->window, &width, &height);
     glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    gl_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT);
+
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
-    /* No need to glClear, we'll render a full screen quad */
 
-    glUseProgram(gs->scr_program);
-
-    if (gs->thread) {
-        glUniform4f(gs->scr_program_tint, 1.0f, 1.0f, 1.0f, 1.0f);
-    } else { /* Darken if paused */
-        glUniform4f(gs->scr_program_tint, 0.5f, 0.5f, 0.5f, 0.5f);
+    float tint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    if (!gs->thread) { /* darken tint if paused */
+        tint[0] = 0.5f;
+        tint[1] = 0.5f;
+        tint[2] = 0.5f;
+        tint[3] = 0.5f;
     }
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gs->scr_tex);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gs->pal_tex);
-
-    glBindBuffer(GL_ARRAY_BUFFER, gs->vtx_buf);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (const GLvoid *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (const GLvoid *)(sizeof(float) * 2));
-    glEnableVertexAttribArray(1);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glUseProgram(0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    gs->renderer->draw(gs->renderer, tint);
 }
 
 /** SDL timer callback. This just sends an event to the main thread.
@@ -645,8 +565,8 @@ static void event_loop(struct game_state *gs)
 #ifdef ENABLE_DEBUGUI
                 debugui_newframe(gs->window);
 #endif
-                /* Update textures from VM state/thread */
-                game_sdlscreen_update_textures(gs->screen, gs->scr_tex, gs->pal_tex);
+                /* Update textures and uniforms from VM state/thread */
+                game_sdlscreen_update_textures(gs->screen, gs->renderer, (update_texture_func *)gs->renderer->update_texture, (update_palette_func *)gs->renderer->update_palette);
                 /* Trigger vblank interrupt in interpreter thread */
                 SDL_AtomicSet(&gs->vblank_trigger, 1);
                 /* Draw a frame */
@@ -671,24 +591,84 @@ static void event_loop(struct game_state *gs)
     }
 }
 
+/** List of supported renderers with instantiation function. */
+const struct renderer_desc {
+    const char *name;
+    struct game_renderer *(*new_renderer)(void);
+} renderer_names[] = {
+    { "basic", new_renderer_basic },
+    { "hq4x", new_renderer_hq4x },
+};
+
 int main(int argc, char **argv)
 {
     struct psys_state *state;
-    struct game_state *gs = CALLOC_STRUCT(game_state);
-    const char *imagename;
+    struct game_state *gs                     = CALLOC_STRUCT(game_state);
+    const char *image_name                    = NULL;
+    const struct renderer_desc *renderer_type = &renderer_names[0];
+    bool print_usage                          = false;
+    bool fullscreen                           = false;
 
+    /** Command-line argument parsing. */
+    for (int argidx = 1; argidx < argc; ++argidx) {
+        const char *arg = argv[argidx];
+        if (arg[0] == '-') {
+            if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0) {
+                print_usage = true;
+                break;
+            } else if (strcmp(arg, "--fullscreen") == 0) {
+                fullscreen = true;
+            } else if (strcmp(arg, "--renderer") == 0) {
+                argidx += 1;
+                if (argidx == argc) {
+                    fprintf(stderr, "Missing argument for %s\n", arg);
+                    print_usage = true;
+                    break;
+                }
+                const char *renderer_name = argv[argidx];
+                renderer_type             = NULL;
+                for (size_t renderidx = 0; renderidx < ARRAY_SIZE(renderer_names); ++renderidx) {
+                    if (strcmp(renderer_name, renderer_names[renderidx].name) == 0) {
+                        renderer_type = &renderer_names[renderidx];
+                    }
+                }
+                if (renderer_type == NULL) {
+                    fprintf(stderr, "Unknown renderer specified: %s\n", renderer_name);
+                    print_usage = true;
+                    break;
+                }
+            } else {
+                fprintf(stderr, "Unknown argument: %s\n", arg);
+                print_usage = true;
+                break;
+            }
+        } else {
+            /* Loose argument: consider as image name */
+            if (image_name == NULL) {
+                image_name = argv[argidx];
+            } else {
+                fprintf(stderr, "Surplus argument: %s\n", arg);
+                print_usage = true;
+                break;
+            }
+        }
+    }
 #ifndef DISK_IMAGE_AS_RESOURCE
-    if (argc == 2) {
-        imagename = argv[1];
-    } else {
-        fprintf(stderr, "Usage: %s <image.st>\n", argv[0]);
+    if (!image_name) {
+        print_usage = true;
+    }
+#endif
+    if (print_usage) {
+        fprintf(stderr, "Usage: %s [--renderer (basic|hq4x)] <image.st>\n", argv[0]);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "      --fullscreen Make window initially fullscreen.\n");
+        fprintf(stderr, "      --renderer   Set renderer to use (\"basic\" or \"hq4x\"), default is \"basic\". Renderers other than \"basic\" require a OpenGL 3 compatible GPU.\n");
+        fprintf(stderr, "      --help       Display this help and exit.\n");
+        fprintf(stderr, "\n");
         fprintf(stderr, "For copyright reasons this game does not come with the resources nor game code.\n");
         fprintf(stderr, "It requires the user to provide the 360K `.st` raw disk image of the game to run.\n");
         exit(1);
     }
-#else
-    imagename = NULL;
-#endif
 
 #ifdef SDL_HINT_NO_SIGNAL_HANDLERS
     SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1"); /* Allow ctrl-c to quit */
@@ -704,8 +684,8 @@ int main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     gs->window = SDL_CreateWindow("SunDog: Frozen Legacy",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320 * 4, 200 * 4,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
     if (!gs->window) {
         psys_panic("Unable to create window: %s\n", SDL_GetError());
     }
@@ -716,9 +696,13 @@ int main(int argc, char **argv)
 
     printf("GL version: %s\n", glGetString(GL_VERSION));
 
-    swoosh(gs->window, "swoosh/");
+    gs->renderer = renderer_type->new_renderer();
+    if (gs->renderer == NULL) {
+        fprintf(stderr, "Could not initialize renderer %s, it might need GPU features that are not available.\n", renderer_type->name);
+        exit(1);
+    }
 
-    init_gl(gs);
+    swoosh(gs->window, gs->renderer, "swoosh/");
 
     /* Set up "vblank" timer */
     gs->vblank_count = 0;
@@ -739,7 +723,7 @@ int main(int argc, char **argv)
 
     /* Create object to manage rendering from interpreter */
     gs->screen = new_game_screen();
-    gs->psys = state      = setup_state(gs->screen, gs->sound, imagename, &gs->rspb);
+    gs->psys = state      = setup_state(gs->screen, gs->sound, image_name, &gs->rspb);
     state->trace_userdata = gs;
 
 #ifdef PSYS_DEBUGGER

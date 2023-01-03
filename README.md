@@ -45,9 +45,12 @@ implementation never writes to the disk image.
 Building from source
 ----------------------
 
+### Linux
+
 To build from source make sure the SDL2 development package (and SDL\_mixer
-with ogg support) for your distribution is installed, the OpenGL ES 2 headers,
-as well as GNU readline (only necessary for the debugger). On Ubuntu this is:
+with ogg support) for your distribution is installed, the OpenGL ES 3 headers\*,
+as well as GNU readline (only necessary for the debugger). On Debian and Ubuntu
+this is:
 
 ```bash
 apt-get install libreadline-dev libsdl2-dev libsdl2-mixer-dev libgles2-mesa-dev
@@ -59,6 +62,15 @@ Then:
 cd src
 make
 ```
+
+\* The openGL ES 3 headers are needed for building, even when using only the basic OpenGL ES 2
+renderer. This could be worked around on a build system level if someone really wanted to,
+but note that using the set of headers itself doesn't put any requirements on the hardware.
+
+### Other platforms
+
+People have built this software for other platforms (it's pretty straightforward in general,
+SDL2 is widely available), but no instructions have been contributed.
 
 Invocation
 ------------
@@ -74,6 +86,17 @@ The game can be started using the command line:
 ```
 
 Where `<image.st>` is the Sundog disk image to use.
+
+Other options can be provided:
+
+- `--fullscreen`: Make window initially fullscreen.
+- `--renderer <renderer>`: Set renderer to use:
+  - `basic` is the default, which applies straightforward nearest pixel filtering
+    to scale the image.
+  - `hq4x` is a higher quality pixel art scaler that takes neighbour pixels
+    into account. This is a more expensive algorithm that requires a GPU
+    capable of OpenGL ES 3.0.
+- `--help`: Display a help message and exit.
 
 Playing
 ---------

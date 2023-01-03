@@ -89,13 +89,17 @@ HEADERS= \
 	game/wowzo.h \
 	test/test_util.h
 
-MAIN_OBJS= \
-	glutil.o \
-	sundog_compare_trace.o \
+SUNDOG_OBJS= \
 	sundog.o \
 	sundog_resources.o \
 	swoosh.o \
-        test/img_tests.o \
+	glutil.o \
+	renderer_basic.o \
+	renderer_hq4x.o
+
+MAIN_OBJS= \
+	sundog_compare_trace.o \
+	test/img_tests.o \
 	test/inst_tests.o \
 	test/set_tests.o \
 	rip_images.o
@@ -112,7 +116,8 @@ RESOURCES = \
 	../swoosh/*.bmp \
 	../sounds/*.ogg \
 	../shaders/*.vert \
-	../shaders/*.frag
+	../shaders/*.frag \
+	../shaders/*.bmp.gz
 
 GENERATED = \
 	game/game_debuginfo.h \
@@ -125,7 +130,7 @@ sundog_resource_data.h: $(RESOURCES)
 
 sundog_resources.o: sundog_resource_data.h
 
-sundog: sundog.o sundog_resources.o swoosh.o glutil.o $(PSYS_OBJS) $(GAME_OBJS) $(DEBUGUI_OBJS)
+sundog: $(SUNDOG_OBJS) $(PSYS_OBJS) $(GAME_OBJS) $(DEBUGUI_OBJS)
 	$(LINK) $^ $(LDFLAGS) -o $@
 
 sundog_compare_trace: sundog_compare_trace.o $(PSYS_OBJS) $(GAME_OBJS)
@@ -156,4 +161,4 @@ check: $(EXES)
 	test/img_tests
 
 clean:
-	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS) $(TOOL_OBJS) $(DEBUGUI_OBJS) $(GENERATED)
+	rm -f $(PSYS_OBJS) $(EXES) $(MAIN_OBJS) $(GAME_OBJS) $(TEST_OBJS) $(TOOL_OBJS) $(DEBUGUI_OBJS) $(GENERATED) $(SUNDOG_OBJS)

@@ -170,6 +170,7 @@ void debugui_newframe(SDL_Window *window)
         ImGui::End();
     }
 
+#if 0 /* XXX needs to be updated for new renderer system */
     if (show_palette_window)
     {
         ImGui::Begin("Palette", &show_palette_window);
@@ -181,6 +182,7 @@ void debugui_newframe(SDL_Window *window)
         }
         ImGui::End();
     }
+#endif
 
     if (show_memory_window)
     {

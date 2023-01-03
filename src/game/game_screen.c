@@ -12,8 +12,6 @@
 #include "util/util_save_state.h"
 
 #include "SDL.h"
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
 /* make sure M_PI is defined */
 #include <math.h>
@@ -676,41 +674,17 @@ struct game_screen *new_game_screen(void)
     return &screen->base;
 }
 
-void game_sdlscreen_update_textures(struct game_screen *screen_, unsigned scr_tex, unsigned pal_tex)
+void game_sdlscreen_update_textures(struct game_screen *screen_, void *data, update_texture_func *update_texture, update_palette_func *update_palette)
 {
     struct sdl_screen *screen = sdl_screen(screen_);
-    uint8_t palette_img[SCREEN_COLORS * 4];
-    int x;
     SDL_LockMutex(screen->mutex);
     if (screen->buffer_dirty) {
-        /* Build screen texture */
-        glBindTexture(GL_TEXTURE_2D, scr_tex);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_LUMINANCE, GL_UNSIGNED_BYTE, screen->buffer);
+        update_texture(data, screen->buffer);
         screen->buffer_dirty = false;
     }
 
     if (screen->palette_dirty) {
-        /* Update palette texture, after converting ST format to RGBA */
-        glBindTexture(GL_TEXTURE_2D, pal_tex);
-        for (x = 0; x < SCREEN_COLORS; ++x) {
-            /* atari ST paletter color is 0x0rgb, convert to RGBA */
-            unsigned red           = (screen->palette[x] >> 8) & 7;
-            unsigned green         = (screen->palette[x] >> 4) & 7;
-            unsigned blue          = (screen->palette[x] >> 0) & 7;
-            palette_img[x * 4 + 0] = (red << 5) | (red << 2) | (red >> 1);
-            palette_img[x * 4 + 1] = (green << 5) | (green << 2) | (green >> 1);
-            palette_img[x * 4 + 2] = (blue << 5) | (blue << 2) | (blue >> 1);
-            palette_img[x * 4 + 3] = 255;
-#if 0
-            printf("%d 0x%02x 0x%02x 0x%02x 0x%02x\n",
-                    x,
-                    palette_img[x * 4 + 0],
-                    palette_img[x * 4 + 1],
-                    palette_img[x * 4 + 2],
-                    palette_img[x * 4 + 3]);
-#endif
-        }
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SCREEN_COLORS, 1, GL_RGBA, GL_UNSIGNED_BYTE, palette_img);
+        update_palette(data, screen->palette);
         screen->palette_dirty = false;
     }
     SDL_UnlockMutex(screen->mutex);

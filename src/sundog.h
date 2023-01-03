@@ -1,7 +1,6 @@
 #ifndef H_SUNDOG
 #define H_SUNDOG
 
-#include <GLES2/gl2.h>
 #include <SDL.h>
 
 #include <stdbool.h>
@@ -9,6 +8,7 @@
 struct psys_state;
 struct psys_binding;
 struct game_screen;
+struct game_renderer;
 
 struct game_state {
     bool running;
@@ -37,11 +37,7 @@ struct game_state {
     unsigned time_offset;
     uint32_t saved_time;
 
-    GLuint scr_program;
-    GLint scr_program_tint;
-    GLuint scr_tex;
-    GLuint pal_tex;
-    GLuint vtx_buf;
+    struct game_renderer *renderer;
 };
 
 #endif

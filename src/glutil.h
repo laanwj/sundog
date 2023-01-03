@@ -7,9 +7,24 @@
 #ifndef H_GLUTIL
 #define H_GLUTIL
 
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
+
+#include <stdbool.h>
+#include <unistd.h>
 
 /** Compile GLSL shader from resource. */
 GLuint load_shader_resource(const char *name, GLenum shader_type);
+
+/** Load texture from resource. */
+GLuint load_texture_resource(const char *name);
+
+/** Load paletted image of fixed size as-is into byte array (one byte per element). */
+bool load_paletted(const char *name, void *data, size_t width, size_t height, uint8_t *colors);
+
+/** Return true if OpenGL ES is at least version 3. */
+bool check_for_GLES3(void);
+
+/** Make viewport maximum size that preserves aspect ratio. */
+void gl_viewport_fixed_ratio(int width, int height, int desired_width, int desired_height);
 
 #endif

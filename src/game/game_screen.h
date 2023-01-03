@@ -109,8 +109,13 @@ struct game_screen *new_game_screen(void);
 /* internal - communication between render/input thread
  * and interpreter thread
  */
-void game_sdlscreen_update_textures(struct game_screen *screen_, unsigned scr_tex, unsigned pal_tex);
-void game_sdlscreen_update_cursor(struct game_screen *screen_, void **cursor);
+
+/** This gets passed the buffer and palette respectively, when dirty. */
+typedef void(update_texture_func)(void *data, const uint8_t *buffer);
+typedef void(update_palette_func)(void *data, const uint16_t *palette);
+
+void game_sdlscreen_update_textures(struct game_screen *screen, void *data, update_texture_func *update_texture, update_palette_func *update_palette);
+void game_sdlscreen_update_cursor(struct game_screen *screen, void **cursor);
 
 /** Save screen state to fd (return 0 on success) */
 extern int game_sdlscreen_save_state(struct game_screen *b, int fd);
