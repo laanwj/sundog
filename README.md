@@ -173,7 +173,8 @@ It most notably does NOT do:
 - Security and sandboxing. Everything can read and write everywhere.
 
 - Address more than 64KiB (or 128KiB on word-addressed architectures) of data
-  memory. It does however use "code pools" to be able to store more code.
+  memory. It does however use "code pools" to be able to store more code and
+  string constants.
 
 The game includes a rudimentary debugger (use *d* key to start it) which can be
 used to poke around in the internals of the p-machine.
@@ -181,6 +182,22 @@ used to poke around in the internals of the p-machine.
 The best overview of the internals of the p-system version IV is the
 "p-System Software Reference Library: Internal Architecture", which can be
 found [on bitsavers](http://bitsavers.informatik.uni-stuttgart.de/pdf/sage/sageandstride/Internal_Architecture-1.140.41.A.pdf).
+
+## Retrospect
+
+In retrospect we could have gotten away with emulating way less of the actual
+p-system, if we'd emulated at the run-time level instead of the OS level. The
+game doesn't use any of the OS functionality, besides one background task. The
+paging was not required even with the 1MB of memory of an Atari ST. Most game
+data is static, it hardly uses dynamic memory management.
+
+So we could do away with SofTech's `SYSTEM.PASCAL` runtime and replace it with
+a minimal stub in C. Run the game itself only.
+
+That said, I didn't have enough knowledge about the whole thing when I started
+this, and besides, it's kind of cool how this project is as much of a toy
+operating system as a game. Unless the PASCAL source code of the original game
+happens to become open source (:smile:) there's little reason to do otherwise.
 
 Debug UI
 ---------
@@ -201,7 +218,7 @@ Contributions in the form of github pull requests are very welcome.
 Special thanks to:
 
 - [Bitsavers](http://bitsavers.trailing-edge.com)
-- [The UCSD pascal group](https://groups.yahoo.com/neo/groups/UCSDPascal/info) on Yahoo
+- The former UCSD pascal group on Yahoo
 - [ocornut](https://github.com/ocornut) for the "dear imgui" GUI system used for debug GUI
 - Of course late FTL software: Bruce Webster, Doug Bell, Wayne Holder, Mike Newton, Andy Jaros for making SunDog in the first place.
 
