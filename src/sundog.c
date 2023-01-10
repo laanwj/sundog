@@ -130,15 +130,18 @@ static const struct psys_function_id trace_ignore_procs[] = {
     { { { "XMOVEINB" } }, 0x1c }, /* */
 };
 
-/** Locations to insert artificial delays, to compensate for emulation speed.
- * Make sure this is sorted by (name, address).
+/** Locations to insert artificial delays (in microseconds) or waits for mouse
+ * release (-1), to compensate for emulation speed. Make sure this is sorted by
+ * (name, address).
  */
 static const struct {
     const char *seg_name;
     uint16_t address;
-    uint32_t delay_us;
+    int32_t delay_us;
 } artificial_delays[] = {
-    { "WINDOWLI", 0x070e, 100000 }, /* WINDOWLI:0x12 entry point on creating a dialog (see issue #18) */
+    { "WINDOWLI", 0x070e, -1 }, /* WINDOWLI:0x12 entry point on creating a dialog (see issue #18) */
+    { "WINDOWLI", 0x09e1, -1 }, /* WINDOWLI:0x15 make_zoom return */
+    { "XDOINTER", 0x0fa2, -1 }, /* XDOINTER:0x1f new_frame, on return after drawing a dialog */
 };
 
 /* Called before every instruction executed.
@@ -170,7 +173,16 @@ static void psys_trace(struct psys_state *s, void *gs_)
     size_t curaddr          = s->ipc - s->curseg;
     for (size_t idx = 0; idx < ARRAY_SIZE(artificial_delays); ++idx) {
         if (strncmp(curseg_name, artificial_delays[idx].seg_name, 8) == 0 && curaddr == artificial_delays[idx].address) {
-            usleep(artificial_delays[idx].delay_us);
+            if (artificial_delays[idx].delay_us >= 0) { /* wait microseconds */
+                usleep(artificial_delays[idx].delay_us);
+            } else { /* wait for mouse release */
+                unsigned buttons = 1;
+                int x, y;
+                while (buttons) {
+                    gs->screen->vq_mouse(gs->screen, &buttons, &x, &y);
+                    usleep(10000);
+                }
+            }
         }
     }
 

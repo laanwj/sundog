@@ -401,8 +401,6 @@ static void gembind_VDI(struct psys_state *s, struct gembind_priv *priv, psys_fu
     default:
         psys_debug("unsupported VDI call 0x%04x\n", opcode);
     }
-    /* seems necessary otherwise the interface is hyperactive */
-    msleep(1);
 }
 
 /** AES(ctx,opcode,numintin,numintout,numaddrin,numaddrout) */
