@@ -41,6 +41,11 @@ void debugui_init(SDL_Window *window, struct game_state *gs)
     gamestate = gs;
 }
 
+bool debugui_is_visible(void)
+{
+    return show_window || show_test_window || show_palette_window || show_memory_window || show_segments_window;
+}
+
 static bool is_segment_resident(struct psys_state *s, psys_word erec)
 {
     psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);

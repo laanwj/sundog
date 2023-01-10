@@ -460,6 +460,7 @@ static void event_loop(struct game_state *gs)
      * 50fps? Probably badly: there's no framedrop support.
      */
     SDL_Event event;
+    bool need_redraw;
 #ifdef GAME_CHEATS
     psys_byte gamestate[512];
     psys_byte hl[512];
@@ -556,25 +557,39 @@ static void event_loop(struct game_state *gs)
                 } else {
                     stop_interpreter_thread(gs);
                 }
+                gs->force_redraw = true;
+                break;
+            }
+            break;
+        case SDL_WINDOWEVENT:
+            switch (event.window.event) {
+            case SDL_WINDOWEVENT_EXPOSED:
+            case SDL_WINDOWEVENT_RESIZED:
+                gs->force_redraw = true;
                 break;
             }
             break;
         case SDL_USEREVENT:
             switch (event.user.code) {
             case EVC_TIMER: /* Timer event */
-#ifdef ENABLE_DEBUGUI
-                debugui_newframe(gs->window);
-#endif
                 /* Update textures and uniforms from VM state/thread */
-                game_sdlscreen_update_textures(gs->screen, gs->renderer, (update_texture_func *)gs->renderer->update_texture, (update_palette_func *)gs->renderer->update_palette);
+                need_redraw = game_sdlscreen_update_textures(gs->screen, gs->renderer, (update_texture_func *)gs->renderer->update_texture, (update_palette_func *)gs->renderer->update_palette);
+                need_redraw |= debugui_is_visible();
+                if (need_redraw || gs->force_redraw) {
+#ifdef ENABLE_DEBUGUI
+                    debugui_newframe(gs->window);
+#endif
+                    /* Draw a frame */
+                    draw(gs);
+#ifdef ENABLE_DEBUGUI
+                    debugui_render();
+#endif
+                    SDL_GL_SwapWindow(gs->window);
+                    gs->force_redraw = false;
+                }
                 /* Trigger vblank interrupt in interpreter thread */
                 SDL_AtomicSet(&gs->vblank_trigger, 1);
-                /* Draw a frame */
-                draw(gs);
-#ifdef ENABLE_DEBUGUI
-                debugui_render();
-#endif
-                SDL_GL_SwapWindow(gs->window);
+                /* Change cursor (if needed) */
                 game_sdlscreen_update_cursor(gs->screen, (void **)&gs->cursor);
                 /* Congestion control */
                 SDL_AtomicSet(&gs->timer_queued, 0);

@@ -114,7 +114,7 @@ struct game_screen *new_game_screen(void);
 typedef void(update_texture_func)(void *data, const uint8_t *buffer);
 typedef void(update_palette_func)(void *data, const uint16_t *palette);
 
-void game_sdlscreen_update_textures(struct game_screen *screen, void *data, update_texture_func *update_texture, update_palette_func *update_palette);
+bool game_sdlscreen_update_textures(struct game_screen *screen, void *data, update_texture_func *update_texture, update_palette_func *update_palette);
 void game_sdlscreen_update_cursor(struct game_screen *screen, void **cursor);
 
 /** Save screen state to fd (return 0 on success) */
