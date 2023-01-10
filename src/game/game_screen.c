@@ -75,6 +75,8 @@ struct sdl_screen {
     void *vblank_cb_arg;
     /** If set, bypass/ignore SDL input */
     bool input_bypass;
+    /** Display viewport, used for input handling */
+    int viewport[4];
 };
 
 static inline struct sdl_screen *sdl_screen(struct game_screen *base)
@@ -440,7 +442,6 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
      * event loop without synchronization, they may be stale or even corrupted.
      */
     int sx, sy;
-    int x_max = 0, y_max = 0;
     uint32_t sb   = SDL_GetMouseState(&sx, &sy);
     uint32_t bout = 0;
     if (sb & SDL_BUTTON(SDL_BUTTON_LEFT)) {
@@ -449,12 +450,8 @@ static void sdlscreen_vq_mouse(struct game_screen *screen_,
     if (sb & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
         bout |= 2;
     }
-    SDL_Window *window = SDL_GetMouseFocus();
-    if (window) {
-        SDL_GetWindowSize(window, &x_max, &y_max);
-    }
-    *x       = sx * 320 / imax(x_max, 1);
-    *y       = sy * 200 / imax(y_max, 1);
+    *x       = (sx - screen->viewport[0]) * SCREEN_WIDTH / imax(screen->viewport[2], 1);
+    *y       = (sy - screen->viewport[1]) * SCREEN_HEIGHT / imax(screen->viewport[3], 1);
     *buttons = bout;
 
     /* Emulate right click action when clicking (or touching) in top right,
@@ -779,4 +776,12 @@ void game_sdlscreen_set_input_bypass(struct game_screen *screen_, bool input_byp
 {
     struct sdl_screen *screen = sdl_screen(screen_);
     screen->input_bypass      = input_bypass;
+}
+
+void game_sdlscreen_update_viewport(struct game_screen *screen_, int viewport[4])
+{
+    struct sdl_screen *screen = sdl_screen(screen_);
+    for (int idx = 0; idx < 4; ++idx) {
+        screen->viewport[idx] = viewport[idx];
+    }
 }

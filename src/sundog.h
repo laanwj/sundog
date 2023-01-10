@@ -38,6 +38,7 @@ struct game_state {
     uint32_t saved_time;
 
     struct game_renderer *renderer;
+    int viewport[4];
     bool force_redraw;
 };
 

@@ -126,6 +126,9 @@ extern int game_sdlscreen_load_state(struct game_screen *b, int fd);
 /** Set whether to bypass SDL input */
 extern void game_sdlscreen_set_input_bypass(struct game_screen *b, bool input_bypass);
 
+/** Update input viewport */
+extern void game_sdlscreen_update_viewport(struct game_screen *b, int viewport[4]);
+
 #ifdef __cplusplus
 }
 #endif

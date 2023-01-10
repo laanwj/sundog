@@ -24,6 +24,11 @@ bool load_paletted(const char *name, void *data, size_t width, size_t height, ui
 /** Return true if OpenGL ES is at least version 3. */
 bool check_for_GLES3(void);
 
+/* Compute viewport of maximum size that preserves aspect ratio.
+ * Returns {xbase, ybase, width, height}.
+ */
+void compute_viewport_fixed_ratio(int width, int height, int desired_width, int desired_height, int viewport_out[4]);
+
 /** Make viewport maximum size that preserves aspect ratio. */
 void gl_viewport_fixed_ratio(int width, int height, int desired_width, int desired_height);
 

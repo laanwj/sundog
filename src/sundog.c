@@ -422,7 +422,7 @@ static void draw(struct game_state *gs)
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    gl_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glViewport(gs->viewport[0], gs->viewport[1], gs->viewport[2], gs->viewport[3]);
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
@@ -436,6 +436,17 @@ static void draw(struct game_state *gs)
         tint[3] = 0.5f;
     }
     gs->renderer->draw(gs->renderer, tint);
+}
+
+/** Window was resized */
+static void update_window_size(struct game_state *gs)
+{
+    int width, height;
+
+    SDL_GetWindowSize(gs->window, &width, &height);
+    compute_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT, gs->viewport);
+    game_sdlscreen_update_viewport(gs->screen, gs->viewport);
+    gs->force_redraw = true;
 }
 
 /** SDL timer callback. This just sends an event to the main thread.
@@ -564,8 +575,10 @@ static void event_loop(struct game_state *gs)
         case SDL_WINDOWEVENT:
             switch (event.window.event) {
             case SDL_WINDOWEVENT_EXPOSED:
-            case SDL_WINDOWEVENT_RESIZED:
                 gs->force_redraw = true;
+                break;
+            case SDL_WINDOWEVENT_RESIZED:
+                update_window_size(gs);
                 break;
             }
             break;
@@ -750,6 +763,7 @@ int main(int argc, char **argv)
 #endif
     start_interpreter_thread(gs);
 
+    update_window_size(gs);
     event_loop(gs);
 
     stop_interpreter_thread(gs);

@@ -146,15 +146,28 @@ bool check_for_GLES3(void)
     return true;
 }
 
-void gl_viewport_fixed_ratio(int width, int height, int desired_width, int desired_height)
+void compute_viewport_fixed_ratio(int width, int height, int desired_width, int desired_height, int viewport_out[4])
 {
-    /* Make viewport maximum size that preserves aspect ratio. */
     float ratio     = (float)desired_width / (float)desired_height;
     float altheight = width / ratio;
     float altwidth  = ratio * height;
     if (altheight <= height) {
-        glViewport(0, (height - altheight) / 2.0, width, altheight);
+        viewport_out[0] = 0;
+        viewport_out[1] = (height - altheight) / 2.0;
+        viewport_out[2] = width;
+        viewport_out[3] = altheight;
     } else {
-        glViewport((width - altwidth) / 2.0, 0, altwidth, height);
+        viewport_out[0] = (width - altwidth) / 2.0;
+        viewport_out[1] = 0;
+        viewport_out[2] = altwidth;
+        viewport_out[3] = height;
     }
 }
+
+void gl_viewport_fixed_ratio(int width, int height, int desired_width, int desired_height)
+{
+    int viewport[4];
+    compute_viewport_fixed_ratio(width, height, desired_width, desired_height, viewport);
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+}
+
