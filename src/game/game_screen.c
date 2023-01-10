@@ -673,19 +673,19 @@ struct game_screen *new_game_screen(void)
 
 bool game_sdlscreen_update_textures(struct game_screen *screen_, void *data, update_texture_func *update_texture, update_palette_func *update_palette)
 {
-    bool updated = false;
+    bool updated              = false;
     struct sdl_screen *screen = sdl_screen(screen_);
     SDL_LockMutex(screen->mutex);
     if (screen->buffer_dirty) {
         update_texture(data, screen->buffer);
         screen->buffer_dirty = false;
-        updated = true;
+        updated              = true;
     }
 
     if (screen->palette_dirty) {
         update_palette(data, screen->palette);
         screen->palette_dirty = false;
-        updated = true;
+        updated               = true;
     }
     SDL_UnlockMutex(screen->mutex);
     return updated;

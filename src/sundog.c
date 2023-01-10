@@ -303,8 +303,8 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
      */
 
     /** These two are dummy (legacy?) values and not used on Atari ST: */
-    boot.ext_mem_base  = boot.mem_fake_base + boot.isp;
-    boot.ext_mem_size  = 0;
+    boot.ext_mem_base = boot.mem_fake_base + boot.isp;
+    boot.ext_mem_size = 0;
 
     psys_bootstrap(state, &boot, &disk_data[track_size]);
 
