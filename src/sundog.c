@@ -183,7 +183,7 @@ static void psys_trace(struct psys_state *s, void *gs_)
             } else { /* wait for mouse release */
                 unsigned buttons = 1;
                 int x, y;
-                while (buttons) {
+                while (buttons && !SDL_AtomicGet(&gs->stop_trigger)) {
                     gs->screen->vq_mouse(gs->screen, &buttons, &x, &y);
                     usleep(10000);
                 }
