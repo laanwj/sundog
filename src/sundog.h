@@ -37,10 +37,13 @@ struct game_state {
     unsigned time_offset;
     uint32_t saved_time;
 
+    /** Current renderer object. */
     struct game_renderer *renderer;
+    /** Viewport bounds {xbase, ybase, width, height}. */
     int viewport[4];
+    /** Force redraw on next frame if true. */
     bool force_redraw;
-    /** If set, bypass/ignore SDL input to game */
+    /** If set, bypass/ignore SDL input to game. */
     bool input_bypass;
 };
 

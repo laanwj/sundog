@@ -96,43 +96,43 @@ static unsigned get_60hz_time()
     return SDL_GetTicks() / 17;
 }
 
-/** Procedures to ignore in tracing.
+/** Procedures to ignore in tracing because they're called often.
  * Make sure this is sorted by (name, func_id).
  */
 static const struct psys_function_id trace_ignore_procs[] = {
-    { { { "GEMBIND " } }, 0xff },
+    { { { "GEMBIND " } }, 0xff }, /* all GEMBIND functions */
     { { { "KERNEL  " } }, 0x0f }, /* moveleft */
     { { { "KERNEL  " } }, 0x10 }, /* moveright */
     { { { "KERNEL  " } }, 0x14 }, /* time */
-    { { { "MAINLIB " } }, 0x03 }, /* Sound(x) */
-    { { { "MAINLIB " } }, 0x04 }, /* */
-    { { { "MAINLIB " } }, 0x06 }, /* PaletteColor */
-    { { { "MAINLIB " } }, 0x0b }, /* PseudoRandom */
-    { { { "MAINLIB " } }, 0x24 }, /* DrawTime */
-    { { { "MAINLIB " } }, 0x25 }, /* */
-    { { { "MAINLIB " } }, 0x26 }, /* */
-    { { { "MAINLIB " } }, 0x28 }, /* */
-    { { { "MAINLIB " } }, 0x29 }, /* */
-    { { { "MAINLIB " } }, 0x2a }, /* */
-    { { { "MAINLIB " } }, 0x32 }, /* PaletteChange */
-    { { { "MAINLIB " } }, 0x33 }, /* Nop */
-    { { { "MAINLIB " } }, 0x35 }, /* */
-    { { { "MAINLIB " } }, 0x36 }, /* */
-    { { { "MAINLIB " } }, 0x3c }, /* */
-    { { { "MAINLIB " } }, 0x3f }, /* */
-    { { { "MAINLIB " } }, 0x50 }, /* TimeDigit */
-    { { { "SHIPLIB " } }, 0x0f }, /* RedFlashToggle */
-    { { { "SHIPLIB " } }, 0x10 }, /* */
-    { { { "SHIPLIB " } }, 0x12 }, /* */
-    { { { "SHIPLIB " } }, 0x1f }, /* */
-    { { { "SHIPLIB " } }, 0x23 }, /* */
-    { { { "SHIPLIB " } }, 0x24 }, /* */
-    { { { "XDOFIGHT" } }, 0x0a }, /* */
-    { { { "XDOFIGHT" } }, 0x0c }, /* */
-    { { { "XDOUSERM" } }, 0x04 }, /* */
-    { { { "XMOVEINB" } }, 0x02 }, /* */
-    { { { "XMOVEINB" } }, 0x1b }, /* */
-    { { { "XMOVEINB" } }, 0x1c }, /* */
+    { { { "MAINLIB " } }, 0x03 }, /* fore_sound */
+    { { { "MAINLIB " } }, 0x04 }, /* back_sound */
+    { { { "MAINLIB " } }, 0x06 }, /* color_value */
+    { { { "MAINLIB " } }, 0x0b }, /* random */
+    { { { "MAINLIB " } }, 0x24 }, /* put_time */
+    { { { "MAINLIB " } }, 0x25 }, /* tick_less */
+    { { { "MAINLIB " } }, 0x26 }, /* add_ticks */
+    { { { "MAINLIB " } }, 0x28 }, /* timeout */
+    { { { "MAINLIB " } }, 0x29 }, /* set_update */
+    { { { "MAINLIB " } }, 0x2a }, /* need_update */
+    { { { "MAINLIB " } }, 0x32 }, /* title_color */
+    { { { "MAINLIB " } }, 0x33 }, /* util_color */
+    { { { "MAINLIB " } }, 0x35 }, /* the_time */
+    { { { "MAINLIB " } }, 0x36 }, /* screen_pos */
+    { { { "MAINLIB " } }, 0x3c }, /* get_window */
+    { { { "MAINLIB " } }, 0x3f }, /* in_r_window */
+    { { { "MAINLIB " } }, 0x50 }, /* put_time:make_str */
+    { { { "SHIPLIB " } }, 0x0f }, /* running_lights */
+    { { { "SHIPLIB " } }, 0x10 }, /* whoosh_whoosh_lights */
+    { { { "SHIPLIB " } }, 0x12 }, /* update_ship */
+    { { { "SHIPLIB " } }, 0x1f }, /* update_movement */
+    { { { "SHIPLIB " } }, 0x23 }, /* update_levels */
+    { { { "SHIPLIB " } }, 0x24 }, /* update_levels:check_fuel */
+    { { { "XDOFIGHT" } }, 0x0a }, /* replot_screen */
+    { { { "XDOFIGHT" } }, 0x0c }, /* update_fight */
+    { { { "XDOUSERM" } }, 0x04 }, /* update_status */
+    { { { "XMOVEINB" } }, 0x02 }, /* handle_bartender */
+    { { { "XMOVEINB" } }, 0x1b }, /* handle_player */
+    { { { "XMOVEINB" } }, 0x1c }, /* handle_customers */
 };
 
 /** Locations to insert artificial delays (in microseconds) or waits for mouse

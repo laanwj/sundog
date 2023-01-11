@@ -814,7 +814,6 @@ static void gembind_vblank_cb(struct game_screen *screen, void *arg)
     struct gembind_priv *priv = (struct gembind_priv *)arg;
     struct psys_state *s      = priv->psys;
     int n;
-    (void)priv;
     if (priv->movement_enable1 && priv->movement_enable2) {
         for (n = priv->movement_start; n < NUM_SPRITES; n += 2) {
             psys_word base      = priv->env_priv + SPRITE_DESC_OFS + n * 0x10;
@@ -850,7 +849,7 @@ static void gembind_vblank_cb(struct game_screen *screen, void *arg)
                 /* - Try with full movement
                  * - Try with dx=0 (if dy!=0)
                  * - Try with dy=0 (if dx!=0)
-                 * - Try with try with dx and dy squashed to -1..1 iso -2..2
+                 * - Try with dx and dy clamped to -1..1 iso -2..2
                  * - Try with that and dx=0 (if dy!=0)
                  * - Try with that and dy=0 (if dx!=0)
                  * If all fail, give up and set flag to 0xffff.
