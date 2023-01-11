@@ -73,10 +73,14 @@ struct sdl_screen {
 
     game_screen_vblank_func *vblank_cb;
     void *vblank_cb_arg;
-    /** If set, bypass/ignore SDL input */
-    bool input_bypass;
-    /** Display viewport, used for input handling */
-    int viewport[4];
+
+    /** Current mouse state. */
+    struct {
+        SDL_mutex *mutex;
+        int x;
+        int y;
+        unsigned buttons;
+    } mouse;
 };
 
 static inline struct sdl_screen *sdl_screen(struct game_screen *base)
@@ -421,45 +425,16 @@ static void sdlscreen_vsc_form(struct game_screen *screen_,
     (void)screen;
 }
 
-#define CANCEL_AREA_W 24
-#define CANCEL_AREA_H 16
-
 static void sdlscreen_vq_mouse(struct game_screen *screen_,
     unsigned *buttons, int *x, int *y)
 {
     struct sdl_screen *screen = sdl_screen(screen_);
 
-    if (screen->input_bypass) {
-        /* dummyscreen for psys_compare_trace */
-        *buttons = 0;
-        *x       = 0;
-        *y       = 0;
-        return;
-    }
-
-    /* TODO: Not allowed to do this from a thread?
-     * This seems to work but as these values are updated from the main
-     * event loop without synchronization, they may be stale or even corrupted.
-     */
-    int sx, sy;
-    uint32_t sb   = SDL_GetMouseState(&sx, &sy);
-    uint32_t bout = 0;
-    if (sb & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-        bout |= 1;
-    }
-    if (sb & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
-        bout |= 2;
-    }
-    *x       = (sx - screen->viewport[0]) * SCREEN_WIDTH / imax(screen->viewport[2], 1);
-    *y       = (sy - screen->viewport[1]) * SCREEN_HEIGHT / imax(screen->viewport[3], 1);
-    *buttons = bout;
-
-    /* Emulate right click action when clicking (or touching) in top right,
-       to accomodate single mouse button devices.
-      */
-    if ((*buttons == 1) && *x >= (320 - CANCEL_AREA_W) && *y < CANCEL_AREA_H) {
-        *buttons = 2;
-    }
+    SDL_LockMutex(screen->mouse.mutex);
+    *x       = screen->mouse.x;
+    *y       = screen->mouse.y;
+    *buttons = screen->mouse.buttons;
+    SDL_UnlockMutex(screen->mouse.mutex);
 }
 
 static void sdlscreen_set_color(struct game_screen *screen_,
@@ -476,6 +451,7 @@ static void sdlscreen_destroy(struct game_screen *screen_)
 {
     struct sdl_screen *screen = sdl_screen(screen_);
     SDL_DestroyMutex(screen->mutex);
+    SDL_DestroyMutex(screen->mouse.mutex);
     free(screen);
 }
 
@@ -642,7 +618,8 @@ struct game_screen *new_game_screen(void)
     screen->base.draw_points      = &sdlscreen_draw_points;
     screen->base.destroy          = &sdlscreen_destroy;
 
-    screen->mutex = SDL_CreateMutex();
+    screen->mutex       = SDL_CreateMutex();
+    screen->mouse.mutex = SDL_CreateMutex();
 
     /* Set up row pointers for easy access */
     for (i = 0; i < SCREEN_HEIGHT; ++i) {
@@ -772,16 +749,12 @@ int game_sdlscreen_load_state(struct game_screen *screen_, int fd)
     return 0;
 }
 
-void game_sdlscreen_set_input_bypass(struct game_screen *screen_, bool input_bypass)
+void game_sdlscreen_update_mouse(struct game_screen *screen_, int x, int y, unsigned buttons)
 {
     struct sdl_screen *screen = sdl_screen(screen_);
-    screen->input_bypass      = input_bypass;
-}
-
-void game_sdlscreen_update_viewport(struct game_screen *screen_, int viewport[4])
-{
-    struct sdl_screen *screen = sdl_screen(screen_);
-    for (int idx = 0; idx < 4; ++idx) {
-        screen->viewport[idx] = viewport[idx];
-    }
+    SDL_LockMutex(screen->mouse.mutex);
+    screen->mouse.x       = x;
+    screen->mouse.y       = y;
+    screen->mouse.buttons = buttons;
+    SDL_UnlockMutex(screen->mouse.mutex);
 }

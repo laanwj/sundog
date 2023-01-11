@@ -25,6 +25,7 @@
 #include "util/debugger.h"
 #endif
 #include "util/memutil.h"
+#include "util/util_minmax.h"
 #include "util/util_save_state.h"
 #ifdef ENABLE_DEBUGUI
 #include "debugui/debugui.h"
@@ -44,6 +45,10 @@
 
 /* Time between vblanks in ms */
 #define VBLANK_TIME (1000 / 50)
+
+/** Mouse area on upper right corner to consider "cancel area", where clicks are interpreted as right clicks. */
+#define CANCEL_AREA_W (24)
+#define CANCEL_AREA_H (16)
 
 /** User-defined event types */
 enum {
@@ -457,8 +462,35 @@ static void update_window_size(struct game_state *gs)
 
     SDL_GetWindowSize(gs->window, &width, &height);
     compute_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT, gs->viewport);
-    game_sdlscreen_update_viewport(gs->screen, gs->viewport);
     gs->force_redraw = true;
+}
+
+/** Mouse button pressed or mouse moved */
+static void update_mouse_state(struct game_state *gs)
+{
+    if (gs->input_bypass) {
+        return;
+    }
+
+    int sx, sy;
+    uint32_t sb      = SDL_GetMouseState(&sx, &sy);
+    unsigned buttons = 0;
+    if (sb & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+        buttons |= 1;
+    }
+    if (sb & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+        buttons |= 2;
+    }
+    int x = (sx - gs->viewport[0]) * SCREEN_WIDTH / imax(gs->viewport[2], 1);
+    int y = (sy - gs->viewport[1]) * SCREEN_HEIGHT / imax(gs->viewport[3], 1);
+
+    /* Emulate right click action when clicking (or touching) in top right,
+       to accomodate single mouse button devices.
+      */
+    if ((buttons == 1) && x >= (320 - CANCEL_AREA_W) && y < CANCEL_AREA_H) {
+        buttons = 2;
+    }
+    game_sdlscreen_update_mouse(gs->screen, x, y, buttons);
 }
 
 /** SDL timer callback. This just sends an event to the main thread.
@@ -584,6 +616,11 @@ static void event_loop(struct game_state *gs)
                 break;
             }
             break;
+        case SDL_MOUSEMOTION:
+        case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEBUTTONDOWN:
+            update_mouse_state(gs);
+            break;
         case SDL_WINDOWEVENT:
             switch (event.window.event) {
             case SDL_WINDOWEVENT_EXPOSED:
@@ -602,7 +639,12 @@ static void event_loop(struct game_state *gs)
                 need_redraw |= debugui_is_visible();
                 if (need_redraw || gs->force_redraw) {
 #ifdef ENABLE_DEBUGUI
-                    debugui_newframe(gs->window);
+                    if (debugui_newframe(gs->window)) {
+                        gs->input_bypass = true;
+                        game_sdlscreen_update_mouse(gs->screen, 0, 0, 0);
+                    } else {
+                        gs->input_bypass = false;
+                    }
 #endif
                     /* Draw a frame */
                     draw(gs);

@@ -11,7 +11,7 @@ struct game_state;
 
 void debugui_init(SDL_Window *window, struct game_state *gs);
 bool debugui_is_visible(void);
-void debugui_newframe(SDL_Window *window);
+bool debugui_newframe(SDL_Window *window);
 bool debugui_processevent(SDL_Event *event);
 void debugui_render(void);
 void debugui_shutdown(void);

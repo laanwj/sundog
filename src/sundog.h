@@ -40,6 +40,8 @@ struct game_state {
     struct game_renderer *renderer;
     int viewport[4];
     bool force_redraw;
+    /** If set, bypass/ignore SDL input to game */
+    bool input_bypass;
 };
 
 #endif

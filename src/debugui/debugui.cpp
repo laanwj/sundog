@@ -144,7 +144,7 @@ static void debugui_list_segments(struct psys_state *s)
     ImGui::Columns(1);
 }
 
-void debugui_newframe(SDL_Window *window)
+bool debugui_newframe(SDL_Window *window)
 {
     ImGui_ImplSdlGLES2_NewFrame(window);
 
@@ -220,7 +220,7 @@ void debugui_newframe(SDL_Window *window)
 
     // If ImGui wants to capture mouse, block game from processing mouse position/buttons
     ImGuiIO& io = ImGui::GetIO();
-    game_sdlscreen_set_input_bypass(gamestate->screen, io.WantCaptureMouse);
+    return io.WantCaptureMouse;
 }
 
 bool debugui_processevent(SDL_Event *event)

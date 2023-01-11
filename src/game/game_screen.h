@@ -123,11 +123,8 @@ extern int game_sdlscreen_save_state(struct game_screen *b, int fd);
 /** Load screen state from fd (return 0 on success) */
 extern int game_sdlscreen_load_state(struct game_screen *b, int fd);
 
-/** Set whether to bypass SDL input */
-extern void game_sdlscreen_set_input_bypass(struct game_screen *b, bool input_bypass);
-
-/** Update input viewport */
-extern void game_sdlscreen_update_viewport(struct game_screen *b, int viewport[4]);
+/** Update mouse state */
+extern void game_sdlscreen_update_mouse(struct game_screen *b, int x, int y, unsigned buttons);
 
 #ifdef __cplusplus
 }
