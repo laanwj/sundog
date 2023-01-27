@@ -20,8 +20,8 @@
 #include "psys/psys_rsp.h"
 #include "psys/psys_save_state.h"
 #include "psys/psys_task.h"
-#ifdef PSYS_DEBUGGER
 #include "game/game_debug.h"
+#ifdef PSYS_DEBUGGER
 #include "util/debugger.h"
 #endif
 #include "util/memutil.h"
@@ -636,7 +636,9 @@ static void event_loop(struct game_state *gs)
             case EVC_TIMER: /* Timer event */
                 /* Update textures and uniforms from VM state/thread */
                 need_redraw = game_sdlscreen_update_textures(gs->screen, gs->renderer, (update_texture_func *)gs->renderer->update_texture, (update_palette_func *)gs->renderer->update_palette);
+#ifdef ENABLE_DEBUGUI
                 need_redraw |= debugui_is_visible();
+#endif
                 if (need_redraw || gs->force_redraw) {
 #ifdef ENABLE_DEBUGUI
                     if (debugui_newframe(gs->window)) {

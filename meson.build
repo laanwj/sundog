@@ -3,18 +3,36 @@ project('sundog', 'c', 'cpp',
 
 sdl2_dep = dependency('SDL2')
 sdl2_mixer_dep = dependency('SDL2_mixer')
-readline_dep = dependency('readline') # Only if PSYS_DEBUGGER
 m_lib = meson.get_compiler('c').find_library('m', required: false)
 
 add_project_arguments(
     '-Wmissing-declarations',
     '-Wno-unused-parameter',
     '-DFLIP_ENDIAN_HACK',
-    '-DPSYS_DEBUGGER',
-    '-DGAME_CHEATS',
-    '-DENABLE_DEBUGUI',
     language: ['c', 'cpp']
 )
+if get_option('psys_debugger')
+    add_project_arguments(
+        '-DPSYS_DEBUGGER',
+        language: ['c', 'cpp']
+    )
+    readline_dep = dependency('readline')
+else
+    readline_dep = []
+endif
+if get_option('debug_ui')
+    add_project_arguments(
+        '-DENABLE_DEBUGUI',
+        language: ['c', 'cpp']
+    )
+endif
+if get_option('game_cheats')
+    add_project_arguments(
+        '-DGAME_CHEATS',
+        language: ['c', 'cpp']
+    )
+endif
+
 add_project_arguments(
     '-Werror=implicit-function-declaration',
     '-Wmissing-prototypes',
@@ -76,6 +94,13 @@ resources = files(
     'shaders/screen-hqish.frag',
     'shaders/hq4x.bmp.gz',
 )
+if get_option('builtin_image')
+    add_project_arguments(
+        '-DDISK_IMAGE_AS_RESOURCE',
+        language: ['c', 'cpp']
+    )
+    resources += files('game/sundog.st')
+endif
 
 prog_python = import('python').find_installation('python3')
 resource_comp = files('tools/resource_compiler.py')

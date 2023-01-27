@@ -67,6 +67,18 @@ ninja -C build
 renderer. This could be worked around on a build system level if someone really wanted to,
 but note that using the set of headers itself doesn't put any requirements on the hardware.
 
+### Build settings
+
+The following settings can be set with `-Doption=value` on the meson command line, or through `meson configure`:
+```
+  Project options                                Default Value                                    Possible Values                                  Description
+  -----------------                              -------------                                    ---------------                                  -----------
+  builtin_image                                  false                                            [true, false]                                    Use built-in disk image (must be in game/sundog.st)
+  debug_ui                                       false                                            [true, false]                                    Enable debug user interface
+  game_cheats                                    false                                            [true, false]                                    Enable cheats
+  psys_debugger                                  false                                            [true, false]                                    Enable P-system command line debugger
+```
+
 ### Other platforms
 
 People have built this software for other platforms (it's pretty straightforward in general,

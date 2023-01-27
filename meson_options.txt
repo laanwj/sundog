@@ -1,0 +1,4 @@
+option('psys_debugger', type : 'boolean', value : false, description : 'Enable P-system command line debugger')
+option('debug_ui', type : 'boolean', value : false, description : 'Enable debug user interface')
+option('game_cheats', type : 'boolean', value : false, description : 'Enable cheats')
+option('builtin_image', type : 'boolean', value : false, description : 'Use built-in disk image (must be in game/sundog.st)')
