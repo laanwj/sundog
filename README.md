@@ -53,14 +53,14 @@ as well as GNU readline (only necessary for the debugger). On Debian and Ubuntu
 this is:
 
 ```bash
-apt-get install libreadline-dev libsdl2-dev libsdl2-mixer-dev libgles2-mesa-dev
+apt-get install libreadline-dev libsdl2-dev libsdl2-mixer-dev libgles2-mesa-dev meson ninja-build
 ```
 
 Then:
 
 ```bash
-cd src
-make
+meson setup build
+ninja -C build
 ```
 
 \* The openGL ES 3 headers are needed for building, even when using only the basic OpenGL ES 2
@@ -82,7 +82,7 @@ rendering these days.
 The game can be started using the command line:
 
 ```
-./sundog <image.st>
+build/src/sundog <image.st>
 ```
 
 Where `<image.st>` is the Sundog disk image to use.

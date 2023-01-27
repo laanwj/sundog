@@ -1,9 +1,0 @@
-sundog_resource_data.h
-game/game_debuginfo.h
-*.o
-test/set_tests
-test/inst_tests
-test/img_tests
-sundog
-sundog_compare_trace
-rip_images
