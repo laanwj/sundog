@@ -48,20 +48,21 @@ libdebugui_sources = files(
 )
 libdebugui = library('debugui', sources: libdebugui_sources,
                   include_directories: ['imgui'],
-                  dependencies: [sdl2_dep, readline_dep, gles2_lib])
+                  dependencies: [sdl2_dep, readline_dep])
 
 sundog_sources = files(
     'sundog.c',
     'sundog_resources.c',
     'swoosh.c',
     'glutil.c',
+    'glxw/glxw_es3.c',
     'renderer_basic.c',
     'renderer_hq4x.c',
 )
 executable('sundog', [sundog_sources, gen_resource],
            link_with: [libpsys, libgame, libdebugui],
            win_subsystem: 'windows',
-           dependencies: [sdl2_dep, sdl2_mixer_dep, gles2_lib, m_lib])
+           dependencies: [sdl2_dep, sdl2_mixer_dep, m_lib])
 
 executable('sundog_compare_trace', 'sundog_compare_trace.c',
            link_with: [libpsys, libgame],

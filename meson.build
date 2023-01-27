@@ -4,7 +4,6 @@ project('sundog', 'c', 'cpp',
 sdl2_dep = dependency('SDL2')
 sdl2_mixer_dep = dependency('SDL2_mixer')
 readline_dep = dependency('readline') # Only if PSYS_DEBUGGER
-gles2_lib = meson.get_compiler('c').find_library('GLESv2')
 m_lib = meson.get_compiler('c').find_library('m', required: false)
 
 add_project_arguments(

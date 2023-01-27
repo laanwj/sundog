@@ -7,7 +7,7 @@
 #ifndef H_GLUTIL
 #define H_GLUTIL
 
-#include <GLES3/gl3.h>
+#include <glxw/glxw_es3.h>
 
 #include <stdbool.h>
 #include <unistd.h>

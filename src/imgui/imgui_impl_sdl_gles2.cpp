@@ -12,12 +12,8 @@
 // SDL,OpenGLES2
 #include <SDL.h>
 #include <SDL_syswm.h>
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
-#else
-#include <SDL_opengles2.h>
-#endif
+
+#include <glxw/glxw_es3.h>
 
 // Data
 static double       g_Time = 0.0f;
