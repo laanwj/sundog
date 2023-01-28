@@ -59,13 +59,15 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: '3.x'
+    - name: Prepare MSVC
+      uses: bus1/cabuild/action/msdevshell@v1
+      with:
+        architecture: x64
     - run: pip install meson ninja
     - run: |
         mkdir subprojects
         meson wrap install sdl2
     - run: meson setup -Dgame_cheats=true -Ddebug_ui=true builddir/
-      env:
-        CC: gcc
     - run: ninja -C builddir
     - run: meson test -C builddir/ -v
     - uses: actions/upload-artifact@v3
