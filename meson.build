@@ -39,6 +39,13 @@ add_project_arguments(
     '-D_POSIX_C_SOURCE=200809L',
     language: ['c'])
 
+# shut up some warnings for imgui build
+add_project_arguments(
+    '-Wno-class-memaccess',
+    '-Wno-missing-declarations',
+    language: ['cpp']
+)
+
 resources = files(
     'swoosh/frame000.bmp',
     'swoosh/frame001.bmp',
