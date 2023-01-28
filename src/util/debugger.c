@@ -11,6 +11,7 @@
 #include "psys/psys_registers.h"
 #include "psys/psys_state.h"
 #include "util/memutil.h"
+#include "util/compat.h"
 
 #include <fcntl.h>
 #include <readline/history.h>
@@ -382,7 +383,7 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 goto cleanup;
             } else if (!strcmp(cmd, "dm")) { /* Dump memory */
                 if (num >= 2) {
-                    int fd = open(args[1], O_CREAT | O_WRONLY, 0666);
+                    int fd = open(args[1], O_CREAT | O_WRONLY | O_BINARY, 0666);
                     int rv = write(fd, s->memory, s->mem_size);
                     (void)rv;
                     close(fd);

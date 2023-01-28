@@ -12,6 +12,7 @@
 #include "psys/psys_rsp.h"
 #include "psys/psys_task.h"
 
+#include "util/compat.h"
 #include "util/memutil.h"
 #include "util/util_minmax.h"
 
@@ -52,7 +53,7 @@ struct __attribute__((__packed__)) psys_tracerec {
 
 static void setup_trace_compare()
 {
-    tracefd = open("../sundog.psystrace", O_RDONLY);
+    tracefd = open("../sundog.psystrace", O_RDONLY | O_BINARY);
     if (tracefd < 0) {
         perror("Could not open trace file\n");
         exit(1);
@@ -238,7 +239,7 @@ static struct psys_state *setup_state(struct game_screen *screen)
     track_size = 9 * 512;
     disk_size  = 80 * track_size;
     disk_data  = malloc(disk_size);
-    fd         = open("../verify_disk.st", O_RDONLY);
+    fd         = open("../verify_disk.st", O_RDONLY | O_BINARY);
     if (fd == -1) {
         perror("Could not open disk image\n");
         exit(1);
@@ -269,7 +270,7 @@ static struct psys_state *setup_state(struct game_screen *screen)
 
     /* Read initial memory state to compare to */
     verify_mem = malloc(65536);
-    fd         = open("../files/psys_initmem.bin", O_RDONLY);
+    fd         = open("../files/psys_initmem.bin", O_RDONLY | O_BINARY);
     if (fd == -1) {
         perror("Could not open initial state file\n");
         exit(1);

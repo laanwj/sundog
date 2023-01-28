@@ -32,6 +32,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "util/compat.h"
+
 #include "write_bmp.h"
 
 #define FILENAME_SIZE 1024
@@ -108,7 +110,7 @@ void bmp_dump32(char *buffer, unsigned width, unsigned height, bool bgra, const 
 {
     int fd;
 
-    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0666);
     if (fd == -1) {
         printf("Failed to open %s: %s\n", filename, strerror(errno));
         return;
@@ -131,7 +133,7 @@ void bmp_dump32_noflip(char *buffer, unsigned width, unsigned height, bool bgra,
 {
     int fd;
 
-    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0666);
     if (fd == -1) {
         printf("Failed to open %s: %s\n", filename, strerror(errno));
         return;
@@ -154,7 +156,7 @@ void bmp_dump32_ex(char *buffer, unsigned width, unsigned height, bool flip, boo
 {
     int fd;
 
-    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0666);
     if (fd == -1) {
         printf("Failed to open %s: %s\n", filename, strerror(errno));
         return;

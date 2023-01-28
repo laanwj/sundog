@@ -1,4 +1,5 @@
 #include "psys/psys_types.h"
+#include "util/compat.h"
 #include "util/util_img.h"
 #include "util/write_bmp.h"
 
@@ -60,7 +61,7 @@ static void rip_images(const char *imagename)
     track_size = 9 * 512;
     disk_size  = 80 * track_size;
     disk_data  = malloc(disk_size);
-    fd         = open(imagename, O_RDONLY);
+    fd         = open(imagename, O_RDONLY | O_BINARY);
     if (fd < 0) {
         perror("open");
         fprintf(stderr, "Could not open disk image %s\n", imagename);

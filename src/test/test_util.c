@@ -5,6 +5,8 @@
  */
 #include "test_util.h"
 
+#include "util/compat.h"
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +17,7 @@
 
 void *load_file(const char *filename, size_t *size_out)
 {
-    int fd        = open(filename, O_RDONLY);
+    int fd        = open(filename, O_RDONLY | O_BINARY);
     char *program = NULL;
     size_t size;
     struct stat stat;
@@ -34,7 +36,7 @@ void *load_file(const char *filename, size_t *size_out)
         goto error;
     }
     if (read(fd, program, size) != (ssize_t)size) {
-        fprintf(stderr, "Unable to read program source\n");
+        fprintf(stderr, "Unable to read data\n");
         goto error;
     }
     close(fd);
@@ -49,7 +51,7 @@ error:
 
 void write_file(const char *filename, void *data, size_t size)
 {
-    int fd = open(filename, O_WRONLY | O_CREAT, 0644);
+    int fd = open(filename, O_WRONLY | O_CREAT | O_BINARY, 0644);
     if (fd < 0) {
         fprintf(stderr, "Cannot open %s for writing\n", filename);
         goto cleanup;

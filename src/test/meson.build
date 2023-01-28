@@ -1,7 +1,8 @@
 libtestutil_sources = files(
     'test_util.c',
 )
-libtestutil = library('testutil', libtestutil_sources)
+libtestutil = library('testutil', libtestutil_sources,
+          include_directories: ['..'])
 
 e = executable('set_tests', 'set_tests.c',
            include_directories: ['..'],

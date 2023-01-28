@@ -21,6 +21,7 @@
 #include "psys/psys_save_state.h"
 #include "psys/psys_task.h"
 #include "game/game_debug.h"
+#include "util/compat.h"
 #ifdef PSYS_DEBUGGER
 #include "util/debugger.h"
 #endif
@@ -267,7 +268,7 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
     /* load disk image */
     disk_size = 80 * track_size;
     disk_data = malloc(disk_size);
-    fd        = open(imagename, O_RDONLY);
+    fd        = open(imagename, O_RDONLY | O_BINARY);
     if (fd < 0) {
         perror("open");
         fprintf(stderr, "Could not open disk image %s\n", imagename);
@@ -577,7 +578,7 @@ static void event_loop(struct game_state *gs)
                 break;
             case SDLK_s: {                   /* Save state */
                 stop_interpreter_thread(gs); /* stop interpreter thread while saving */
-                int fd = open("sundog.sav", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                int fd = open("sundog.sav", O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
                 if (fd < 0) {
                     psys_debug("Error opening game state file for writing\n");
                     break;
@@ -592,7 +593,7 @@ static void event_loop(struct game_state *gs)
             } break;
             case SDLK_l: {                   /* Load state */
                 stop_interpreter_thread(gs); /* stop interpreter thread while loading */
-                int fd = open("sundog.sav", O_RDONLY);
+                int fd = open("sundog.sav", O_RDONLY | O_BINARY);
                 if (fd < 0) {
                     psys_debug("Error opening game state file for reading\n");
                     break;
