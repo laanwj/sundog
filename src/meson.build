@@ -48,7 +48,7 @@ if get_option('debug_ui')
         'imgui/imgui_impl_sdl_gles2.cpp',
     )
     libdebugui = library('debugui', sources: libdebugui_sources,
-                      include_directories: ['imgui'],
+                      include_directories: ['imgui', '../thirdparty'],
                       dependencies: [sdl2_dep])
 else
     libdebugui = []
@@ -64,6 +64,7 @@ sundog_sources = files(
     'renderer_hq4x.c',
 )
 executable('sundog', [sundog_sources, gen_resource],
+           include_directories: ['../thirdparty'],
            link_with: [libpsys, libgame, libdebugui],
            win_subsystem: 'windows',
            dependencies: [sdl2_dep, m_lib])

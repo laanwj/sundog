@@ -48,11 +48,11 @@ Building from source
 ### Linux
 
 To build from source make sure the SDL2 development package for your
-distribution is installed, the OpenGL ES 3 headers\*, as well as GNU readline
-(only necessary for the debugger). On Debian and Ubuntu this is:
+distribution is installed, as well as GNU readline (only necessary for the
+debugger). On Debian and Ubuntu this is:
 
 ```bash
-apt-get install libreadline-dev libsdl2-dev libgles2-mesa-dev meson ninja-build
+apt-get install libreadline-dev libsdl2-dev meson ninja-build
 ```
 
 Then:
@@ -61,10 +61,6 @@ Then:
 meson setup build
 ninja -C build
 ```
-
-\* The openGL ES 3 headers are needed for building, even when using only the basic OpenGL ES 2
-renderer. This could be worked around on a build system level if someone really wanted to,
-but note that using the set of headers itself doesn't put any requirements on the hardware.
 
 ### Build settings
 
