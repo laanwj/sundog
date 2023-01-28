@@ -35,6 +35,7 @@ libgame_sources = files(
     'util/debugger.c',
     'util/util_img.c',
     'util/util_time.c',
+    'util/emu2149.c',
 )
 libgame = library('game', sources: [libgame_sources, gen_debuginfo],
                   dependencies: [sdl2_dep, readline_dep])
@@ -65,7 +66,7 @@ sundog_sources = files(
 executable('sundog', [sundog_sources, gen_resource],
            link_with: [libpsys, libgame, libdebugui],
            win_subsystem: 'windows',
-           dependencies: [sdl2_dep, sdl2_mixer_dep, m_lib])
+           dependencies: [sdl2_dep, m_lib])
 
 executable('sundog_compare_trace', 'sundog_compare_trace.c',
            link_with: [libpsys, libgame],

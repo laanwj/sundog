@@ -35,7 +35,6 @@
 #include "swoosh.h"
 
 #include <SDL.h>
-#include <SDL_mixer.h>
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -799,14 +798,9 @@ int main(int argc, char **argv)
     gs->timer        = SDL_AddTimer(VBLANK_TIME, &timer_callback, gs);
 
     /* Create object to manage sound */
-    if (Mix_Init(MIX_INIT_OGG) < 0 || Mix_OpenAudio(44100, AUDIO_S16SYS, 1, 512) < 0 || Mix_AllocateChannels(1) < 0) {
-        printf("Warning: unable to initialize SDLMixer (%s) for mono ogg playback at 44100Hz, there will be no sound.\n", SDL_GetError());
-        gs->sound = 0;
-    } else {
-        gs->sound = new_sdl_sound((game_sound_loader_func *)&load_resource_sdl, "sounds/");
-        if (!gs->sound) {
-            printf("Warning: could not load samples, there will be no sound.\n");
-        }
+    gs->sound = new_sdl_sound();
+    if (!gs->sound) {
+        printf("Warning: could not initialize SDL sound, no sound will be played.\n");
     }
 
     /* Create object to manage rendering from interpreter */
@@ -842,7 +836,5 @@ int main(int argc, char **argv)
     free(state);
     free(gs);
 
-    Mix_CloseAudio();
-    Mix_Quit();
     return 0;
 }

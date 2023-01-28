@@ -47,13 +47,12 @@ Building from source
 
 ### Linux
 
-To build from source make sure the SDL2 development package (and SDL\_mixer
-with ogg support) for your distribution is installed, the OpenGL ES 3 headers\*,
-as well as GNU readline (only necessary for the debugger). On Debian and Ubuntu
-this is:
+To build from source make sure the SDL2 development package for your
+distribution is installed, the OpenGL ES 3 headers\*, as well as GNU readline
+(only necessary for the debugger). On Debian and Ubuntu this is:
 
 ```bash
-apt-get install libreadline-dev libsdl2-dev libsdl2-mixer-dev libgles2-mesa-dev meson ninja-build
+apt-get install libreadline-dev libsdl2-dev libgles2-mesa-dev meson ninja-build
 ```
 
 Then:
@@ -255,6 +254,7 @@ Special thanks to:
 - [Bitsavers](http://bitsavers.trailing-edge.com)
 - The former UCSD pascal group on Yahoo
 - [ocornut](https://github.com/ocornut) for the "dear imgui" GUI system used for debug GUI
+- Mitsutaka Okazaki for emu2149
 - Of course late FTL software: Bruce Webster, Doug Bell, Wayne Holder, Mike Newton, Andy Jaros for making SunDog in the first place.
 
 License
