@@ -81,3 +81,7 @@ jobs:
       with:
         name: Windows_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Windows_Executable
+        path: builddir/src/sundog.exe
