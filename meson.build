@@ -4,9 +4,8 @@ project('sundog', 'c', 'cpp',
 sdl2_dep = dependency('SDL2')
 m_lib = meson.get_compiler('c').find_library('m', required: false)
 
+# Flip p-system endian (XXX should only be required on little-endian systems)
 add_project_arguments(
-    '-Wmissing-declarations',
-    '-Wno-unused-parameter',
     '-DFLIP_ENDIAN_HACK',
     language: ['c', 'cpp']
 )
@@ -32,19 +31,30 @@ if get_option('game_cheats')
     )
 endif
 
+# C-standard settings.
 add_project_arguments(
-    '-Werror=implicit-function-declaration',
-    '-Wmissing-prototypes',
     '-D_POSIX_C_SOURCE=200809L',
     '-D_DARWIN_C_SOURCE=1', # MacOS memset_pattern4 for SDL
     language: ['c'])
 
-# shut up some warnings for imgui build
-add_project_arguments(
-    '-Wno-class-memaccess',
-    '-Wno-missing-declarations',
-    language: ['cpp']
-)
+# Warning overrides.
+if meson.get_compiler('c').get_id() == 'msvc'
+    # XXX MSVC specific warning disables
+else
+    add_project_arguments(
+        '-Wmissing-declarations',
+        '-Wno-unused-parameter',
+        '-Werror=implicit-function-declaration',
+        '-Wmissing-prototypes',
+        language: ['c'])
+    # shut up some warnings for imgui build
+    add_project_arguments(
+        '-Wno-unused-parameter',
+        '-Wno-class-memaccess',
+        '-Wno-missing-declarations',
+        language: ['cpp']
+    )
+endif
 
 resources = files(
     'swoosh/frame000.bmp',
