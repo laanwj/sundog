@@ -69,7 +69,7 @@ def main():
     resources = {}
     for filename in args.inputs:
         fullpath = os.path.realpath(filename)
-        file_id = os.path.relpath(fullpath, args.base_path).replace(os.pathsep, '/')
+        file_id = os.path.relpath(fullpath, args.base_path).replace(os.path.sep, '/')
 
         if file_id.endswith('.gz'): # strip .gz suffix and decompress (for now)
             file_id = file_id[:-3]
