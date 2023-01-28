@@ -135,7 +135,7 @@ struct wowzo {
 static void wowzo_wait(struct wowzo *data, unsigned int delay)
 {
     /* 80-140 cycles at 8 Mhz */
-    usleep(delay * 15);
+    util_usleep(delay * 15);
 }
 
 /** Deterministic random number routine, used for star position generation. */

@@ -36,7 +36,7 @@ endif
 add_project_arguments(
     '-Werror=implicit-function-declaration',
     '-Wmissing-prototypes',
-    '-D_GNU_SOURCE',
+    '-D_POSIX_C_SOURCE=200809L',
     language: ['c'])
 
 resources = files(

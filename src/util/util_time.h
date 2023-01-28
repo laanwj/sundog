@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-/* Sleep for a specified number of milli-seconds */
-unsigned int msleep(unsigned int ms);
+/* Sleep for a specified number of micro-seconds */
+int util_usleep(unsigned int us);
 
 #ifdef __cplusplus
 }

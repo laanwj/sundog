@@ -389,7 +389,7 @@ static void gembind_VDI(struct psys_state *s, struct gembind_priv *priv, psys_fu
         psys_stw(s, W(intout, 0), buttons); /* buttons */
         psys_stw(s, W(ptsout, 0), x);       /* x */
         psys_stw(s, W(ptsout, 1), y);       /* y */
-        msleep(10);
+        util_usleep(10000);
         /* UI loop delay - ideally this would be a conditional wait on mouse state change or vsync,
          * but seems to work well enough.
          */
@@ -693,7 +693,7 @@ static void gembind_CollisionDetect(struct psys_state *s, struct gembind_priv *p
     /* HACK: time delay to make combat playable, otherwise bullets are invisible
      * because they effectively move at light speed.
      */
-    msleep(3);
+    util_usleep(3000);
 }
 
 /** DrawSprite(flag,back_addr,x,y,pattern,color) */
@@ -713,7 +713,7 @@ static void gembind_DrawSprite(struct psys_state *s, struct gembind_priv *priv, 
     /* HACK: time delay to make combat playable, otherwise bullets are invisible
      * because they effectively move at light speed.
      */
-    msleep(3);
+    util_usleep(3000);
 }
 
 /** SpriteMovementEnable(flag) */

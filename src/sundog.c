@@ -27,6 +27,7 @@
 #include "util/memutil.h"
 #include "util/util_minmax.h"
 #include "util/util_save_state.h"
+#include "util/util_time.h"
 #ifdef ENABLE_DEBUGUI
 #include "debugui/debugui.h"
 #endif
@@ -179,13 +180,13 @@ static void psys_trace(struct psys_state *s, void *gs_)
     for (size_t idx = 0; idx < ARRAY_SIZE(artificial_delays); ++idx) {
         if (strncmp(curseg_name, artificial_delays[idx].seg_name, 8) == 0 && curaddr == artificial_delays[idx].address) {
             if (artificial_delays[idx].delay_us >= 0) { /* wait microseconds */
-                usleep(artificial_delays[idx].delay_us);
+                util_usleep(artificial_delays[idx].delay_us);
             } else { /* wait for mouse release */
                 unsigned buttons = 1;
                 int x, y;
                 while (buttons && !SDL_AtomicGet(&gs->stop_trigger)) {
                     gs->screen->vq_mouse(gs->screen, &buttons, &x, &y);
-                    usleep(10000);
+                    util_usleep(10000);
                 }
             }
         }
