@@ -32,11 +32,15 @@ libgame_sources = files(
     'game/game_sound.c',
     'game/game_debug.c',
     'game/wowzo.c',
-    'util/debugger.c',
     'util/util_img.c',
     'util/util_time.c',
     'util/emu2149.c',
 )
+if get_option('psys_debugger')
+    libgame_sources += files(
+        'util/debugger.c',
+    )
+endif
 libgame = library('game', sources: [libgame_sources, gen_debuginfo],
                   dependencies: [sdl2_dep, readline_dep])
 

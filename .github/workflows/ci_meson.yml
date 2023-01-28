@@ -50,3 +50,26 @@ jobs:
       with:
         name: MacOS_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
+
+# Disable psys_debugger for windows because we don't have a console window like that there anyway.
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install meson ninja
+    - run: |
+        mkdir subprojects
+        meson wrap install sdl2
+    - run: meson setup -Dgame_cheats=true -Ddebug_ui=true builddir/
+      env:
+        CC: gcc
+    - run: ninja -C builddir
+    - run: meson test -C builddir/ -v
+    - uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: Windows_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
