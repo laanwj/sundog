@@ -3,12 +3,15 @@ libtestutil_sources = files(
 )
 libtestutil = library('testutil', libtestutil_sources)
 
-executable('set_tests', 'set_tests.c',
+e = executable('set_tests', 'set_tests.c',
            include_directories: ['..'],
            link_with: [libpsys, libtestutil])
-executable('inst_tests', 'inst_tests.c',
+test('set_tests', e)
+e = executable('inst_tests', 'inst_tests.c',
            include_directories: ['..'],
            link_with: [libpsys, libtestutil])
-executable('img_tests', 'img_tests.c',
+test('inst_tests', e)
+e = executable('img_tests', 'img_tests.c',
            include_directories: ['..'],
            link_with: [libpsys, libgame, libtestutil])
+test('img_tests', e, workdir: meson.project_source_root())

@@ -1,0 +1,32 @@
+name: ci_meson
+
+on:
+  - push
+  - pull_request
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install meson ninja
+    - run: |
+        sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu `lsb_release -sc` main universe restricted multiverse"
+        sudo apt-get update -y -qq
+        sudo apt-get install libreadline-dev libsdl2-dev libgles2-mesa-dev
+    - run: meson setup -Dgame_cheats=true -Dpsys_debugger=true -Ddebug_ui=true builddir/
+      env:
+        CC: gcc
+    - run: ninja -C builddir
+      env:
+        CC: gcc
+    - run: meson test -C builddir/ -v
+    - uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: Linux_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt

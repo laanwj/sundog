@@ -20,9 +20,9 @@ uint8_t verify[320 * 200];
 int main()
 {
     size_t sourcedata_size;
-    uint8_t *sourcedata = load_file("test/compress_source.bin", &sourcedata_size);
+    uint8_t *sourcedata = load_file("src/test/compress_source.bin", &sourcedata_size);
     size_t destdata_planar_size;
-    uint8_t *destdata_planar = load_file("test/compress_dest.bin", &destdata_planar_size);
+    uint8_t *destdata_planar = load_file("src/test/compress_dest.bin", &destdata_planar_size);
     unsigned ptr;
     unsigned size_consumed;
 
