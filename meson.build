@@ -36,6 +36,7 @@ add_project_arguments(
     '-Werror=implicit-function-declaration',
     '-Wmissing-prototypes',
     '-D_POSIX_C_SOURCE=200809L',
+    '-D_DARWIN_C_SOURCE=1', # MacOS memset_pattern4 for SDL
     language: ['c'])
 
 # shut up some warnings for imgui build

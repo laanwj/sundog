@@ -20,13 +20,6 @@
 
 #include <stdio.h>
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
-#else
-#include <SDL_opengles2.h>
-#endif
-
 static bool show_window = false;
 static bool show_palette_window = false;
 static bool show_memory_window = false;

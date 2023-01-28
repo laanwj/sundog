@@ -28,3 +28,25 @@ jobs:
       with:
         name: Linux_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
+
+
+# XXX disable psys_debugger for MacOS for now as it can't seem to find brew's readline
+  macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: brew install gcc sdl2
+    - run: pip install meson ninja
+    - run: meson setup -Dgame_cheats=true -Ddebug_ui=true builddir/
+      env:
+        CC: gcc
+    - run: ninja -C builddir
+    - run: meson test -C builddir/ -v
+    - uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: MacOS_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
