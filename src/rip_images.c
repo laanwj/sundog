@@ -1,11 +1,10 @@
 #include "psys/psys_types.h"
-#include "util/compat.h"
 #include "util/util_img.h"
 #include "util/write_bmp.h"
 
-#include <fcntl.h>
+#include "compat/compat_fcntl.h"
 #include <stdio.h>
-#include <unistd.h>
+#include "compat/compat_unistd.h"
 
 static void write_image(unsigned addr, const psys_byte *data, unsigned width, unsigned height)
 {

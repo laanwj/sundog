@@ -12,7 +12,6 @@
 #include "psys/psys_rsp.h"
 #include "psys/psys_task.h"
 
-#include "util/compat.h"
 #include "util/memutil.h"
 #include "util/util_minmax.h"
 
@@ -20,12 +19,12 @@
 #include "game/game_screen.h"
 #include "game/game_shiplib.h"
 
-#include <fcntl.h>
+#include "compat/compat_fcntl.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include "compat/compat_unistd.h"
 
 int tracefd;
 uint32_t tracerecsize;

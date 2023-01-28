@@ -7,7 +7,7 @@
 #define H_UTIL_SAVE_STATE
 
 #include <string.h>
-#include <unistd.h>
+#include "compat/compat_unistd.h"
 
 #ifdef __cplusplus
 extern "C" {

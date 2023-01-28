@@ -1,5 +1,5 @@
-#ifndef H_UTIL_COMPAT
-#define H_UTIL_COMPAT
+#ifndef H_COMPAT_FCNTL
+#define H_COMPAT_FCNTL
 
 #include <fcntl.h>
 

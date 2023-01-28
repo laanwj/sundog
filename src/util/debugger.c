@@ -11,14 +11,13 @@
 #include "psys/psys_registers.h"
 #include "psys/psys_state.h"
 #include "util/memutil.h"
-#include "util/compat.h"
 
-#include <fcntl.h>
+#include "compat/compat_fcntl.h"
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
+#include "compat/compat_unistd.h"
 
 /** Rudimentary p-system debugger. The following functionality would be nice:
  * - Load / set VM register (lpr/spr)

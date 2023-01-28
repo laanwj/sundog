@@ -20,7 +20,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
 /* Header for savestates */
 #define GAME_GEMBIND_STATE_ID 0x47454d42

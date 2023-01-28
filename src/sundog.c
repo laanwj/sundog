@@ -21,7 +21,6 @@
 #include "psys/psys_save_state.h"
 #include "psys/psys_task.h"
 #include "game/game_debug.h"
-#include "util/compat.h"
 #ifdef PSYS_DEBUGGER
 #include "util/debugger.h"
 #endif
@@ -37,12 +36,12 @@
 
 #include <SDL.h>
 
-#include <fcntl.h>
+#include "compat/compat_fcntl.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include "compat/compat_unistd.h"
 
 /* Time between vblanks in ms */
 #define VBLANK_TIME (1000 / 50)

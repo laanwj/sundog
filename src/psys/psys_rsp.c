@@ -20,7 +20,6 @@
 
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 
 /* Header for savestates */
 #define PSYS_RSP_STATE_ID 0x50525350
