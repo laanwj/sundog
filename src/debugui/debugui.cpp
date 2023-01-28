@@ -28,7 +28,6 @@
 #endif
 
 static bool show_window = false;
-static bool show_test_window = false;
 static bool show_palette_window = false;
 static bool show_memory_window = false;
 static bool show_segments_window = false;
@@ -43,7 +42,7 @@ void debugui_init(SDL_Window *window, struct game_state *gs)
 
 bool debugui_is_visible(void)
 {
-    return show_window || show_test_window || show_palette_window || show_memory_window || show_segments_window;
+    return show_window || show_palette_window || show_memory_window || show_segments_window;
 }
 
 static bool is_segment_resident(struct psys_state *s, psys_word erec)
@@ -168,8 +167,6 @@ bool debugui_newframe(SDL_Window *window)
         if (ImGui::Button("Memory")) show_memory_window ^= 1;
         ImGui::SameLine();
         if (ImGui::Button("Segments")) show_segments_window ^= 1;
-        ImGui::SameLine();
-        if (ImGui::Button("Test Window")) show_test_window ^= 1;
 
         ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
@@ -211,12 +208,6 @@ bool debugui_newframe(SDL_Window *window)
     }
 
     // TODO: instruction view/single step, when VM is stopped
-
-    if (show_test_window)
-    {
-        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-        ImGui::ShowTestWindow(&show_test_window);
-    }
 
     // If ImGui wants to capture mouse, block game from processing mouse position/buttons
     ImGuiIO& io = ImGui::GetIO();

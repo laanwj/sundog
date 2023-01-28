@@ -43,7 +43,6 @@ if get_option('debug_ui')
     libdebugui_sources = files(
         'debugui/debugui.cpp',
         'imgui/imgui.cpp',
-        'imgui/imgui_demo.cpp',
         'imgui/imgui_draw.cpp',
         'imgui/imgui_impl_sdl_gles2.cpp',
     )
