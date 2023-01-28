@@ -44,12 +44,13 @@ void psys_spr(struct psys_state *state, psys_sword reg, psys_word value)
             state->curtask = value;
             break;
         case PSYS_REG_EVEC:
-            return psys_stw(state, state->erec + PSYS_EREC_Env_Vect, value);
+            psys_stw(state, state->erec + PSYS_EREC_Env_Vect, value);
+            break;
         case PSYS_REG_READYQ:
             state->readyq = value;
             break;
         default:
-            psys_panic("Read from unknown processor register %d\n", reg);
+            psys_panic("Write to unknown processor register %d\n", reg);
         }
     } else {
         psys_store_state_to_tib(state);
