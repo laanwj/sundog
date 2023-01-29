@@ -252,35 +252,23 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
 
     track_size = 9 * 512;
 #ifdef DISK_IMAGE_AS_RESOURCE
-    const void *disk_data_ro = load_resource("game/sundog.st", &disk_size);
-    if (!disk_data_ro || disk_size != 80 * track_size) {
-        fprintf(stderr, "Could not read disk image from resource /game/sundog.st\n");
-        exit(1);
-    }
-    /* Make a swizzled read-write copy. */
-    disk_data = malloc(disk_size);
-    memcpy(disk_data + 0 * track_size, disk_data_ro + 3 * track_size, 77 * track_size);
-    memcpy(disk_data + 77 * track_size, disk_data_ro + 0 * track_size, 3 * track_size);
-    unload_resource(disk_data_ro);
+    SDL_RWops *fd = load_resource_sdl(imagename);
 #else
-    int fd;
+    SDL_RWops *fd = SDL_RWFromFile(imagename, "rb");
+#endif
     /* load disk image */
     disk_size = 80 * track_size;
     disk_data = malloc(disk_size);
-    fd        = open(imagename, O_RDONLY | O_BINARY);
-    if (fd < 0) {
-        perror("open");
+    if (!fd) {
         fprintf(stderr, "Could not open disk image %s\n", imagename);
         exit(1);
     }
-    if (read(fd, disk_data + 77 * track_size, 3 * track_size) < (ssize_t)(3 * track_size)
-        || read(fd, disk_data, 77 * track_size) < (ssize_t)(77 * track_size)) {
-        perror("read");
+    if (SDL_RWread(fd, disk_data + 77 * track_size, 1, 3 * track_size) < (size_t)(3 * track_size)
+        || SDL_RWread(fd, disk_data, 1, 77 * track_size) < (size_t)(77 * track_size)) {
         fprintf(stderr, "Could not read disk image\n");
         exit(1);
     }
-    close(fd);
-#endif
+    SDL_RWclose(fd);
 
     /* override memory size and offset in SYSTEM.MISCINFO */
     /* This is sneaky: at boot, SUNDOG writes amount of memory and memory
@@ -741,6 +729,8 @@ int main(int argc, char **argv)
     if (!image_name) {
         print_usage = true;
     }
+#else
+    image_name = "game/sundog.st";
 #endif
     if (print_usage) {
         fprintf(stderr, "Usage: %s [--renderer (basic|hq4x)] <image.st>\n", argv[0]);
