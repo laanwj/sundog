@@ -19,12 +19,12 @@
 #include "game/game_screen.h"
 #include "game/game_shiplib.h"
 
-#include "compat/compat_fcntl.h"
-#include "compat/compat_unistd.h"
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 int tracefd;
 uint32_t tracerecsize;
@@ -52,7 +52,7 @@ struct __attribute__((__packed__)) psys_tracerec {
 
 static void setup_trace_compare()
 {
-    tracefd = open("../sundog.psystrace", O_RDONLY | O_BINARY);
+    tracefd = open("../sundog.psystrace", O_RDONLY);
     if (tracefd < 0) {
         perror("Could not open trace file\n");
         exit(1);
@@ -238,7 +238,7 @@ static struct psys_state *setup_state(struct game_screen *screen)
     track_size = 9 * 512;
     disk_size  = 80 * track_size;
     disk_data  = malloc(disk_size);
-    fd         = open("../verify_disk.st", O_RDONLY | O_BINARY);
+    fd         = open("../verify_disk.st", O_RDONLY);
     if (fd == -1) {
         perror("Could not open disk image\n");
         exit(1);
@@ -269,7 +269,7 @@ static struct psys_state *setup_state(struct game_screen *screen)
 
     /* Read initial memory state to compare to */
     verify_mem = malloc(65536);
-    fd         = open("../files/psys_initmem.bin", O_RDONLY | O_BINARY);
+    fd         = open("../files/psys_initmem.bin", O_RDONLY);
     if (fd == -1) {
         perror("Could not open initial state file\n");
         exit(1);

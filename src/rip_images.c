@@ -2,9 +2,9 @@
 #include "util/util_img.h"
 #include "util/write_bmp.h"
 
-#include "compat/compat_fcntl.h"
-#include "compat/compat_unistd.h"
+#include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static void write_image(unsigned addr, const psys_byte *data, unsigned width, unsigned height)
 {
@@ -60,7 +60,7 @@ static void rip_images(const char *imagename)
     track_size = 9 * 512;
     disk_size  = 80 * track_size;
     disk_data  = malloc(disk_size);
-    fd         = open(imagename, O_RDONLY | O_BINARY);
+    fd         = open(imagename, O_RDONLY);
     if (fd < 0) {
         perror("open");
         fprintf(stderr, "Could not open disk image %s\n", imagename);

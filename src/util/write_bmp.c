@@ -24,13 +24,13 @@
 /*
  * Quick 'n Dirty bitmap dumper.
  */
-#include "compat/compat_fcntl.h"
-#include "compat/compat_unistd.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "write_bmp.h"
 
@@ -108,7 +108,7 @@ void bmp_dump32(char *buffer, unsigned width, unsigned height, bool bgra, const 
 {
     int fd;
 
-    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0666);
+    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
     if (fd == -1) {
         printf("Failed to open %s: %s\n", filename, strerror(errno));
         return;
@@ -131,7 +131,7 @@ void bmp_dump32_noflip(char *buffer, unsigned width, unsigned height, bool bgra,
 {
     int fd;
 
-    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0666);
+    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
     if (fd == -1) {
         printf("Failed to open %s: %s\n", filename, strerror(errno));
         return;
@@ -154,7 +154,7 @@ void bmp_dump32_ex(char *buffer, unsigned width, unsigned height, bool flip, boo
 {
     int fd;
 
-    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0666);
+    fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
     if (fd == -1) {
         printf("Failed to open %s: %s\n", filename, strerror(errno));
         return;
