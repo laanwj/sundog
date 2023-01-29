@@ -5,60 +5,55 @@
  */
 #include "test_util.h"
 
-#include "compat/compat_fcntl.h"
-#include "compat/compat_unistd.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 void *load_file(const char *filename, size_t *size_out)
 {
-    int fd        = open(filename, O_RDONLY | O_BINARY);
+    FILE *f       = fopen(filename, "rb");
     char *program = NULL;
     size_t size;
-    struct stat stat;
-    if (fd < 0) {
+    if (f == NULL) {
         fprintf(stderr, "Cannot open %s\n", filename);
         goto error;
     }
-    if (fstat(fd, &stat) < 0) {
-        fprintf(stderr, "Cannot stat %s\n", filename);
-        goto error;
-    }
-    size    = stat.st_size;
+
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
     program = malloc(size);
     if (!program) {
         fprintf(stderr, "Unable to allocate memory for program\n");
         goto error;
     }
-    if (read(fd, program, size) != (ssize_t)size) {
+    if (fread(program, 1, size, f) != (size_t)size) {
         fprintf(stderr, "Unable to read data\n");
         goto error;
     }
-    close(fd);
+    fclose(f);
     *size_out = size;
     return program;
 error:
-    if (fd >= 0)
-        close(fd);
+    if (f != NULL)
+        fclose(f);
     free(program);
     return NULL;
 }
 
 void write_file(const char *filename, void *data, size_t size)
 {
-    int fd = open(filename, O_WRONLY | O_CREAT | O_BINARY, 0644);
-    if (fd < 0) {
+    FILE *f = fopen(filename, "wb");
+    if (f == NULL) {
         fprintf(stderr, "Cannot open %s for writing\n", filename);
         goto cleanup;
     }
-    if (write(fd, data, size) != (ssize_t)size) {
+    if (fwrite(data, 1, size, f) != (size_t)size) {
         fprintf(stderr, "Cannot write data to file\n");
         goto cleanup;
     }
 cleanup:
-    if (fd >= 0)
-        close(fd);
+    if (f != NULL)
+        fclose(f);
 }
