@@ -58,7 +58,7 @@ apt-get install libreadline-dev libsdl2-dev meson ninja-build
 Then:
 
 ```bash
-meson setup build
+meson setup --buildtype release build
 ninja -C build
 ```
 
