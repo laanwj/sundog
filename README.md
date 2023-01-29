@@ -84,12 +84,13 @@ Invocation
 
 To run, you'll need a graphics driver as well as hardware capable of supporting
 OpenGL ES 2.0. This is pretty much the lowest common denominator for graphics
-rendering these days.
+rendering these days. Especially when coupled with
+[ANGLE](https://github.com/google/angle).
 
 The game can be started using the command line:
 
 ```
-build/src/sundog <image.st>
+build/src/sundog[.exe] <image.st>
 ```
 
 Where `<image.st>` is the Sundog disk image to use.
