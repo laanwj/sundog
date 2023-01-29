@@ -16,7 +16,11 @@ GLuint load_shader_resource(const char *name, GLenum shader_type)
     GLuint shader = glCreateShader(shader_type);
 
     size_t size_res;
-    const char *shader_str = load_resource(name, &size_res);
+    SDL_RWops *resource    = load_resource_sdl(name);
+    const char *shader_str = NULL;
+    if (resource) {
+        shader_str = (const char *)SDL_LoadFile_RW(resource, &size_res, true);
+    }
 
     if (!shader_str) {
         printf("Error: shader %s load failed!\n", name);
@@ -42,7 +46,7 @@ GLuint load_shader_resource(const char *name, GLenum shader_type)
         }
         exit(1);
     }
-    unload_resource(shader_str);
+    SDL_free((void *)shader_str);
     return shader;
 }
 

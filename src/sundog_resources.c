@@ -14,30 +14,14 @@
 
 #include "sundog_resource_data.h"
 
-const void *load_resource(const char *name, size_t *size_out)
+SDL_RWops *load_resource_sdl(const char *name)
 {
-    *size_out = 0;
     /* XXX could use binary search, if we care. */
     for (size_t idx = 0; idx < ARRAY_SIZE(resource_directory); ++idx) {
         if (strcmp(name, resource_directory[idx].name) == 0) {
-            *size_out = resource_directory[idx].size;
-            return resource_directory[idx].data;
+            return SDL_RWFromConstMem(resource_directory[idx].data, resource_directory[idx].size);
         }
     }
+    /* XXX could fall back to SDL_RWFromFile here. */
     return NULL;
-}
-
-SDL_RWops *load_resource_sdl(const char *name)
-{
-    size_t resource_size;
-    const void *resource_data = load_resource(name, &resource_size);
-    if (!resource_data) {
-        return NULL;
-    }
-    return SDL_RWFromConstMem(resource_data, resource_size);
-}
-
-void unload_resource(const void *data)
-{
-    /* Nothing to do! */
 }
