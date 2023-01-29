@@ -22,7 +22,7 @@ jobs:
     - run: |
         mkdir subprojects
         meson wrap install sdl2
-    - run: meson setup -Dgame_cheats=true -Ddebug_ui=true builddir/
+    - run: meson setup  --buildtype release -Dgame_cheats=true -Ddebug_ui=true builddir/
     - run: ninja -C builddir
     - run: meson test -C builddir/ -v
     - uses: actions/upload-artifact@v3
