@@ -78,16 +78,17 @@ The following settings can be set with `-Doption=value` on the meson command lin
 
 ### Other platforms
 
-People have built this software for other platforms (it's pretty straightforward in general,
-SDL2 is widely available), but no instructions have been contributed.
+People have built this software for other platforms. It should be pretty
+straightforward, as we've tried hard to make the source and build system as
+compatible as possible. Also, SDL2 and support for OpenGL ES 2.0+ (especially
+when coupled with [ANGLE](https://github.com/google/angle)) is widely
+available.
+
+The CI checks run on Linux (gcc), MacOS (gcc) and Windows (MSVC). However, no
+instructions have been contributed for manual builds on these platforms.
 
 Invocation
 ------------
-
-To run, you'll need a graphics driver as well as hardware capable of supporting
-OpenGL ES 2.0. This is pretty much the lowest common denominator for graphics
-rendering these days. Especially when coupled with
-[ANGLE](https://github.com/google/angle).
 
 The game can be started using the command line:
 
