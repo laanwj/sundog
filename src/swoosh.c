@@ -56,7 +56,7 @@ void swoosh(SDL_Window *window, struct game_renderer *renderer, const char *fram
         if (temp_path[BUFLEN - 1]) {
             goto error;
         }
-        slen = strnlen(temp_path, BUFLEN);
+        slen = strlen(temp_path);
         if (slen > 0 && temp_path[slen - 1] != '/') {
             strncat(temp_path, "/", BUFLEN - 1);
         }

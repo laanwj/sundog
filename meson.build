@@ -32,10 +32,11 @@ if get_option('game_cheats')
 endif
 
 # C-standard settings.
-add_project_arguments(
-    '-D_POSIX_C_SOURCE=200809L',
-    '-D_DARWIN_C_SOURCE=1', # MacOS memset_pattern4 for SDL
-    language: ['c'])
+if host_machine.system() == 'darwin'
+    add_project_arguments(
+        '-D_DARWIN_C_SOURCE=1', # MacOS memset_pattern4 for SDL
+        language: ['c'])
+endif
 
 # Warning overrides.
 if meson.get_compiler('c').get_id() == 'msvc'
