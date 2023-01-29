@@ -99,7 +99,7 @@ static void hq4x_destroy(struct game_renderer *renderer_)
     free(renderer);
 }
 
-static void init_gl(struct renderer_hq4x *renderer)
+static void init_gl(struct renderer_hq4x *renderer, const char *vert_name, const char *frag_name, const char *param_texture)
 {
     /* Simple textured quad, for use with triangle strip */
     static float quad[] = {
@@ -119,13 +119,15 @@ static void init_gl(struct renderer_hq4x *renderer)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
     assert(glGetError() == GL_NONE);
 
-    /* Param texture for HQ4x shader. */
-    renderer->aux_tex = load_texture_resource("shaders/hq4x.bmp");
+    if (param_texture) {
+        /* Param texture for HQ4x shader. */
+        renderer->aux_tex = load_texture_resource(param_texture);
+    }
 
     /* Create shaders */
     GLuint p1 = glCreateProgram();
-    GLuint s2 = load_shader_resource("shaders/screen-hq4x.vert", GL_VERTEX_SHADER);
-    GLuint s3 = load_shader_resource("shaders/screen-hq4x.frag", GL_FRAGMENT_SHADER);
+    GLuint s2 = load_shader_resource(vert_name, GL_VERTEX_SHADER);
+    GLuint s3 = load_shader_resource(frag_name, GL_FRAGMENT_SHADER);
     glAttachShader(p1, s2);
     glDeleteShader(s2);
     glAttachShader(p1, s3);
@@ -161,7 +163,23 @@ struct game_renderer *new_renderer_hq4x(void)
     renderer->base.update_palette  = hq4x_update_palette;
     renderer->base.destroy         = hq4x_destroy;
 
-    init_gl(renderer);
+    init_gl(renderer, "shaders/screen-hq4x.vert", "shaders/screen-hq4x.frag", "shaders/hq4x.bmp");
+
+    return &renderer->base;
+}
+
+struct game_renderer *new_renderer_hqish(void)
+{
+    if (!check_for_GLES3()) {
+        return NULL;
+    }
+    struct renderer_hq4x *renderer = CALLOC_STRUCT(renderer_hq4x);
+    renderer->base.draw            = hq4x_draw;
+    renderer->base.update_texture  = hq4x_update_texture;
+    renderer->base.update_palette  = hq4x_update_palette;
+    renderer->base.destroy         = hq4x_destroy;
+
+    init_gl(renderer, "shaders/screen-hqish.vert", "shaders/screen-hqish.frag", NULL);
 
     return &renderer->base;
 }

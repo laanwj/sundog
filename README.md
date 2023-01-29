@@ -107,6 +107,9 @@ Other options can be provided:
   - `hq4x` is a higher quality pixel art scaler that takes neighbour pixels
     into account. This is a more expensive algorithm that requires a GPU
     capable of OpenGL ES 3.0.
+  - `hqish` is another higher quality pixel art scaler. It's different than
+    `hq4x` in that it doesn't hardcode a scale factor but computes everything
+    on the fly. This may look better for larger resolutions. YMMV.
 - `--help`: Display a help message and exit.
 
 Playing

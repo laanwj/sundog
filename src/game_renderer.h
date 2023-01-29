@@ -29,5 +29,6 @@ struct game_renderer {
 
 struct game_renderer *new_renderer_basic(void);
 struct game_renderer *new_renderer_hq4x(void);
+struct game_renderer *new_renderer_hqish(void);
 
 #endif

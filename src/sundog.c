@@ -668,6 +668,7 @@ const struct renderer_desc {
 } renderer_names[] = {
     { "basic", new_renderer_basic },
     { "hq4x", new_renderer_hq4x },
+    { "hqish", new_renderer_hqish },
 };
 
 int main(int argc, char **argv)
@@ -731,10 +732,10 @@ int main(int argc, char **argv)
     image_name = "game/sundog.st";
 #endif
     if (print_usage) {
-        fprintf(stderr, "Usage: %s [--renderer (basic|hq4x)] <image.st>\n", argv[0]);
+        fprintf(stderr, "Usage: %s [--renderer (basic|hq4x|hqish)] <image.st>\n", argv[0]);
         fprintf(stderr, "\n");
         fprintf(stderr, "      --fullscreen Make window initially fullscreen.\n");
-        fprintf(stderr, "      --renderer   Set renderer to use (\"basic\" or \"hq4x\"), default is \"basic\". Renderers other than \"basic\" require a OpenGL 3 compatible GPU.\n");
+        fprintf(stderr, "      --renderer   Set renderer to use (\"basic\" or \"hq4x\" or \"hqish\"), default is \"basic\". Renderers other than \"basic\" require OpenGL ES 3.\n");
         fprintf(stderr, "      --help       Display this help and exit.\n");
         fprintf(stderr, "\n");
         fprintf(stderr, "For copyright reasons this game does not come with the resources nor game code.\n");
