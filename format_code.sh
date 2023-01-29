@@ -1,6 +1,4 @@
-#!/bin/bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#!/bin/sh
+set -e
 
-clang-format -style=file -i \
-    ${DIR}/src/*.[ch] \
-    ${DIR}/src/{test,psys,game,util}/*.[ch]
+find src -iname \*.c -o -iname \*.h -o -iname \*.cpp | xargs clang-format -style=file -i
