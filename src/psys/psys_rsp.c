@@ -18,6 +18,7 @@
 #include "util/util_minmax.h"
 #include "util/util_save_state.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
@@ -138,10 +139,10 @@ static psys_word unitrw(struct psys_state *state, struct psys_rsp_state *rsp, bo
     case PSYS_UNIT_CONSOLE:
     case PSYS_UNIT_SYSTERM: {
         if (wr) {
-            int ret = write(STDOUT_FILENO, buf, len);
+            size_t ret = fwrite(buf, 1, len, stdout);
             (void)ret;
         } else {
-            int ret = read(STDIN_FILENO, buf, len);
+            size_t ret = fread(buf, 1, len, stdin);
             (void)ret;
         }
     } break;
