@@ -1,5 +1,23 @@
 #include "util_time.h"
 
+#ifdef _WIN32
+/* https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw */
+#include <windows.h>
+
+int util_usleep(unsigned int usec)
+{
+    HANDLE timer;
+    LARGE_INTEGER ft;
+
+    ft.QuadPart = -(10*usec); // Convert to 100 nanosecond interval, negative value indicates relative time
+
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0); 
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
+    return 0;
+}
+#else
 #include <errno.h>
 #include <time.h>
 
@@ -15,3 +33,4 @@ int util_usleep(unsigned int us)
     }
     return 0;
 }
+#endif
