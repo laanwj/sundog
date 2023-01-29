@@ -177,7 +177,7 @@ static void shiplib_19(struct psys_state *s, struct shiplib_priv *priv, psys_ful
         }
 
         /* Wait two frames */
-        util_usleep(2000000 / 50);
+        util_msleep(2000 / 50);
     }
 }
 

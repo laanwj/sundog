@@ -101,6 +101,8 @@ static const uint8_t sound_warp1[] = { 0x07, 0x38, 0x08, 0x10, 0x09, 0x10, 0x0a,
 static const uint8_t sound_warp2[] = { 0x0c, 0xff, 0x07, 0x07, 0x08, 0x10, 0x09, 0x10, 0x0a, 0x10, 0x80, 0x00, 0x0d, 0x09, 0x81, 0x06, 0x01, 0x5a, 0x08, 0x0c, 0x09, 0x0c, 0x0a, 0x0b, 0xff, 0x00 };
 static const uint8_t sound_warp3[] = { 0x0c, 0x04, 0x06, 0x00, 0x07, 0x08, 0x00, 0x64, 0x01, 0x00, 0x02, 0x67, 0x03, 0x00, 0x04, 0x5f, 0x05, 0x00, 0x08, 0x10, 0x09, 0x10, 0x0a, 0x10, 0x0d, 0x0f, 0xff, 0x00 };
 
+static const uint32_t tick_ms = 10;
+
 /** state structure */
 struct wowzo {
     /* OS handles */
@@ -128,13 +130,20 @@ struct wowzo {
 
     /* various vars */
     uint32_t seed; /* current random seed (=last random number generated) */
+    uint32_t delay_acc; /* accumulated delay in microseconds */
 };
 
 /** Delay execution an amount in 68000 DIVS instructions. */
 static void wowzo_wait(struct wowzo *data, unsigned int delay)
 {
     /* 80-140 cycles at 8 Mhz */
-    util_usleep(delay * 15);
+    data->delay_acc += delay * 15;
+
+    /* accumulate delays until we reach tick granularity, then wait a tick */
+    while (data->delay_acc > (tick_ms * 1000)) {
+        data->delay_acc -= tick_ms * 1000;
+        util_msleep(tick_ms);
+    }
 }
 
 /** Deterministic random number routine, used for star position generation. */
