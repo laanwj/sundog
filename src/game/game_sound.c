@@ -6,9 +6,9 @@
 #include "game_sound.h"
 
 #include "psys/psys_debug.h"
-#include "util/emu2149.h"
 #include "util/memutil.h"
 
+#include "emu2149.h"
 #include <SDL.h>
 
 #include <string.h>

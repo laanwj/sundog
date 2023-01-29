@@ -34,7 +34,7 @@ libgame_sources = files(
     'game/wowzo.c',
     'util/util_img.c',
     'util/util_time.c',
-    'util/emu2149.c',
+    '../thirdparty/emu2149/emu2149.c',
 )
 if get_option('psys_debugger')
     libgame_sources += files(
@@ -42,17 +42,18 @@ if get_option('psys_debugger')
     )
 endif
 libgame = library('game', sources: [libgame_sources, gen_debuginfo],
+                  include_directories: ['../thirdparty/emu2149'],
                   dependencies: [sdl2_dep, readline_dep])
 
 if get_option('debug_ui')
     libdebugui_sources = files(
         'debugui/debugui.cpp',
-        'imgui/imgui.cpp',
-        'imgui/imgui_draw.cpp',
-        'imgui/imgui_impl_sdl_gles2.cpp',
+        '../thirdparty/imgui/imgui.cpp',
+        '../thirdparty/imgui/imgui_draw.cpp',
+        '../thirdparty/imgui/imgui_impl_sdl_gles2.cpp',
     )
     libdebugui = library('debugui', sources: libdebugui_sources,
-                      include_directories: ['imgui', '../thirdparty'],
+                      include_directories: ['../thirdparty/imgui', '../thirdparty/glxw-sdl', '../thirdparty/opengl'],
                       dependencies: [sdl2_dep])
 else
     libdebugui = []
@@ -63,12 +64,12 @@ sundog_sources = files(
     'sundog_resources.c',
     'swoosh.c',
     'glutil.c',
-    'glxw/glxw_es3.c',
+    '../thirdparty/glxw-sdl/glxw/glxw_es3.c',
     'renderer_basic.c',
     'renderer_hq4x.c',
 )
 executable('sundog', [sundog_sources, gen_resource],
-           include_directories: ['../thirdparty'],
+           include_directories: ['../thirdparty/glxw-sdl', '../thirdparty/opengl'],
            link_with: [libpsys, libgame, libdebugui],
            win_subsystem: 'windows',
            dependencies: [sdl2_dep, m_lib])
