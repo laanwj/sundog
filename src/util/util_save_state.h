@@ -6,15 +6,15 @@
 #ifndef H_UTIL_SAVE_STATE
 #define H_UTIL_SAVE_STATE
 
-#include "compat/compat_unistd.h"
+#include <stdio.h>
 #include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define FD_WRITE(fd, x) (write((fd), &(x), sizeof(x)) < (ssize_t)sizeof(x))
-#define FD_READ(fd, x) (read((fd), &(x), sizeof(x)) < (ssize_t)sizeof(x))
+#define FD_WRITE(fd, x) (fwrite(&(x), 1, sizeof(x), (fd)) < (size_t)sizeof(x))
+#define FD_READ(fd, x) (fread(&(x), 1, sizeof(x), (fd)) < (size_t)sizeof(x))
 
 #ifdef __cplusplus
 }

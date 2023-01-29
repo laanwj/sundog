@@ -646,7 +646,7 @@ static void psys_rsp_setrestricted(struct psys_state *state, struct psys_rsp_sta
     psys_panic("setrestricted not implemented\n");
 }
 
-static int psys_rsp_save_state(struct psys_binding *b, int fd)
+static int psys_rsp_save_state(struct psys_binding *b, FILE *fd)
 {
     struct psys_rsp_state *rsp = (struct psys_rsp_state *)b->userdata;
     uint32_t id                = PSYS_RSP_STATE_ID;
@@ -659,13 +659,13 @@ static int psys_rsp_save_state(struct psys_binding *b, int fd)
         || FD_WRITE(fd, rsp->time)) {
         return -1;
     }
-    if (write(fd, rsp->disk0, rsp->disk0_size) < (ssize_t)rsp->disk0_size) {
+    if (fwrite(rsp->disk0, 1, rsp->disk0_size, fd) < (size_t)rsp->disk0_size) {
         return -1;
     }
     return 0;
 }
 
-static int psys_rsp_load_state(struct psys_binding *b, int fd)
+static int psys_rsp_load_state(struct psys_binding *b, FILE *fd)
 {
     struct psys_rsp_state *rsp = (struct psys_rsp_state *)b->userdata;
     uint32_t id;
@@ -685,7 +685,7 @@ static int psys_rsp_load_state(struct psys_binding *b, int fd)
         || FD_READ(fd, rsp->time)) {
         return -1;
     }
-    if (read(fd, rsp->disk0, rsp->disk0_size) < (ssize_t)rsp->disk0_size) {
+    if (fread(rsp->disk0, 1, rsp->disk0_size, fd) < (size_t)rsp->disk0_size) {
         return -1;
     }
     return 0;

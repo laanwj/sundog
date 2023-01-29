@@ -193,7 +193,7 @@ static void shiplib_1A(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     wowzo(priv->screen, priv->sound, a, b, c);
 }
 
-static int shiplib_save_state(struct psys_binding *b, int fd)
+static int shiplib_save_state(struct psys_binding *b, FILE *fd)
 {
     uint32_t id = GAME_SHIPLIB_STATE_ID;
     /* Save shiplib state (dummy) */
@@ -203,7 +203,7 @@ static int shiplib_save_state(struct psys_binding *b, int fd)
     return 0;
 }
 
-static int shiplib_load_state(struct psys_binding *b, int fd)
+static int shiplib_load_state(struct psys_binding *b, FILE *fd)
 {
     uint32_t id;
     /* Load shiplib state (dummy) */

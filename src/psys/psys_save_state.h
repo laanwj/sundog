@@ -8,15 +8,17 @@
 
 #include "psys_types.h"
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /** Save state to fd (return 0 on success) */
-extern int psys_save_state(struct psys_state *b, int fd);
+extern int psys_save_state(struct psys_state *b, FILE *fd);
 
 /** Load state from fd (return 0 on success) */
-extern int psys_load_state(struct psys_state *b, int fd);
+extern int psys_load_state(struct psys_state *b, FILE *fd);
 
 #ifdef __cplusplus
 }

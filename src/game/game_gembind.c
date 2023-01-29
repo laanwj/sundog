@@ -885,7 +885,7 @@ static void gembind_vblank_cb(struct game_screen *screen, void *arg)
     }
 }
 
-static int gembind_save_state(struct psys_binding *b, int fd)
+static int gembind_save_state(struct psys_binding *b, FILE *fd)
 {
     struct gembind_priv *priv = (struct gembind_priv *)b->userdata;
     uint32_t id               = GAME_GEMBIND_STATE_ID;
@@ -905,7 +905,7 @@ static int gembind_save_state(struct psys_binding *b, int fd)
     return 0;
 }
 
-static int gembind_load_state(struct psys_binding *b, int fd)
+static int gembind_load_state(struct psys_binding *b, FILE *fd)
 {
     struct gembind_priv *priv = (struct gembind_priv *)b->userdata;
     uint32_t id;

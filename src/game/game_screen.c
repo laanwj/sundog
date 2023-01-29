@@ -697,7 +697,7 @@ void game_sdlscreen_update_cursor(struct game_screen *screen_, void **cursor)
     SDL_UnlockMutex(screen->mutex);
 }
 
-int game_sdlscreen_save_state(struct game_screen *screen_, int fd)
+int game_sdlscreen_save_state(struct game_screen *screen_, FILE *fd)
 {
     /* Must be called without the interpreter thread running,
      * so no locking is needed.
@@ -718,7 +718,7 @@ int game_sdlscreen_save_state(struct game_screen *screen_, int fd)
     return 0;
 }
 
-int game_sdlscreen_load_state(struct game_screen *screen_, int fd)
+int game_sdlscreen_load_state(struct game_screen *screen_, FILE *fd)
 {
     /* Must be called without the interpreter thread running,
      * so no locking is needed.

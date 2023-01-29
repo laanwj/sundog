@@ -9,6 +9,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -118,10 +119,10 @@ bool game_sdlscreen_update_textures(struct game_screen *screen, void *data, upda
 void game_sdlscreen_update_cursor(struct game_screen *screen, void **cursor);
 
 /** Save screen state to fd (return 0 on success) */
-extern int game_sdlscreen_save_state(struct game_screen *b, int fd);
+extern int game_sdlscreen_save_state(struct game_screen *b, FILE *fd);
 
 /** Load screen state from fd (return 0 on success) */
-extern int game_sdlscreen_load_state(struct game_screen *b, int fd);
+extern int game_sdlscreen_load_state(struct game_screen *b, FILE *fd);
 
 /** Update mouse state */
 extern void game_sdlscreen_update_mouse(struct game_screen *b, int x, int y, unsigned buttons);

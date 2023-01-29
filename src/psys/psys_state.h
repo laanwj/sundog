@@ -8,6 +8,8 @@
 
 #include "psys_types.h"
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,9 +26,9 @@ struct psys_binding {
      */
     psys_bindingfunc **handlers;
     /* Save binding state to fd */
-    int (*save_state)(struct psys_binding *b, int fd);
+    int (*save_state)(struct psys_binding *b, FILE *fd);
     /* Load binding state to fd */
-    int (*load_state)(struct psys_binding *b, int fd);
+    int (*load_state)(struct psys_binding *b, FILE *fd);
 
     void *userdata;
 };

@@ -15,7 +15,7 @@
 /* Header for savestates */
 #define PSYS_STATE_ID 0x50535953
 
-int psys_save_state(struct psys_state *s, int fd)
+int psys_save_state(struct psys_state *s, FILE *fd)
 {
     int rv;
     unsigned x;
@@ -38,7 +38,7 @@ int psys_save_state(struct psys_state *s, int fd)
         || FD_WRITE(fd, s->mem_fake_base)) {
         return -1;
     }
-    if (write(fd, s->memory, s->mem_size) < (ssize_t)s->mem_size) {
+    if (fwrite(s->memory, 1, s->mem_size, fd) < (size_t)s->mem_size) {
         return -1;
     }
     /* Save state of bindings */
@@ -53,7 +53,7 @@ int psys_save_state(struct psys_state *s, int fd)
     return 0;
 }
 
-int psys_load_state(struct psys_state *s, int fd)
+int psys_load_state(struct psys_state *s, FILE *fd)
 {
     int rv;
     unsigned x;
@@ -83,7 +83,7 @@ int psys_load_state(struct psys_state *s, int fd)
         || FD_READ(fd, s->mem_fake_base)) {
         return -1;
     }
-    if (read(fd, s->memory, s->mem_size) < (ssize_t)s->mem_size) {
+    if (fread(s->memory, 1, s->mem_size, fd) < (size_t)s->mem_size) {
         return -1;
     }
     /* Load state of bindings */

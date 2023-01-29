@@ -36,8 +36,6 @@
 
 #include <SDL.h>
 
-#include "compat/compat_fcntl.h"
-#include "compat/compat_unistd.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -345,7 +343,7 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
 /* Header for savestates */
 #define PSYS_SUND_STATE_ID 0x53554e44
 
-static int game_load_state(struct game_state *gs, int fd)
+static int game_load_state(struct game_state *gs, FILE *fd)
 {
     uint32_t id;
     if (FD_READ(fd, id)) {
@@ -371,7 +369,7 @@ static int game_load_state(struct game_state *gs, int fd)
     return 0;
 }
 
-static int game_save_state(struct game_state *gs, int fd)
+static int game_save_state(struct game_state *gs, FILE *fd)
 {
     uint32_t id = PSYS_SUND_STATE_ID;
     if (FD_WRITE(fd, id)
@@ -565,34 +563,34 @@ static void event_loop(struct game_state *gs)
                 break;
             case SDLK_s: {                   /* Save state */
                 stop_interpreter_thread(gs); /* stop interpreter thread while saving */
-                int fd = open("sundog.sav", O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
-                if (fd < 0) {
+                FILE *f = fopen("sundog.sav", "wb");
+                if (f == NULL) {
                     psys_debug("Error opening game state file for writing\n");
                     break;
                 }
-                if (game_save_state(gs, fd) < 0) {
+                if (game_save_state(gs, f) < 0) {
                     psys_debug("Error during save of game state\n");
                 } else {
                     psys_debug("Game state succesfully saved\n");
                 }
                 start_interpreter_thread(gs);
-                close(fd);
+                fclose(f);
             } break;
             case SDLK_l: {                   /* Load state */
                 stop_interpreter_thread(gs); /* stop interpreter thread while loading */
-                int fd = open("sundog.sav", O_RDONLY | O_BINARY);
-                if (fd < 0) {
+                FILE *f = fopen("sundog.sav", "rb");
+                if (f == NULL) {
                     psys_debug("Error opening game state file for reading\n");
                     break;
                 }
-                if (game_load_state(gs, fd) < 0) {
+                if (game_load_state(gs, f) < 0) {
                     psys_debug("Error during load of game state\n");
                     /* Don't bother restarting the interpreter after failed load... */
                 } else {
                     psys_debug("Game state succesfully restored\n");
                     start_interpreter_thread(gs);
                 }
-                close(fd);
+                fclose(f);
             } break;
             case SDLK_SPACE: /* Pause */
                 if (!gs->thread) {
