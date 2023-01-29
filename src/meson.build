@@ -73,13 +73,18 @@ executable('sundog', [sundog_sources, gen_resource],
            win_subsystem: 'windows',
            dependencies: [sdl2_dep, m_lib])
 
-executable('sundog_compare_trace', 'sundog_compare_trace.c',
-           link_with: [libpsys, libgame],
-           win_subsystem: 'windows',
-           dependencies: [sdl2_dep, m_lib])
+# Don't build the tools for windows.
+# There may be some Linux specific funniness in there, and I don't particularly
+# care to port that because it's developer tooling only.
+if host_machine.system() != 'windows'
+    executable('sundog_compare_trace', 'sundog_compare_trace.c',
+               link_with: [libpsys, libgame],
+               win_subsystem: 'windows',
+               dependencies: [sdl2_dep, m_lib])
 
-executable('rip_images', ['rip_images.c', 'util/write_bmp.c'],
-           link_with: [libpsys, libgame],
-           dependencies: [m_lib])
+    executable('rip_images', ['rip_images.c', 'util/write_bmp.c'],
+               link_with: [libpsys, libgame],
+               dependencies: [m_lib])
+endif
 
 subdir('test')
