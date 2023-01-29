@@ -1,3 +1,5 @@
+![CI status](https://github.com/laanwj/sundog/actions/workflows/ci_meson.yml/badge.svg?branch=main)
+
 Sundog: Frozen Legacy
 ========================
 
