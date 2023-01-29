@@ -12,8 +12,6 @@
 #include "psys/psys_state.h"
 #include "util/memutil.h"
 
-#include "compat/compat_fcntl.h"
-#include "compat/compat_unistd.h"
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdio.h>
@@ -382,10 +380,10 @@ void psys_debugger_run(struct psys_debugger *dbg, bool user)
                 goto cleanup;
             } else if (!strcmp(cmd, "dm")) { /* Dump memory */
                 if (num >= 2) {
-                    int fd = open(args[1], O_CREAT | O_WRONLY | O_BINARY, 0666);
-                    int rv = write(fd, s->memory, s->mem_size);
+                    FILE *f   = fopen(args[1], "wb");
+                    size_t rv = fwrite(s->memory, 1, s->mem_size, f);
                     (void)rv;
-                    close(fd);
+                    fclose(f);
                     printf("Wrote memory dump to %s\n", args[1]);
                 } else {
                     printf("Two arguments required\n");
