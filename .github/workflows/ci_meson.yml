@@ -46,11 +46,9 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-    - run: brew install gcc sdl2
+    - run: brew install sdl2
     - run: pip install meson ninja
     - run: meson setup -Dgame_cheats=true -Ddebug_ui=true builddir/
-      env:
-        CC: gcc
     - run: ninja -C builddir
     - run: meson test -C builddir/ -v
     - uses: actions/upload-artifact@v3

@@ -84,7 +84,7 @@ compatible as possible. Also, SDL2 and support for OpenGL ES 2.0+ (especially
 when coupled with [ANGLE](https://github.com/google/angle)) is widely
 available.
 
-The CI checks run on Linux (gcc), MacOS (gcc) and Windows (MSVC). However, no
+The CI checks run on Linux (gcc), MacOS (clang) and Windows (MSVC). However, no
 instructions have been contributed for manual builds on these platforms.
 
 Invocation
