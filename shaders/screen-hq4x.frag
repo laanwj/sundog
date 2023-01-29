@@ -1,10 +1,10 @@
+#version 300 es
 /*
  * Copyright (c) 2023 Wladimir J. van der Laan
  * SPDX-License-Identifier: MIT
  */
 /* ST screen palette mapping, fragment shader.
    hqx4x variant inspired by https://github.com/CrossVR/hqx-shader */
-#version 300 es
 precision highp float;
 
 in vec2 texcoord;

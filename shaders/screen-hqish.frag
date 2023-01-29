@@ -1,10 +1,10 @@
+#version 300 es
 /*
  * Copyright (c) 2023 Wladimir J. van der Laan
  * SPDX-License-Identifier: MIT
  */
 /* ST screen palette mapping, fragment shader.
    hqx-ish variant inspired by https://godotshaders.com/shader/hq4x-shader-like-in-emulators/ */
-#version 300 es
 precision highp float;
 
 in vec2 texcoord;
