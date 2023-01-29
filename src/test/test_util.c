@@ -6,12 +6,12 @@
 #include "test_util.h"
 
 #include "compat/compat_fcntl.h"
+#include "compat/compat_unistd.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "compat/compat_unistd.h"
 
 void *load_file(const char *filename, size_t *size_out)
 {

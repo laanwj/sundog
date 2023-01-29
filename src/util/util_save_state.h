@@ -6,8 +6,8 @@
 #ifndef H_UTIL_SAVE_STATE
 #define H_UTIL_SAVE_STATE
 
-#include <string.h>
 #include "compat/compat_unistd.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {

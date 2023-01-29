@@ -129,7 +129,7 @@ struct wowzo {
     uint8_t headmove[MAXSTARS]; /* TRUE (>0) if head still moving */
 
     /* various vars */
-    uint32_t seed; /* current random seed (=last random number generated) */
+    uint32_t seed;      /* current random seed (=last random number generated) */
     uint32_t delay_acc; /* accumulated delay in microseconds */
 };
 

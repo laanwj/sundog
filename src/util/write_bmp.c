@@ -24,13 +24,13 @@
 /*
  * Quick 'n Dirty bitmap dumper.
  */
-#include <errno.h>
 #include "compat/compat_fcntl.h"
+#include "compat/compat_unistd.h"
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "compat/compat_unistd.h"
 
 #include "write_bmp.h"
 

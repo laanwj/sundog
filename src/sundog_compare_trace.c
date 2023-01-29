@@ -20,11 +20,11 @@
 #include "game/game_shiplib.h"
 
 #include "compat/compat_fcntl.h"
+#include "compat/compat_unistd.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "compat/compat_unistd.h"
 
 int tracefd;
 uint32_t tracerecsize;

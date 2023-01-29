@@ -6,6 +6,14 @@ on:
 
 jobs:
 
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: |
+        sh format_code.sh
+        git diff --exit-code
+
   linux:
     runs-on: ubuntu-latest
     steps:

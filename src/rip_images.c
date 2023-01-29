@@ -3,8 +3,8 @@
 #include "util/write_bmp.h"
 
 #include "compat/compat_fcntl.h"
-#include <stdio.h>
 #include "compat/compat_unistd.h"
+#include <stdio.h>
 
 static void write_image(unsigned addr, const psys_byte *data, unsigned width, unsigned height)
 {

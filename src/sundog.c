@@ -5,6 +5,7 @@
  */
 #include "sundog.h"
 
+#include "game/game_debug.h"
 #include "game/game_gembind.h"
 #include "game/game_screen.h"
 #include "game/game_shiplib.h"
@@ -20,7 +21,6 @@
 #include "psys/psys_rsp.h"
 #include "psys/psys_save_state.h"
 #include "psys/psys_task.h"
-#include "game/game_debug.h"
 #ifdef PSYS_DEBUGGER
 #include "util/debugger.h"
 #endif
@@ -37,11 +37,11 @@
 #include <SDL.h>
 
 #include "compat/compat_fcntl.h"
+#include "compat/compat_unistd.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "compat/compat_unistd.h"
 
 /* Time between vblanks in ms */
 #define VBLANK_TIME (1000 / 50)

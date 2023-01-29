@@ -9,9 +9,9 @@
 
 #include <glxw/glxw_es3.h>
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /** Compile GLSL shader from resource. */
 GLuint load_shader_resource(const char *name, GLenum shader_type);

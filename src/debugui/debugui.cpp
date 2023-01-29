@@ -20,9 +20,9 @@
 
 #include <stdio.h>
 
-static bool show_window = false;
-static bool show_palette_window = false;
-static bool show_memory_window = false;
+static bool show_window          = false;
+static bool show_palette_window  = false;
+static bool show_memory_window   = false;
 static bool show_segments_window = false;
 static struct game_state *gamestate;
 static MemoryEditor mem_edit;
@@ -72,10 +72,10 @@ static void debugui_list_segments(struct psys_state *s)
     ImGui::Separator();
     ImGui::PopStyleColor();
     while (erec) {
-        psys_word sib = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
-        psys_word data_base = psys_ldw(s, erec + PSYS_EREC_Env_Data); /* globals start */
+        psys_word sib       = psys_ldw(s, erec + PSYS_EREC_Env_SIB);
+        psys_word data_base = psys_ldw(s, erec + PSYS_EREC_Env_Data);    /* globals start */
         psys_word data_size = psys_ldw(s, sib + PSYS_SIB_Data_Size) * 2; /* globals size in bytes */
-        if (data_size) { /* Add size of MSCW/activation record */
+        if (data_size) {                                                 /* Add size of MSCW/activation record */
             data_size += 0x0a;
         }
 
@@ -90,7 +90,7 @@ static void debugui_list_segments(struct psys_state *s)
         ImGui::NextColumn();
         ImGui::Text("%04x", sib);
         ImGui::NextColumn();
-        ImGui::Text("%c", is_segment_resident(s, erec) ? 'R':'-');
+        ImGui::Text("%c", is_segment_resident(s, erec) ? 'R' : '-');
         ImGui::NextColumn();
         ImGui::Text("%-8.8s", psys_bytes(s, sib + PSYS_SIB_Seg_Name));
         ImGui::NextColumn();
@@ -99,17 +99,17 @@ static void debugui_list_segments(struct psys_state *s)
         ImGui::Text("%04x", data_size);
         ImGui::NextColumn();
 
-        psys_word evec = psys_ldw(s, erec + PSYS_EREC_Env_Vect);
+        psys_word evec     = psys_ldw(s, erec + PSYS_EREC_Env_Vect);
         psys_word num_evec = psys_ldw(s, W(evec, 0));
         /* Subsidiary segments. These will be referenced in the segment's evec
          * and have the same evec pointer (and the same BASE, but that's less reliable
          * as some segments have no globals).
          */
-        for (int i=1; i<num_evec; ++i) {
-            psys_word serec = psys_ldw(s, W(evec,i));
+        for (int i = 1; i < num_evec; ++i) {
+            psys_word serec = psys_ldw(s, W(evec, i));
             if (serec) {
                 /* Print subsidiary segment */
-                psys_word ssib = psys_ldw(s, serec + PSYS_EREC_Env_SIB);
+                psys_word ssib  = psys_ldw(s, serec + PSYS_EREC_Env_SIB);
                 psys_word sevec = psys_ldw(s, serec + PSYS_EREC_Env_Vect);
                 if (serec != erec && sevec == evec) {
                     char buf2[16];
@@ -122,7 +122,7 @@ static void debugui_list_segments(struct psys_state *s)
                     ImGui::NextColumn();
                     ImGui::Text("%04x", ssib);
                     ImGui::NextColumn();
-                    ImGui::Text("%c", is_segment_resident(s, serec) ? 'R':'-');
+                    ImGui::Text("%c", is_segment_resident(s, serec) ? 'R' : '-');
                     ImGui::NextColumn();
                     ImGui::Text(" %-8.8s", psys_bytes(s, ssib + PSYS_SIB_Seg_Name));
                     ImGui::NextColumn();
@@ -140,26 +140,28 @@ bool debugui_newframe(SDL_Window *window)
 {
     ImGui_ImplSdlGLES2_NewFrame(window);
 
-    if (show_window)
-    {
+    if (show_window) {
         ImGui::Begin("Debug");
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f,0.5f,0.0f,1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.5f, 0.0f, 1.0f));
         ImGui::TextUnformatted("Su");
         ImGui::PopStyleColor();
-        ImGui::SameLine(0,0);
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f,0.75f,0.0f,1.0f));
+        ImGui::SameLine(0, 0);
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.75f, 0.0f, 1.0f));
         ImGui::TextUnformatted("nd");
         ImGui::PopStyleColor();
-        ImGui::SameLine(0,0);
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f,1.0f,0.0f,1.0f));
+        ImGui::SameLine(0, 0);
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
         ImGui::TextUnformatted("og");
         ImGui::PopStyleColor();
 
-        if (ImGui::Button("Palette")) show_palette_window ^= 1;
+        if (ImGui::Button("Palette"))
+            show_palette_window ^= 1;
         ImGui::SameLine();
-        if (ImGui::Button("Memory")) show_memory_window ^= 1;
+        if (ImGui::Button("Memory"))
+            show_memory_window ^= 1;
         ImGui::SameLine();
-        if (ImGui::Button("Segments")) show_segments_window ^= 1;
+        if (ImGui::Button("Segments"))
+            show_segments_window ^= 1;
 
         ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
@@ -179,20 +181,18 @@ bool debugui_newframe(SDL_Window *window)
     }
 #endif
 
-    if (show_memory_window)
-    {
+    if (show_memory_window) {
         assert(gamestate->psys);
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f,0.0f,0.0f,0.95f)); // Less transparent
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.95f)); // Less transparent
         ImGui::Begin("Memory", &show_memory_window);
         mem_edit.DrawContents(gamestate->psys->memory, gamestate->psys->mem_size, 0);
         ImGui::End();
         ImGui::PopStyleColor();
     }
 
-    if (show_segments_window)
-    {
-        ImGui::SetNextWindowSize(ImVec2(320,280), ImGuiCond_FirstUseEver);
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f,0.0f,0.0f,0.90f)); // Less transparent
+    if (show_segments_window) {
+        ImGui::SetNextWindowSize(ImVec2(320, 280), ImGuiCond_FirstUseEver);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.90f)); // Less transparent
         ImGui::Begin("Segments", &show_segments_window);
         assert(gamestate->psys);
         debugui_list_segments(gamestate->psys);
@@ -203,13 +203,13 @@ bool debugui_newframe(SDL_Window *window)
     // TODO: instruction view/single step, when VM is stopped
 
     // If ImGui wants to capture mouse, block game from processing mouse position/buttons
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     return io.WantCaptureMouse;
 }
 
 bool debugui_processevent(SDL_Event *event)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     switch (event->type) {
     case SDL_KEYDOWN:
         switch (event->key.keysym.sym) {
@@ -237,4 +237,3 @@ void debugui_shutdown(void)
 {
     ImGui_ImplSdlGLES2_Shutdown();
 }
-

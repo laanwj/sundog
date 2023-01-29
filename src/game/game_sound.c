@@ -15,7 +15,7 @@
 
 #define RATE (22050)
 #define CMDBUFSIZE (256)
-//#define SOUND_DEBUG
+// #define SOUND_DEBUG
 
 struct sdl_sound {
     struct game_sound base;
@@ -39,7 +39,7 @@ static inline struct sdl_sound *sdl_sound(struct game_sound *base)
 static void sdlsound_callback(void *sound_, uint8_t *stream, int len)
 {
     struct sdl_sound *sound = sdl_sound(sound_);
-    int ptr = 0;
+    int ptr                 = 0;
     len /= 2; /* size in samples */
 
     /* Generate samples */
@@ -72,8 +72,8 @@ static void sdlsound_callback(void *sound_, uint8_t *stream, int len)
                     printf("sdlsound: Out of range while reading repeat arguments\n");
                     sound->cmd_ptr = sound->cmd_len;
                 } else {
-                    uint8_t regnr = sound->cmd[sound->cmd_ptr++];
-                    uint8_t delta = sound->cmd[sound->cmd_ptr++];
+                    uint8_t regnr  = sound->cmd[sound->cmd_ptr++];
+                    uint8_t delta  = sound->cmd[sound->cmd_ptr++];
                     uint8_t endval = sound->cmd[sound->cmd_ptr++];
 #ifdef SOUND_DEBUG
                     printf("%d repeat[%02x,%02x,%02x]\n", (int)ofs, regnr, delta, endval);
@@ -115,7 +115,7 @@ static void sdlsound_callback(void *sound_, uint8_t *stream, int len)
         }
 
         /* Generate sample. */
-        ((int16_t*)stream)[ptr] = PSG_calc(sound->psg);
+        ((int16_t *)stream)[ptr] = PSG_calc(sound->psg);
         ptr += 1;
         if (sound->gen_count > 0) {
             sound->gen_count -= 1;
@@ -134,9 +134,9 @@ static void sdlsound_play_sound(struct game_sound *sound_, const uint8_t *data, 
     SDL_LockAudioDevice(1);
     /* Completely replace the previous sound and reset state. */
     memcpy(sound->cmd, data, len);
-    sound->cmd_ptr = 0;
-    sound->cmd_len = len;
-    sound->tmp = 0;
+    sound->cmd_ptr   = 0;
+    sound->cmd_len   = len;
+    sound->tmp       = 0;
     sound->gen_count = 0;
     PSG_reset(sound->psg);
     SDL_UnlockAudioDevice(1);
@@ -157,18 +157,18 @@ struct game_sound *new_sdl_sound(void)
     struct sdl_sound *sound = CALLOC_STRUCT(sdl_sound);
     SDL_AudioSpec wanted;
 
-    sound->base.play_sound  = &sdlsound_play_sound;
-    sound->base.destroy     = &sdlsound_destroy;
+    sound->base.play_sound = &sdlsound_play_sound;
+    sound->base.destroy    = &sdlsound_destroy;
 
     sound->samples_per_tick = RATE / 50;
 
-    sound->gen_count        = 0;
+    sound->gen_count = 0;
 
     SDL_zero(wanted);
-    wanted.freq = RATE;
-    wanted.format = AUDIO_S16;
+    wanted.freq     = RATE;
+    wanted.format   = AUDIO_S16;
     wanted.channels = 1;
-    wanted.samples = 1024;
+    wanted.samples  = 1024;
     wanted.callback = sdlsound_callback;
     wanted.userdata = sound;
 
