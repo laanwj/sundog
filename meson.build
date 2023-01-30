@@ -1,5 +1,5 @@
 project('sundog', 'c', 'cpp',
-        default_options: ['default_library=static', 'c_std=c99', 'warning_level=2'])
+        default_options: ['default_library=static', 'c_std=c99', 'cpp_std=c++11', 'warning_level=2'])
 
 sdl2_dep = dependency('SDL2')
 m_lib = meson.get_compiler('c').find_library('m', required: false)
@@ -48,13 +48,6 @@ else
         '-Werror=implicit-function-declaration',
         '-Wmissing-prototypes',
         language: ['c'])
-    # shut up some warnings for imgui build
-    add_project_arguments(
-        '-Wno-unused-parameter',
-        '-Wno-class-memaccess',
-        '-Wno-missing-declarations',
-        language: ['cpp']
-    )
 endif
 
 resources = files(

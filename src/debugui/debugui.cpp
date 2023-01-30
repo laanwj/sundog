@@ -15,7 +15,8 @@
 #include "sundog.h"
 
 #include <imgui.h>
-#include <imgui_impl_sdl_gles2.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl.h>
 #include <imgui_memory_editor.h>
 
 #include <stdio.h>
@@ -29,7 +30,12 @@ static MemoryEditor mem_edit;
 
 void debugui_init(SDL_Window *window, struct game_state *gs)
 {
-    ImGui_ImplSdlGLES2_Init(window);
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplSDL2_InitForOpenGL(window, NULL);
+    ImGui_ImplOpenGL3_Init(NULL);
+
     gamestate = gs;
 }
 
@@ -138,7 +144,10 @@ static void debugui_list_segments(struct psys_state *s)
 
 bool debugui_newframe(SDL_Window *window)
 {
-    ImGui_ImplSdlGLES2_NewFrame(window);
+    (void)window;
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
 
     if (show_window) {
         ImGui::Begin("Debug");
@@ -222,7 +231,7 @@ bool debugui_processevent(SDL_Event *event)
         break;
     }
     if (io.WantCaptureKeyboard || io.WantCaptureMouse) { /* Send events to debug window? */
-        return ImGui_ImplSdlGLES2_ProcessEvent(event);
+        return ImGui_ImplSDL2_ProcessEvent(event);
     } else {
         return false;
     }
@@ -231,9 +240,11 @@ bool debugui_processevent(SDL_Event *event)
 void debugui_render(void)
 {
     ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void debugui_shutdown(void)
 {
-    ImGui_ImplSdlGLES2_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
 }
