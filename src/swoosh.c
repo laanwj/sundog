@@ -8,6 +8,7 @@
 #include "game_renderer.h"
 #include "glutil.h"
 #include "sundog_resources.h"
+#include "util/memutil.h"
 
 #include <SDL.h>
 
@@ -16,17 +17,26 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 200
 
-static const size_t swoosh_nframes          = 11;
-static const int swoosh_frame_durations[11] = { 10, 1, 1, 2, 2, 3, 3, 3, 3, 12, 40 };
+static struct {
+    const char *name;
+    int duration;
+} swoosh_frames[] = {
+    { "swoosh/frame000.bmp", 10 },
+    { "swoosh/frame001.bmp", 1 },
+    { "swoosh/frame002.bmp", 1 },
+    { "swoosh/frame003.bmp", 2 },
+    { "swoosh/frame004.bmp", 2 },
+    { "swoosh/frame005.bmp", 3 },
+    { "swoosh/frame006.bmp", 3 },
+    { "swoosh/frame007.bmp", 3 },
+    { "swoosh/frame008.bmp", 3 },
+    { "swoosh/frame009.bmp", 12 },
+    { "swoosh/frame010.bmp", 40 },
+};
 
 /** Load and show FTL swoosh animation. */
-void swoosh(SDL_Window *window, struct game_renderer *renderer, const char *frames_path)
+void swoosh(SDL_Window *window, struct game_renderer *renderer)
 {
-    size_t idx;
-    size_t slen;
-#define BUFLEN (200)
-    char temp_path[BUFLEN];
-
     /* Setup GL render and clear window to black. */
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
@@ -44,30 +54,9 @@ void swoosh(SDL_Window *window, struct game_renderer *renderer, const char *fram
     uint8_t palette[16][4];
     uint16_t palette_st[16];
 
-    for (idx = 0; idx < swoosh_nframes; ++idx) {
+    for (size_t idx = 0; idx < ARRAY_SIZE(swoosh_frames); ++idx) {
         /* Load frame */
-        char istr[4];
-        istr[0] = '0' + ((idx / 100) % 10);
-        istr[1] = '0' + ((idx / 10) % 10);
-        istr[2] = '0' + (idx % 10);
-        istr[3] = 0;
-
-        strncpy(temp_path, frames_path, BUFLEN);
-        if (temp_path[BUFLEN - 1]) {
-            goto error;
-        }
-        slen = strlen(temp_path);
-        if (slen > 0 && temp_path[slen - 1] != '/') {
-            strncat(temp_path, "/", BUFLEN - 1);
-        }
-        strncat(temp_path, "frame", BUFLEN - 1);
-        strncat(temp_path, istr, BUFLEN - 1);
-        strncat(temp_path, ".bmp", BUFLEN - 1);
-        if (temp_path[BUFLEN - 2]) {
-            goto error;
-        }
-
-        load_paletted(temp_path, image, SCREEN_WIDTH, SCREEN_HEIGHT, &palette[0][0]);
+        load_paletted(swoosh_frames[idx].name, image, SCREEN_WIDTH, SCREEN_HEIGHT, &palette[0][0]);
         renderer->update_texture(renderer, image);
         /* Here we actually convert the palette back to Atari ST paletter colors. */
         for (int x = 0; x < 16; ++x) {
@@ -87,8 +76,7 @@ void swoosh(SDL_Window *window, struct game_renderer *renderer, const char *fram
         SDL_GL_SwapWindow(window);
 
         /* Sleep after frame */
-        SDL_Delay(swoosh_frame_durations[idx] * 1000 / 50);
+        SDL_Delay(swoosh_frames[idx].duration * 1000 / 50);
         SDL_PumpEvents();
     }
-error:;
 }

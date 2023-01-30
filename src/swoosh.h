@@ -11,6 +11,6 @@
 struct game_renderer;
 
 /** Load and show FTL swoosh animation. */
-void swoosh(SDL_Window *window, struct game_renderer *renderer, const char *frames_path);
+void swoosh(SDL_Window *window, struct game_renderer *renderer);
 
 #endif

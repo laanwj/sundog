@@ -778,7 +778,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    swoosh(gs->window, gs->renderer, "swoosh/");
+    swoosh(gs->window, gs->renderer);
 
     /* Set up "vblank" timer */
     gs->vblank_count = 0;
