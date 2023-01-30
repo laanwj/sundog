@@ -93,10 +93,12 @@ Invocation
 The game can be started using the command line:
 
 ```
-build/src/sundog[.exe] <image.st>
+build/src/sundog[.exe] [<image.st>]
 ```
 
-Where `<image.st>` is the Sundog disk image to use.
+Where `<image.st>` is the Sundog disk image to use. If none is provided, it
+will look for `sundog.st` in the same directory as the program. If it isn't
+found there, the game will fail to start.
 
 Other options can be provided:
 
