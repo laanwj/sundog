@@ -90,4 +90,5 @@ prog_python = import('python').find_installation('python3')
 resource_comp = files('tools/resource_compiler.py')
 debug_info = files('tools/gen_debug_info.py', 'tools/libcalls_list.py', 'tools/appcalls_list.py')
 
+subdir('thirdparty')
 subdir('src')

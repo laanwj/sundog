@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # Copyright (c) 2012 Riku Salminen
+# Copyright (c) 2014 Daniel Scharrer
+# Copyright (c) 2023 W. J. van der Laan
+# SPDX-License-Identifier: Zlib
 
 import argparse
 import os
@@ -32,15 +35,11 @@ def generate_header(api, funcs, api_includes, prefix, suffix, filename):
 
     common = '''
 
-#ifndef __gl_h_
-#define __gl_h_
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int load_gles3_procs(void);
+int load%(suffix)s_procs(void);
 ''' % {
     'upper_suffix': suffix[1:].upper() if api == 'glx' or api == 'wgl' or api == 'egl' else '',
     'suffix': suffix
@@ -53,10 +52,6 @@ int load_gles3_procs(void);
 
 #endif
 '''
-
-    dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
 
     with open(filename, 'w') as f:
         f.write(header)
@@ -90,17 +85,13 @@ def generate_library(api, funcs, api_includes, prefix, suffix, filename):
 
 struct glxw%(suffix)s glxw%(suffix)s;
 
-int load_gles3_procs(void)
+int load%(suffix)s_procs(void)
 {
     struct glxw%(suffix)s *ctx = &glxw%(suffix)s;
 ''' % {
     'upper_suffix': suffix[1:].upper() if api == 'glx' or api == 'wgl' or api == 'egl' else '',
     'suffix': suffix
     }
-
-    dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
 
     with open(filename, 'w') as f:
         f.write('#include <glxw/glxw%s.h>\n' % suffix)
@@ -120,8 +111,6 @@ OpenGL extension loader generator.
 This script downloads OpenGL, OpenGL ES, EGL, WGL, GLX extension headers from
 official sources and generates an extension loading library.
         ''')
-    parser.add_argument('-g', '--generate', action='store_true',
-        help='Generate only')
     parser.add_argument('-I', '--include', type=str, metavar='DIR',
         help='Look for include files in directory')
     parser.add_argument('-o', '--output', type=str, metavar='DIR',
@@ -189,11 +178,10 @@ official sources and generates an extension loading library.
 
         if len(funcs) > 0:
             api_includes = ['%s/%s' % (directory, header) for (f, header, url) in headers]
-            include_file = os.path.join(output_dir, 'include', 'GLXW', 'glxw%s.h' % suffix)
-            source_file = os.path.join(output_dir, 'src', 'glxw%s.c' % suffix)
+
+            include_file = os.path.join(output_dir, 'glxw%s.h' % suffix)
+            source_file = os.path.join(output_dir, 'glxw%s.c' % suffix)
 
             generate_header(api, funcs, api_includes, prefix, suffix, include_file)
             generate_library(api, funcs, api_includes, prefix, suffix, source_file)
-
-
 
