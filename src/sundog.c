@@ -661,6 +661,34 @@ static void event_loop(struct game_state *gs)
     }
 }
 
+#ifndef DISK_IMAGE_AS_RESOURCE
+const char *auto_image_name = "sundog.st";
+/** Try to automatically find the disk image.
+ * For now, check only in progam directory.
+ */
+static const char *sundog_autolocate_image(void)
+{
+    char *exe_path = SDL_GetBasePath();
+    if (!exe_path) {
+        return NULL;
+    }
+    size_t maxlen = SDL_strlen(exe_path) + SDL_strlen(auto_image_name) + 1;
+    char *retval  = SDL_malloc(maxlen);
+    SDL_strlcpy(retval, exe_path, maxlen); /* guaranteed to end with path separator */
+    SDL_strlcat(retval, auto_image_name, maxlen);
+    SDL_free(exe_path);
+
+    SDL_RWops *fd = SDL_RWFromFile(retval, "rb");
+    if (fd == NULL) {
+        SDL_free(retval);
+        return NULL;
+    }
+    SDL_RWclose(fd);
+
+    return retval;
+}
+#endif
+
 /** List of supported renderers with instantiation function. */
 const struct renderer_desc {
     const char *name;
@@ -726,13 +754,19 @@ int main(int argc, char **argv)
     }
 #ifndef DISK_IMAGE_AS_RESOURCE
     if (!image_name) {
-        print_usage = true;
+        image_name = sundog_autolocate_image();
+        if (image_name) {
+            printf("Found disk image: %s\n", image_name);
+        } else {
+            fprintf(stderr, "No image provided, and could not find '%s' in program directory.\n", auto_image_name);
+            print_usage = true;
+        }
     }
 #else
     image_name = "game/sundog.st";
 #endif
     if (print_usage) {
-        fprintf(stderr, "Usage: %s [--renderer (basic|hq4x|hqish)] <image.st>\n", argv[0]);
+        fprintf(stderr, "Usage: %s [--renderer (basic|hq4x|hqish)] [<image.st>]\n", argv[0]);
         fprintf(stderr, "\n");
         fprintf(stderr, "      --fullscreen Make window initially fullscreen.\n");
         fprintf(stderr, "      --renderer   Set renderer to use (\"basic\" or \"hq4x\" or \"hqish\"), default is \"basic\". Renderers other than \"basic\" require OpenGL ES 3.\n");
@@ -740,6 +774,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "\n");
         fprintf(stderr, "For copyright reasons this game does not come with the resources nor game code.\n");
         fprintf(stderr, "It requires the user to provide the 360K `.st` raw disk image of the game to run.\n");
+        fprintf(stderr, "If no image is provided, it will look for `sundog.st` in the program directory.\n");
         exit(1);
     }
 
