@@ -64,6 +64,33 @@ meson setup --buildtype release build
 ninja -C build
 ```
 
+### Mac OS X
+
+1. Install build- and run-time dependencies:
+   ```
+   brew install mesa meson ninja sdl2
+   brew install --cask chromium
+   ```
+2. Clone this repository
+3. Create a `game` subdirectory below the repository, and install [your copy](https://github.com/laanwj/sundog/issues/2#issuecomment-478829859) of the game as `game/sundog.st`
+4. Build from source:
+   ```
+   meson setup --buildtype release build -Dbuiltin_image=true
+   ninja -C build
+   ```
+5. Install the built binary somewhere *not* in the `PATH` (see below), e.g.
+   ```
+   mkdir /usr/local/lib/sundog
+   cp build/src/sundog /usr/local/lib/sundog/
+   ```
+6. Create a shell script `/usr/local/bin/sundog` that reads
+   ```
+   export SDL_VIDEO_EGL_DRIVER="/Applications/Chromium.app/Contents/Frameworks/Chromium Framework.framework/Versions/Current/Libraries/libEGL.dylib"
+   exec /usr/local/lib/sundog/sundog "$@"
+  ```
+7. Run Chromium by hand once, so as to validate the “unknown developer” warning — If you don't, the next step will complain (because the copies of `libEGL.dylib` and `libGLESv2.dylib` that `sundog` attempts to dynamically load, must be whitelisted by the OS before running)
+8. Run `sundog` from the command line.
+
 ### Build settings
 
 The following settings can be set with `-Doption=value` on the meson command line, or through `meson configure`:
