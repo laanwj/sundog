@@ -422,10 +422,10 @@ static void draw(struct game_state *gs)
 {
     int width, height;
     SDL_GetWindowSize(gs->window, &width, &height);
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, width * 2, height * 2);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glViewport(gs->viewport[0], gs->viewport[1], gs->viewport[2], gs->viewport[3]);
+    glViewport(gs->viewport[0], gs->viewport[1], gs->viewport[2] * 2, gs->viewport[3] * 2);
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
