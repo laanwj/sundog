@@ -425,7 +425,9 @@ static void draw(struct game_state *gs)
     glViewport(0, 0, width * 2, height * 2);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glViewport(gs->viewport[0], gs->viewport[1], gs->viewport[2] * 2, gs->viewport[3] * 2);
+    glViewport(gs->viewport[0], gs->viewport[1],
+               gs->viewport[2] * PLATFORM_ASPECT_RATIO_CORRECTION,
+               gs->viewport[3] * PLATFORM_ASPECT_RATIO_CORRECTION);
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);

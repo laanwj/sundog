@@ -33,4 +33,11 @@ void compute_viewport_fixed_ratio(int width, int height, int desired_width, int 
 /** Make viewport maximum size that preserves aspect ratio. */
 void gl_viewport_fixed_ratio(int width, int height, int desired_width, int desired_height);
 
+/** Everything is bigger on Mac OS X Retina, or something */
+#ifdef __APPLE__
+#define PLATFORM_ASPECT_RATIO_CORRECTION 2
+#else
+#define PLATFORM_ASPECT_RATIO_CORRECTION 1
+#endif
+
 #endif
