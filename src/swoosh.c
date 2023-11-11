@@ -39,7 +39,7 @@ void swoosh(SDL_Window *window, struct game_renderer *renderer)
 {
     /* Setup GL render and clear window to black. */
     int width, height;
-    SDL_GetWindowSize(window, &width, &height);
+    SDL_GL_GetDrawableSize(window, &width, &height);
 
     glViewport(0, 0, width, height);
     glDisable(GL_DEPTH_TEST);
@@ -66,7 +66,7 @@ void swoosh(SDL_Window *window, struct game_renderer *renderer)
         }
         renderer->update_palette(renderer, palette_st);
 
-        SDL_GetWindowSize(window, &width, &height);
+        SDL_GL_GetDrawableSize(window, &width, &height);
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
         gl_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT);

@@ -172,6 +172,5 @@ void gl_viewport_fixed_ratio(int width, int height, int desired_width, int desir
 {
     int viewport[4];
     compute_viewport_fixed_ratio(width, height, desired_width, desired_height, viewport);
-    glViewport(viewport[0], viewport[1], viewport[2] * PLATFORM_ASPECT_RATIO_CORRECTION,
-               viewport[3] * PLATFORM_ASPECT_RATIO_CORRECTION);
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }

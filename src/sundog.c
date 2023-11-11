@@ -421,13 +421,11 @@ static void stop_interpreter_thread(struct game_state *gs)
 static void draw(struct game_state *gs)
 {
     int width, height;
-    SDL_GetWindowSize(gs->window, &width, &height);
-    glViewport(0, 0, width * 2, height * 2);
+    SDL_GL_GetDrawableSize(gs->window, &width, &height);
+    glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glViewport(gs->viewport[0], gs->viewport[1],
-               gs->viewport[2] * PLATFORM_ASPECT_RATIO_CORRECTION,
-               gs->viewport[3] * PLATFORM_ASPECT_RATIO_CORRECTION);
+    glViewport(gs->draw_viewport[0], gs->draw_viewport[1], gs->draw_viewport[2], gs->draw_viewport[3]);
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
@@ -448,7 +446,7 @@ static void update_window_size(struct game_state *gs)
 {
     int width, height;
 
-    SDL_GetWindowSize(gs->window, &width, &height);
+    SDL_GL_GetDrawableSize(gs->window, &width, &height);
     compute_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT, gs->viewport);
     gs->force_redraw = true;
 }
@@ -795,7 +793,8 @@ int main(int argc, char **argv)
 
     gs->window = SDL_CreateWindow("SunDog: Frozen Legacy",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320 * 4, 200 * 4,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI |
+                                  (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
     if (!gs->window) {
         psys_panic("Unable to create window: %s\n", SDL_GetError());
     }
