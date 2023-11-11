@@ -39,8 +39,11 @@ struct game_state {
 
     /** Current renderer object. */
     struct game_renderer *renderer;
-    /** Viewport bounds {xbase, ybase, width, height}. */
-    int viewport[4];
+    /** Viewport bounds {xbase, ybase, width, height} for mouse purposes. */
+    int mouse_viewport[4];
+    /** Viewport bounds {xbase, ybase, width, height} for drawing purposes -
+        May differ under e.g. Mac OS X + Retina. */
+    int draw_viewport[4];
     /** Force redraw on next frame if true. */
     bool force_redraw;
     /** If set, bypass/ignore SDL input to game. */

@@ -446,8 +446,10 @@ static void update_window_size(struct game_state *gs)
 {
     int width, height;
 
+    SDL_GetWindowSize(gs->window, &width, &height);
+    compute_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT, gs->mouse_viewport);
     SDL_GL_GetDrawableSize(gs->window, &width, &height);
-    compute_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT, gs->viewport);
+    compute_viewport_fixed_ratio(width, height, SCREEN_WIDTH, SCREEN_HEIGHT, gs->draw_viewport);
     gs->force_redraw = true;
 }
 
@@ -467,8 +469,8 @@ static void update_mouse_state(struct game_state *gs)
     if (sb & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
         buttons |= 2;
     }
-    int x = (sx - gs->viewport[0]) * SCREEN_WIDTH / imax(gs->viewport[2], 1);
-    int y = (sy - gs->viewport[1]) * SCREEN_HEIGHT / imax(gs->viewport[3], 1);
+    int x = (sx - gs->mouse_viewport[0]) * SCREEN_WIDTH / imax(gs->mouse_viewport[2], 1);
+    int y = (sy - gs->mouse_viewport[1]) * SCREEN_HEIGHT / imax(gs->mouse_viewport[3], 1);
 
     /* Emulate right click action when clicking (or touching) in top right,
        to accomodate single mouse button devices.
