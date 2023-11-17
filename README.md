@@ -130,6 +130,10 @@ found there, the game will fail to start.
 Other options can be provided:
 
 - `--fullscreen`: Make window initially fullscreen.
+- `--right-click-emulation`: Dedicate the top right corner of the screen
+   to right-click emulation (e.g. for tablets)
+- `--no-right-click-emulation`: Disable right-click emulation in the top right
+  corner
 - `--renderer <renderer>`: Set renderer to use:
   - `basic` is the default, which applies straightforward nearest pixel filtering
     to scale the image.
@@ -178,6 +182,8 @@ Status
 - Sound effects.
 - Touch screen support: a small area in the top-right of the screen has been
   designated as "cancel area" and will emulate a right-mouse click when touched.
+  This can be disabled by passing `--no-right-click-emulation` on the command
+  line.
 
 Is it fully playable? Yes, I played it for quite a bit. All the critical things
 have been implemented, Though I cannot guarantee that there aren't any bugs
