@@ -711,7 +711,18 @@ int main(int argc, char **argv)
     bool print_usage                          = false;
     bool fullscreen                           = false;
 
+#ifdef __APPLE__
+    #include <TargetConditionals.h>
+    #if defined(TARGET_OS_IPHONE) && (! defined(TARGET_OS_MACCATALYST)) && (! defined(TARGET_OS_SIMULATOR))
     gs->has_right_click_emulation = true;
+    #else
+    gs->has_right_click_emulation = false;
+    #endif
+#elif __ANDROID__
+    gs->has_right_click_emulation = true;
+#else
+    gs->has_right_click_emulation = false;
+#endif
 
     /** Command-line argument parsing. */
     for (int argidx = 1; argidx < argc; ++argidx) {
