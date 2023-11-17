@@ -712,12 +712,12 @@ int main(int argc, char **argv)
     bool fullscreen                           = false;
 
 #ifdef __APPLE__
-    #include <TargetConditionals.h>
-    #if defined(TARGET_OS_IPHONE) && (! defined(TARGET_OS_MACCATALYST)) && (! defined(TARGET_OS_SIMULATOR))
+#include <TargetConditionals.h>
+#if defined(TARGET_OS_IPHONE) && (! defined(TARGET_OS_MACCATALYST)) && (! defined(TARGET_OS_SIMULATOR))
     gs->has_right_click_emulation = true;
-    #else
+#else
     gs->has_right_click_emulation = false;
-    #endif
+#endif
 #elif __ANDROID__
     gs->has_right_click_emulation = true;
 #else

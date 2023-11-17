@@ -38,9 +38,9 @@ struct game_state {
     uint32_t saved_time;
 
     /** Whether clicking in the top right corner acts as right mouse button
-      * (e.g. for tablets). */
+     * (e.g. for tablets). */
     bool has_right_click_emulation;
- 
+
     /** Current renderer object. */
     struct game_renderer *renderer;
     /** Viewport bounds {xbase, ybase, width, height} for mouse purposes. */
