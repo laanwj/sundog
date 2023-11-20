@@ -2,6 +2,7 @@ project('sundog', 'c', 'cpp',
         default_options: ['default_library=static', 'c_std=c99', 'cpp_std=c++11', 'warning_level=2'])
 
 sdl2_dep = dependency('SDL2')
+sdl2main_dep = dependency('SDL2main', required: false)
 m_lib = meson.get_compiler('c').find_library('m', required: false)
 
 # Flip p-system endian (XXX should only be required on little-endian systems)
