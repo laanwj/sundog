@@ -782,7 +782,7 @@ int main(int argc, char **argv)
         }
     }
 #else
-    image_name = "game/sundog.st";
+    image_name                    = "game/sundog.st";
 #endif
     if (print_usage) {
         fprintf(stderr, "Usage: %s [--renderer (basic|hq4x|hqish)] [<image.st>]\n", argv[0]);
@@ -815,8 +815,7 @@ int main(int argc, char **argv)
 
     gs->window = SDL_CreateWindow("SunDog: Frozen Legacy",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320 * 4, 200 * 4,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI |
-                                  (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
     if (!gs->window) {
         psys_panic("Unable to create window: %s\n", SDL_GetError());
     }
