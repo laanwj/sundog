@@ -64,7 +64,7 @@ sundog_sources = files(
 executable('sundog', [sundog_sources, gen_resource],
            link_with: [libpsys, libgame, libdebugui],
            win_subsystem: 'windows',
-           dependencies: [libglxw_idep, sdl2_dep, m_lib])
+           dependencies: [libglxw_idep, sdl2_dep, sdl2main_dep, m_lib])
 
 # Don't build the tools for windows.
 # There may be some Linux specific funniness in there, and I don't particularly

@@ -35,6 +35,7 @@
 #include "swoosh.h"
 
 #include <SDL.h>
+#include <SDL_main.h>
 
 #include <stdio.h>
 #include <string.h>
