@@ -475,7 +475,7 @@ static void update_mouse_state(struct game_state *gs)
     /* Emulate right click action when clicking (or touching) in top right,
        to accomodate single mouse button devices.
       */
-    if ((buttons == 1) && x >= (320 - CANCEL_AREA_W) && y < CANCEL_AREA_H) {
+    if ((gs->has_right_click_emulation) && (buttons == 1) && x >= (320 - CANCEL_AREA_W) && y < CANCEL_AREA_H) {
         buttons = 2;
     }
     game_sdlscreen_update_mouse(gs->screen, x, y, buttons);
@@ -710,6 +710,19 @@ int main(int argc, char **argv)
     bool print_usage                          = false;
     bool fullscreen                           = false;
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if defined(TARGET_OS_IPHONE) && (!defined(TARGET_OS_MACCATALYST)) && (!defined(TARGET_OS_SIMULATOR))
+    gs->has_right_click_emulation = true;
+#else
+    gs->has_right_click_emulation = false;
+#endif
+#elif __ANDROID__
+    gs->has_right_click_emulation = true;
+#else
+    gs->has_right_click_emulation = false;
+#endif
+
     /** Command-line argument parsing. */
     for (int argidx = 1; argidx < argc; ++argidx) {
         const char *arg = argv[argidx];
@@ -738,6 +751,10 @@ int main(int argc, char **argv)
                     print_usage = true;
                     break;
                 }
+            } else if (strcmp(arg, "--right-click-emulation") == 0) {
+                gs->has_right_click_emulation = true;
+            } else if (strcmp(arg, "--no-right-click-emulation") == 0) {
+                gs->has_right_click_emulation = false;
             } else {
                 fprintf(stderr, "Unknown argument: %s\n", arg);
                 print_usage = true;
@@ -765,14 +782,17 @@ int main(int argc, char **argv)
         }
     }
 #else
-    image_name = "game/sundog.st";
+    image_name                    = "game/sundog.st";
 #endif
     if (print_usage) {
         fprintf(stderr, "Usage: %s [--renderer (basic|hq4x|hqish)] [<image.st>]\n", argv[0]);
         fprintf(stderr, "\n");
-        fprintf(stderr, "      --fullscreen Make window initially fullscreen.\n");
-        fprintf(stderr, "      --renderer   Set renderer to use (\"basic\" or \"hq4x\" or \"hqish\"), default is \"basic\". Renderers other than \"basic\" require OpenGL ES 3.\n");
-        fprintf(stderr, "      --help       Display this help and exit.\n");
+        fprintf(stderr, "      --fullscreen                 Make window initially fullscreen.\n");
+        fprintf(stderr, "      --renderer                   Set renderer to use (\"basic\" or \"hq4x\" or \"hqish\"), default is \"basic\". Renderers other than \"basic\" require OpenGL ES 3.\n");
+        fprintf(stderr, "      --right-click-emulation      Dedicate the top right corner of the screen to right-click emulation (e.g. for tablets)\n");
+        fprintf(stderr, "      --no-right-click-emulation   Disable right-click emulation in the top right corner\n");
+
+        fprintf(stderr, "      --help                       Display this help and exit.\n");
         fprintf(stderr, "\n");
         fprintf(stderr, "For copyright reasons this game does not come with the resources nor game code.\n");
         fprintf(stderr, "It requires the user to provide the 360K `.st` raw disk image of the game to run.\n");
@@ -795,8 +815,7 @@ int main(int argc, char **argv)
 
     gs->window = SDL_CreateWindow("SunDog: Frozen Legacy",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320 * 4, 200 * 4,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI |
-                                  (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
     if (!gs->window) {
         psys_panic("Unable to create window: %s\n", SDL_GetError());
     }
