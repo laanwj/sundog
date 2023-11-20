@@ -782,7 +782,7 @@ int main(int argc, char **argv)
         }
     }
 #else
-    image_name = "game/sundog.st";
+    image_name                    = "game/sundog.st";
 #endif
     if (print_usage) {
         fprintf(stderr, "Usage: %s [--renderer (basic|hq4x|hqish)] [<image.st>]\n", argv[0]);
