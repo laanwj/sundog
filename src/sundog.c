@@ -475,8 +475,7 @@ static void update_mouse_state(struct game_state *gs)
     /* Emulate right click action when clicking (or touching) in top right,
        to accomodate single mouse button devices.
       */
-    if ((gs->has_right_click_emulation) && (buttons == 1) &&
-        x >= (320 - CANCEL_AREA_W) && y < CANCEL_AREA_H) {
+    if ((gs->has_right_click_emulation) && (buttons == 1) && x >= (320 - CANCEL_AREA_W) && y < CANCEL_AREA_H) {
         buttons = 2;
     }
     game_sdlscreen_update_mouse(gs->screen, x, y, buttons);
@@ -713,7 +712,7 @@ int main(int argc, char **argv)
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
-#if defined(TARGET_OS_IPHONE) && (! defined(TARGET_OS_MACCATALYST)) && (! defined(TARGET_OS_SIMULATOR))
+#if defined(TARGET_OS_IPHONE) && (!defined(TARGET_OS_MACCATALYST)) && (!defined(TARGET_OS_SIMULATOR))
     gs->has_right_click_emulation = true;
 #else
     gs->has_right_click_emulation = false;
@@ -816,8 +815,7 @@ int main(int argc, char **argv)
 
     gs->window = SDL_CreateWindow("SunDog: Frozen Legacy",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320 * 4, 200 * 4,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI |
-                                  (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
     if (!gs->window) {
         psys_panic("Unable to create window: %s\n", SDL_GetError());
     }
