@@ -55,16 +55,14 @@ enum {
     EVC_DEBUGGER = 0x1001
 };
 
-/** HACK: Sundog has a complex, extremely paranoid integrity checking system.
+/** Sundog has a complex, extremely paranoid integrity checking system.
  * This may be part copy protection or to deter other kinds of tampering with the game.
  * In case an error is detected it sets the screen to red and locks up the game
  * (just google for "Sundog red screen" to find plenty of examples of people stumbling on it,
  * both in emulation and on real STs).
- * In any case it trips up while running in this interpreter, and until someone finds
- * a more elegant way around it, we persistently turn it off by resetting its state.
  */
-#define INTEGRITY_CHECK_ADDR(gs) (W((gs)->gembind_ofs + 8, 0x238)) /* global GEMBIND_238 */
 #ifdef DEBUG_INTEGRITY_CHECK
+#define INTEGRITY_CHECK_ADDR(gs) (W((gs)->gembind_ofs + 8, 0x238)) /* global GEMBIND_238 */
 /** Watch ??? state */
 static void watch_integrity_check(struct game_state *gs)
 {
@@ -74,19 +72,33 @@ static void watch_integrity_check(struct game_state *gs)
     static psys_word last_state = 0;
     psys_word new_state         = psys_ldw(gs->psys, INTEGRITY_CHECK_ADDR(gs));
     if (new_state != last_state) {
-        psys_debug("\x1b[38;5;196;48;5;235m??? state changed to 0x%04x\x1b[0m\n", new_state);
-        psys_print_traceback(s);
+        char *state_str = "???";
+        switch ((short)new_state) {
+        case 18278: state_str = "misc1_check"; break;
+        case -2278: state_str = "misc2_check"; break;
+        case 747: state_str = "misc3_check"; break;
+        case -30000: state_str = "misc4_check"; break;
+        case 18: state_str = "do_sum"; break;
+        case -365: state_str = "can_check"; break;
+        case 4765: state_str = "first_check"; break;
+        case -13257: state_str = "second_check"; break;
+        case 13: state_str = "blowup_soon"; break;
+        case 1234: state_str = "time_to_blowup"; break;
+        }
+        psys_word fail1   = psys_ldw(gs->psys, W((gs)->mainlib_ofs + 8, 0x3ab));
+        psys_word fail2   = psys_ldw(gs->psys, W((gs)->mainlib_ofs + 8, 0x3ac));
+        psys_word fail3   = psys_ldw(gs->psys, W((gs)->mainlib_ofs + 8, 0x3ad));
+        psys_word secret1 = psys_ldw(gs->psys, W((gs)->mainlib_ofs + 8, 0xa73));
+        psys_word secret2 = psys_ldw(gs->psys, W((gs)->mainlib_ofs + 8, 0x3b1));
+        psys_word secret3 = psys_ldw(gs->psys, W((gs)->mainlib_ofs + 8, 0x392));
+        psys_debug("\x1b[38;5;196;48;5;235m??? state changed to %s (%d) fail %d %d %d secret %d %d %d\x1b[0m\n", state_str, (short)new_state, fail1, fail2, fail3, secret1, secret2, secret3);
+        psys_print_traceback(gs->psys);
         last_state = new_state;
     }
 }
 #else
-/** Neuter ??? state */
 static void watch_integrity_check(struct game_state *gs)
 {
-    if (!gs->gembind_ofs) {
-        return;
-    }
-    psys_stw(gs->psys, INTEGRITY_CHECK_ADDR(gs), 0);
 }
 #endif
 
@@ -234,6 +246,43 @@ static void psys_trace(struct psys_state *s, void *gs_)
 #endif
 }
 
+static void special_disk_handler(void *data, int disk, unsigned srcblk, bool wr)
+{
+    /*
+     * Patch for copy protection:
+     * > I've done some reverse engineering to figure out a bit more about the copy
+     * > protection mechanism used by Atart ST Sundog.  Part of the trick is that
+     * > track 3 of the floppy disk has 10 sectors rather than the standard 9 sectors.
+     * > The additional sector is a duplicate of sector 5 (that is, there are two
+     * > sectors that both identify as sector 5.)  The contents of these two sectors
+     * > is identical except that the byte at offset 0x113 (275) is set to 0xBC in one
+     * > sector and to 0xA2 in the other.  In addition, the sectors on track 3 are
+     * > written in this order (1, 4, 7, 5, 2, 5, 8, 3, 6, 9).  This means that the
+     * > code can control which version of sector 5 it reads by varying which sector
+     * > it reads before it tries to read sector 5.
+     * - Wayne Holder
+     */
+    psys_byte *disk0 = (psys_byte *)data;
+    if (srcblk < 9) {
+        const int secret_offset = (5 - 1) * 512 + 0x113;
+        if (srcblk == (5 - 1)) {
+#ifdef DEBUG_INTEGRITY_CHECK
+            printf("Reading track 3 sector 5: %02x\n", disk0[secret_offset]);
+#endif
+        } else if (srcblk == (2 - 1) || srcblk == (8 - 1)) { /* Visited sector 2 or 8 first, special value. */
+#ifdef DEBUG_INTEGRITY_CHECK
+            printf("Reading track 3 sector %d -> setting 0xa2\n", srcblk + 1);
+#endif
+            disk0[secret_offset] = 0xa2;
+        } else { /* Visited any other sector first, normal value. */
+#ifdef DEBUG_INTEGRITY_CHECK
+            printf("Reading track 3 sector %d -> setting 0xbc\n", srcblk + 1);
+#endif
+            disk0[secret_offset] = 0xbc;
+        }
+    }
+}
+
 static struct psys_state *setup_state(struct game_screen *screen, struct game_sound *sound, const char *imagename, struct psys_binding **rspb_out)
 {
     struct psys_state *state = CALLOC_STRUCT(psys_state);
@@ -324,6 +373,7 @@ static struct psys_state *setup_state(struct game_screen *screen, struct game_so
     /* set up RSP and disk */
     rspb = psys_new_rsp(state);
     psys_rsp_set_disk(rspb, 0, disk_data, disk_size, track_size, true);
+    psys_rsp_set_pre_access_hook(rspb, special_disk_handler, disk_data);
     if (rspb_out) {
         *rspb_out = rspb;
     }

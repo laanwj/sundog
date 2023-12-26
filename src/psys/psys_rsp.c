@@ -148,7 +148,7 @@ static psys_word unitrw(struct psys_state *state, struct psys_rsp_state *rsp, bo
     } break;
     case PSYS_UNIT_DISK0: {
         unsigned x, srcblk;
-        if (ctrl & 2) { /* physical addressing starts a second earlier */
+        if (ctrl & 2) { /* physical addressing starts a track earlier */
             len    = 512;
             srcblk = block;
         } else {
@@ -169,6 +169,9 @@ static psys_word unitrw(struct psys_state *state, struct psys_rsp_state *rsp, bo
             }
             if (PDBG(state, RSP)) {
                 psys_debug("%s 0x%04x 0x%04x 0x%04x\n", wr ? "write" : "read", buf_addr + x, srcblk * PSYS_BLOCK_SIZE, remainder);
+            }
+            if (rsp->pre_access_hook) {
+                rsp->pre_access_hook(rsp->pre_access_hook_data, unit, srcblk, wr);
             }
             if (wr) {
                 memcpy(rsp->disk0 + srcblk * PSYS_BLOCK_SIZE, buf + x, remainder);
@@ -764,6 +767,13 @@ void psys_rsp_set_disk(struct psys_binding *b, int n, void *data, size_t size, s
     rsp->disk0_size  = size / PSYS_BLOCK_SIZE;
     rsp->disk0_track = track / PSYS_BLOCK_SIZE;
     rsp->disk0_wrap  = wrap;
+}
+
+void psys_rsp_set_pre_access_hook(struct psys_binding *b, psys_rsp_pre_access_hook *pre_access_hook, void *data)
+{
+    struct psys_rsp_state *rsp = (struct psys_rsp_state *)b->userdata;
+    rsp->pre_access_hook       = pre_access_hook;
+    rsp->pre_access_hook_data  = data;
 }
 
 void psys_rsp_event(struct psys_binding *b, psys_word event, bool taskswitch)

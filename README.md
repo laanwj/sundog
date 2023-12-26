@@ -190,14 +190,6 @@ have been implemented, Though I cannot guarantee that there aren't any bugs
 left. If so, please report them through the issue tracker, along with a saved
 state if possible.
 
-### To be done
-
-Non-critical:
-
-- The copy protection (integrity check) is mitigated in an ugly and brittle
-  way. It would be better to emulate the underlying mechanism (which is known)
-  in the simulated disk controller.
-
 P-system
 -----------
 

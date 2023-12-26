@@ -83,6 +83,8 @@ enum {
     GDIR_ENTRY_SIZE  = 0x1a,
 };
 
+typedef void(psys_rsp_pre_access_hook)(void *data, int disk, unsigned blk, bool wr);
+
 #define PSYS_MAX_EVENTS 64
 
 struct psys_rsp_state {
@@ -97,6 +99,10 @@ struct psys_rsp_state {
 
     /* simulated inputs */
     unsigned time;
+
+    /* hooks */
+    psys_rsp_pre_access_hook *pre_access_hook;
+    void *pre_access_hook_data;
 };
 
 /* Fixed I/O block size */
@@ -104,6 +110,7 @@ struct psys_rsp_state {
 
 extern struct psys_binding *psys_new_rsp(struct psys_state *state);
 extern void psys_rsp_set_disk(struct psys_binding *b, int n, void *data, size_t size, size_t track, bool wrap);
+extern void psys_rsp_set_pre_access_hook(struct psys_binding *b, psys_rsp_pre_access_hook *pre_access_hook, void *data);
 extern void psys_destroy_rsp(struct psys_binding *b);
 
 /* Trigger event */
