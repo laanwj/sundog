@@ -87,7 +87,7 @@ ninja -C build
    ```
    export SDL_VIDEO_EGL_DRIVER="/Applications/Chromium.app/Contents/Frameworks/Chromium Framework.framework/Versions/Current/Libraries/libEGL.dylib"
    exec /usr/local/lib/sundog/sundog "$@"
-  ```
+   ```
 7. Run Chromium by hand once, so as to validate the “unknown developer” warning — If you don't, the next step will complain (because the copies of `libEGL.dylib` and `libGLESv2.dylib` that `sundog` attempts to dynamically load, must be whitelisted by the OS before running)
 8. Run `sundog` from the command line.
 
