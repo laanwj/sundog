@@ -158,6 +158,7 @@ static const struct {
     { "WINDOWLI", 0x070e, -1 }, /* WINDOWLI:0x12 entry point on creating a dialog (see issue #18) */
     { "WINDOWLI", 0x09e1, -1 }, /* WINDOWLI:0x15 make_zoom return */
     { "XDOINTER", 0x0fa2, -1 }, /* XDOINTER:0x1f new_frame, on return after drawing a dialog */
+    { "XMOVEONG", 0x2224, -1 }, /* XMOVEONG:0x30 choose_jump, fixup for teleporter choose destination */
     { "XSLOTS  ", 0x00ca, 1 },  /* XSLOTS:0x06   roll_face, fixup for slot machine animation */
 };
 
