@@ -877,9 +877,11 @@ int main(int argc, char **argv)
         psys_panic("Unable to create context: %s\n", SDL_GetError());
     }
 
+#ifndef USE_SYSGL
     if (!load_es3_procs()) {
         psys_panic("Unable to load OpenGL ES 2/3 functions.\n");
     }
+#endif
     printf("GL version: %s\n", glGetString(GL_VERSION));
 
     gs->renderer = renderer_type->new_renderer();
