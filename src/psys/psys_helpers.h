@@ -23,12 +23,12 @@ extern "C" {
  */
 #define W(base, ofs) ((base) + ((ofs)*2))
 #endif
-#ifdef FLIP_ENDIAN_HACK
-/* Flip endian */
-#define F(x) psys_flip_endian(x)
-#else
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 /* Don't flip endian */
 #define F(x) (x)
+#else
+/* Flip endian */
+#define F(x) psys_flip_endian(x)
 #endif
 
 /* Sign extend byte */

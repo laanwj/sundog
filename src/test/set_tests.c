@@ -10,13 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef FLIP_ENDIAN_HACK
-/* Flip endian */
-#define F(x) psys_flip_endian(x)
-#else
-/* Don't flip endian */
-#define F(x) (x)
-#endif
 /* Read from set (in native endian) */
 #define I(x, y) F((x)[(y)])
 /* Write to set (in native endian) */
