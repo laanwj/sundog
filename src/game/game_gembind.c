@@ -186,22 +186,22 @@ static void gembind_VDI(struct psys_state *s, struct gembind_priv *priv, psys_fu
     psys_fulladdr ptsout = psys_lda(s, W(ctx, 8));
     (void)numintin;
     /* Need calls:
-     * 0x0001   v_opnwk     http://toshyp.atari.org/en/00700a.html#v_opnwk
-     * 0x0002   v_clswk     http://toshyp.atari.org/en/00700a.html#v_clswk
-     * 0x0006   v_pline     http://toshyp.atari.org/en/007005.html#v_pline
-     * 0x000b   gdp         http://toshyp.atari.org/en/007005.html#v_bar
-     * 0x0010   vsl_width   http://toshyp.atari.org/en/007004.html#vsl_width
-     * 0x0011   vsl_color   http://toshyp.atari.org/en/007004.html#vsl_color
-     * 0x0019   vsf_color   http://toshyp.atari.org/en/007004.html#vsf_color
-     * 0x0020   vswr_mode   http://toshyp.atari.org/en/007004.html#vswr_mode
-     * 0x006d   vro_cpyfm   http://toshyp.atari.org/en/00700b.html#vro_cpyfm
-     * 0x006f   vsc_form    http://toshyp.atari.org/en/007007.html#vsc_form
-     * 0x0072   vr_recfl    http://toshyp.atari.org/en/007005.html#vr_recfl
-     * 0x0079   vrt_cpyfm   http://toshyp.atari.org/en/00700b.html#vrt_cpyfm
-     * 0x007a   v_show_c    http://toshyp.atari.org/en/007007.html#v_show_c
-     * 0x007b   v_hide_c    http://toshyp.atari.org/en/007007.html#v_hide_c
-     * 0x007c   vq_mouse    http://toshyp.atari.org/en/007007.html#vq_mouse
-     * 0x0081   vs_clip     http://toshyp.atari.org/en/00700a.html#vs_clip
+     * 0x0001   v_opnwk     https://freemint.github.io/tos.hyp/en/vdi_control.html#v_opnwk
+     * 0x0002   v_clswk     https://freemint.github.io/tos.hyp/en/vdi_control.html#v_clswk
+     * 0x0006   v_pline     https://freemint.github.io/tos.hyp/en/vdi_output.html#v_pline
+     * 0x000b   gdp         https://freemint.github.io/tos.hyp/en/vdi_output.html#v_bar
+     * 0x0010   vsl_width   https://freemint.github.io/tos.hyp/en/vdi_attribute.html#vsl_width
+     * 0x0011   vsl_color   https://freemint.github.io/tos.hyp/en/vdi_attribute.html#vsl_color
+     * 0x0019   vsf_color   https://freemint.github.io/tos.hyp/en/vdi_attribute.html#vsf_color
+     * 0x0020   vswr_mode   https://freemint.github.io/tos.hyp/en/vdi_attribute.html#vswr_mode
+     * 0x006d   vro_cpyfm   https://freemint.github.io/tos.hyp/en/vdi_raster.html#vro_cpyfm
+     * 0x006f   vsc_form    https://freemint.github.io/tos.hyp/en/vdi_input.html#vsc_form
+     * 0x0072   vr_recfl    https://freemint.github.io/tos.hyp/en/vdi_output.html#vr_recfl
+     * 0x0079   vrt_cpyfm   https://freemint.github.io/tos.hyp/en/vdi_raster.html#vrt_cpyfm
+     * 0x007a   v_show_c    https://freemint.github.io/tos.hyp/en/vdi_input.html#v_show_c
+     * 0x007b   v_hide_c    https://freemint.github.io/tos.hyp/en/vdi_input.html#v_hide_c
+     * 0x007c   vq_mouse    https://freemint.github.io/tos.hyp/en/vdi_input.html#vq_mouse
+     * 0x0081   vs_clip     https://freemint.github.io/tos.hyp/en/vdi_control.html#vs_clip
      */
     /* TOO noisy.
     psys_debug("gembind_VDI 0x%04x 0x%04x 0x%04x 0x%04x [0x%05x 0x%05x 0x%05x 0x%05x 0x%05x]\n",
@@ -418,9 +418,9 @@ static void gembind_AES(struct psys_state *s, struct gembind_priv *priv, psys_fu
     psys_fulladdr cb_padrin   = psys_lda(s, W(ctx, 8));
     psys_fulladdr cb_padrout  = psys_lda(s, W(ctx, 10));
     /* Need calls:
-     * 0x000a   appl_init       http://toshyp.atari.org/en/Application.html#appl_init
-     * 0x004d   graf_handle     http://toshyp.atari.org/en/00800c.html#graf_handle
-     * 0x004e   graf_mouse      http://toshyp.atari.org/en/00800c.html#graf_mouse
+     * 0x000a   appl_init       https://freemint.github.io/tos.hyp/en/appl.html#appl_init
+     * 0x004d   graf_handle     https://freemint.github.io/tos.hyp/en/graf.html#graf_handle
+     * 0x004e   graf_mouse      https://freemint.github.io/tos.hyp/en/graf.html#graf_mouse
      */
     if (priv->debug_level) {
         psys_debug("gembind_AES 0x%04x 0x%04x 0x%04x 0x%04x 0x%04x 0x%04x [0x%05x 0x%05x 0x%05x 0x%05x 0x%05x 0x%05x]\n",
