@@ -345,7 +345,7 @@ void wowzo(struct game_screen *screen, struct game_sound *sound, bool warp_faile
                 /* star moved out of display area, in stage1 and 2 it will be replaced with a new star */
                 wowzo_new_star(data, idx, GTOP, YHI - 10);
             } /* stars */
-        }     /* passes */
+        } /* passes */
 
         if (stage == 1) {
             wowzo_dosound(data, sound_warp1, sizeof(sound_warp1), 4);
@@ -419,7 +419,7 @@ void wowzo(struct game_screen *screen, struct game_sound *sound, bool warp_faile
             /* star moved out of display area, mark as dead */
             data->xwait[idx] = 0xff;
         } /* stars */
-    }     /* passes */
+    } /* passes */
 
     /* Stage 4
        stars streak, with their tails running behind them
