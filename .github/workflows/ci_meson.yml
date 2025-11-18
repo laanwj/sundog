@@ -31,7 +31,7 @@ jobs:
         CC: gcc
     - run: ninja -C builddir
     - run: meson test -C builddir/ -v
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: Linux_Meson_Testlog
@@ -51,7 +51,7 @@ jobs:
     - run: meson setup -Dgame_cheats=true -Ddebug_ui=true builddir/
     - run: ninja -C builddir
     - run: meson test -C builddir/ -v
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: MacOS_Meson_Testlog
@@ -76,7 +76,7 @@ jobs:
     - run: meson setup -Dgame_cheats=true -Ddebug_ui=true builddir/
     - run: ninja -C builddir
     - run: meson test -C builddir/ -v
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: Windows_Meson_Testlog
