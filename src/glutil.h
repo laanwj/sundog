@@ -7,7 +7,12 @@
 #ifndef H_GLUTIL
 #define H_GLUTIL
 
+#ifdef USE_SYSGL
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#else
 #include <glxw/glxw_es3.h>
+#endif
 
 #include <stdbool.h>
 #include <stddef.h>
