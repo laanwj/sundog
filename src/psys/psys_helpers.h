@@ -21,7 +21,7 @@ extern "C" {
 /* Word offset - this is a macro to make it easier to switch to word-based
  * addressing (except for instruction pointer) at some point.
  */
-#define W(base, ofs) ((base) + ((ofs)*2))
+#define W(base, ofs) ((base) + ((ofs) * 2))
 #endif
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 /* Don't flip endian */

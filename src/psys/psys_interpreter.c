@@ -22,7 +22,7 @@
  * use the bottom bit. This means that 0 is false, but e.g. 2, 4, 6 and so on
  * is also false.
  */
-#define BOOL(x) ((x)&1)
+#define BOOL(x) ((x) & 1)
 
 /** Instruction fetching ***/
 
