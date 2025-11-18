@@ -5,11 +5,6 @@ sdl2_dep = dependency('SDL2')
 sdl2main_dep = dependency('SDL2main', required: false)
 m_lib = meson.get_compiler('c').find_library('m', required: false)
 
-# Flip p-system endian (XXX should only be required on little-endian systems)
-add_project_arguments(
-    '-DFLIP_ENDIAN_HACK',
-    language: ['c', 'cpp']
-)
 if get_option('psys_debugger')
     add_project_arguments(
         '-DPSYS_DEBUGGER',
