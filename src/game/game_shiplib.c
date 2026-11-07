@@ -89,6 +89,7 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     psys_byte *points_dy = points_dx + 0x10;
     struct game_screen_point point[16 * 4 * 2];
     int ptn                  = 0, i, xx, yy;
+    int alive                = 0; /* any fragment still on screen */
     static int obj_color_idx = 0; /* keep track of current color index */
     unsigned color;
     /* Decrease count and store new value in global */
@@ -129,6 +130,7 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
             if (count == 0 || x <= 96 || y <= 7 || y >= 116) { /* if counter expired or out of viewscreen, nuke it */
                 points_x[i] = 0;
             } else { /* store new position and redraw */
+                alive       = 1;
                 points_x[i] = x;
                 points_y[i] = y;
                 for (yy = 0; yy < 2; ++yy) {
@@ -144,6 +146,10 @@ static void shiplib_18(struct psys_state *s, struct shiplib_priv *priv, psys_ful
     }
     /* Draw queued pixels */
     priv->screen->draw_points(priv->screen, 1 /*Replace*/, point, ptn);
+    /* The original 68000 routine ends with move.w d5,10(a6): global 1 (the explosion-running
+     * flag) is set to whether any fragment is still on screen. The fight loop waits for it
+     * to clear before handling the destroyed ship (reward message, end of red alert). */
+    psys_stw(s, W(env_priv + PSYS_MSCW_VAROFS, 0x1), alive);
 }
 
 /** shiplib_19(x) */
